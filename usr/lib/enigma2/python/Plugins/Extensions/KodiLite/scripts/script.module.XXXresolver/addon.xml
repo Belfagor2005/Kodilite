@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="script.module.XXXresolver"
+       name="dateutil"
+       version="1.0.0"
+       provider-name="pcd">
+  <requires>
+    <import addon="xbmc.python" version="2.1.0"/>
+    
+  </requires>
+  <extension point="xbmc.python.module"
+             library="lib" />
+  
+    <summary>dateutil - powerful extensions to datetime</summary>
+    <description>Packed for Kodi from https://github.com/dateutil/dateutil</description>
+    <platform>all</platform>
+    <language></language>
+    <license>Revised BSD License</license>
+    <forum></forum>
+    <website></website>
+    <source></source>
+    <email></email>
+  </extension>
+</addon>
