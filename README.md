@@ -1,7 +1,7 @@
 Kodilite for E2
 by PCD
 
-<img src="https://github.com/Belfagor2005/Kodilite/blob/main/usr/lib/enigma2/python/Plugins/Extensions/Kodilite/plugin.png">
+<img src="https://github.com/Belfagor2005/Kodilite/blob/main/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugin.png">
 
 Enigma2 project
 Only Free Channels ( no Pay Tv ) 
