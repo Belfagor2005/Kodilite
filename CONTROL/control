@@ -1,0 +1,12 @@
+Package: enigma2-plugin-extensions-kodilite
+Version: 7.0_r0
+Description: Enigma2 Plugin kodilite by pcd
+Section: extra
+Priority: optional
+Maintainer: pcd@linuxsat-support.com
+Architecture: all
+OE: kodilite
+Homepage: pcd@linuxsat-support.com
+Depends:
+Source: None
+

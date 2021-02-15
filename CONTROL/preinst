@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if [ -d /usr/lib/enigma2/python/Plugins/Extensions/KodiLite ]; then
+  rm -rf /usr/lib/enigma2/python/Plugins/Extensions/KodiLite > /dev/null 2>&1
+fi
+if [ -d /media/usb/KodiLite ]; then
+  rm -rf /media/usb/KodiLite > /dev/null 2>&1
+fi
+if [ -d /media/hdd/KodiLite ]; then
+  rm -rf /media/hdd/KodiLite > /dev/null 2>&1
+fi
+
+if [ -e /etc/kodiupd ]; then
+  rm /etc/kodiupd > /dev/null 2>&1
+fi
+if [ -e /etc/kodinodl ]; then
+  rm /etc/kodinodl > /dev/null 2>&1
+fi
+
+exit 0
+

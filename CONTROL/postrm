@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ -d /usr/lib/enigma2/python/Plugins/Extensions/KodiLite ]; then
+  rm -rf /usr/lib/enigma2/python/Plugins/Extensions/KodiLite > /dev/null 2>&1
+fi
+
+exit 0
+
