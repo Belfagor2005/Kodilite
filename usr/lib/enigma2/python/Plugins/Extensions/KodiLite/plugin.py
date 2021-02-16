@@ -2848,12 +2848,12 @@ class Start_mainmenu(Screen):
                 print "In checkUpd version = ", version
                 f.close()
                 try:
-                       file1 = THISPLUG + "/adlist.txt"
-                       f1=open(file1,"r+")
-                       fpage = f1.read()
+                       import base64
+                       thost = 'aHR0cDovL3BhdGJ1d2ViLmNvbQ=='
+                       ServerS1 = base64.b64decode(thost)
+                       fpage = getUrl(ServerS1 + '/Newkodilite/adlist.txt')
                 except:       
                        fpage = " "
-                
                 self.fpage = fpage
 #                tfile2 = THISPLUG + "/adlist.txt"      
 #                f2 = open(tfile2, "r")
@@ -3133,10 +3133,10 @@ class Start_mainmenu(Screen):
     def gotPage(self, html):
                     self.fdlist = html
 ###################################################### 
-                    file1 = THISPLUG + "/adlist.txt"
-                    f1=open(file1,"r")
-                    adlst = f1.read()
-                    f1.close()
+                    import base64
+                    thost = 'aHR0cDovL3BhdGJ1d2ViLmNvbQ=='
+                    ServerS1 = base64.b64decode(thost)
+                    adlst = getUrl(ServerS1 + '/Newkodilite/adlist.txt')
 ######################################################
                     missed = self.missed
                     print "missed = [", missed
@@ -5180,10 +5180,10 @@ class Addons(Screen):
 #	        try:
 #                       if DEBUG == 1:
             	              #print "In Addons html = ", html 
-                       file1 = THISPLUG + "/adlist.txt"
-                       f1=open(file1,"r+")
-                       fpage = f1.read()
-                       
+                       import base64
+                       thost = 'aHR0cDovL3BhdGJ1d2ViLmNvbQ=='
+                       ServerS1 = base64.b64decode(thost)
+                       fpage = getUrl(ServerS1 + '/Newkodilite/adlist.txt')                       
                        n1 = fpage.find("Frodo")
                        n2 = fpage.find("#####", (n1+10))
                        fpage2 = fpage[n1:n2]
@@ -6541,7 +6541,7 @@ def main(session, **kwargs):
         afile.write(cachefolder)
         afile.close()
         print "In def main 6"
-        """
+        
         try:
                from Plugins.Extensions.KodiLite.Update2 import updstart2
         except:       
@@ -6558,7 +6558,7 @@ def main(session, **kwargs):
                updstart()
         except:       
                print "\nError updating some scripts"
-        """
+        
         print "In def main 7" 
 ######################################        
         fyt = THISPLUG + "/scripts/script.module.youtube.dl/control.py"
@@ -6803,6 +6803,11 @@ class classJobManagerViews():
             _session.open(XBMCAddonsMediaExplorer)          
                 		
 pjopviews = classJobManagerViews() 
+
+
+
+
+
 
 
 
