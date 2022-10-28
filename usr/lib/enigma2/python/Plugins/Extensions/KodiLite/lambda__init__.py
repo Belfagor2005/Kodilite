@@ -1,8 +1,8 @@
-# -*- coding: UTF-8 -*-
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import pkgutil
 import os.path
-
 import xbmcaddon
 
 __addon__ = xbmcaddon.Addon(id='script.module.lambdascrapers')
@@ -10,7 +10,7 @@ __addon__ = xbmcaddon.Addon(id='script.module.lambdascrapers')
 def sources():
     try:
         sourceDict = []
-##        provider = __addon__.getSetting('module.provider')
+        # provider = __addon__.getSetting('module.provider')
         provider = "Lambdascrapers"
         sourceFolder = getScraperFolder(provider)
         sourceFolderLocation = os.path.join(os.path.dirname(__file__), sourceFolder)
@@ -80,8 +80,4 @@ def getModuleName(scraper_folders):
         try: nameList.append(s.split('_')[1].lower().title())
         except: pass
     return nameList
-
-
-
-
 

@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function
+
 """
 This package defines classes that simplify bit-wise creation, manipulation and
 interpretation of data.
@@ -84,6 +88,7 @@ MAX_CHARS = 250
 
 # Maximum size of caches used for speed optimisations.
 CACHE_SIZE = 1000
+
 
 class Error(Exception):
     """Base class for errors in the bitstring module."""
@@ -263,14 +268,14 @@ def offsetcopy(s, newoffset):
             shiftleft = s.offset % 8 - newoffset
             # First deal with everything except for the final byte
             for x in range(s.byteoffset, s.byteoffset + s.bytelength - 1):
-                newdata.append(((d[x] << shiftleft) & 0xff) +\
+                newdata.append(((d[x] << shiftleft) & 0xff) + \
                                (d[x + 1] >> (8 - shiftleft)))
             bits_in_last_byte = (s.offset + s.bitlength) % 8
             if not bits_in_last_byte:
                 bits_in_last_byte = 8
             if bits_in_last_byte > shiftleft:
                 newdata.append((d[s.byteoffset + s.bytelength - 1] << shiftleft) & 0xff)
-        else: # newoffset > s._offset % 8
+        else:  # newoffset > s._offset % 8
             shiftright = newoffset - s.offset % 8
             newdata.append(s.getbyte(0) >> shiftright)
             for x in range(s.byteoffset + 1, s.byteoffset + s.bytelength):
@@ -456,10 +461,12 @@ except NameError:
 # Python 2.x octals start with '0', in Python 3 it's '0o'
 LEADING_OCT_CHARS = len(oct(1)) - 1
 
+
 def tidy_input_string(s):
     """Return string made lowercase and with all whitespace removed."""
     s = ''.join(s.split()).lower()
     return s
+
 
 INIT_NAMES = ('uint', 'int', 'ue', 'se', 'sie', 'uie', 'hex', 'oct', 'bin', 'bits',
               'uintbe', 'intbe', 'uintle', 'intle', 'uintne', 'intne',
@@ -494,13 +501,16 @@ REPLACEMENTS_LE = {'b': 'intle:8', 'B': 'uintle:8',
                    'q': 'intle:64', 'Q': 'uintle:64',
                    'f': 'floatle:32', 'd': 'floatle:64'}
 
+
 # Size in bytes of all the pack codes.
 PACK_CODE_SIZE = {'b': 1, 'B': 1, 'h': 2, 'H': 2, 'l': 4, 'L': 4,
                   'q': 8, 'Q': 8, 'f': 4, 'd': 8}
 
+
 _tokenname_to_initialiser = {'hex': 'hex', '0x': 'hex', '0X': 'hex', 'oct': 'oct',
                              '0o': 'oct', '0O': 'oct', 'bin': 'bin', '0b': 'bin',
                              '0B': 'bin', 'bits': 'auto', 'bytes': 'bytes', 'pad': 'pad'}
+
 
 def structparser(token):
     """Parse struct-like format string token into sub-token list."""
@@ -529,6 +539,7 @@ def structparser(token):
             assert endian == '>'
             tokens = [REPLACEMENTS_BE[c] for c in fmt]
     return tokens
+
 
 def tokenparser(fmt, keys=None, token_cache={}):
     """Divide the format string into tokens and parse them.
@@ -631,8 +642,10 @@ def tokenparser(fmt, keys=None, token_cache={}):
         token_cache[token_key] = stretchy_token, return_values
     return stretchy_token, return_values
 
+
 # Looks for first number*(
 BRACKET_RE = re.compile(r'(?P<factor>\d+)\*\(')
+
 
 def expand_brackets(s):
     """Remove whitespace and expand all brackets."""
@@ -1628,8 +1641,7 @@ class Bits(object):
             tmp >>= 1
             leadingzeros += 1
         remainingpart = i + 1 - (1 << leadingzeros)
-        binstring = '0' * leadingzeros + '1' + Bits(uint=remainingpart,
-                                                             length=leadingzeros).bin
+        binstring = '0' * leadingzeros + '1' + Bits(uint=remainingpart, length=leadingzeros).bin
         self._setbin_unsafe(binstring)
 
     def _readue(self, pos):
@@ -1828,7 +1840,7 @@ class Bits(object):
         # pad with zeros up to byte boundary if needed
         boundary = ((length + 7) // 8) * 8
         padded_binstring = binstring + '0' * (boundary - length)\
-                           if len(binstring) < boundary else binstring
+                        if len(binstring) < boundary else binstring
         try:
             bytelist = [int(padded_binstring[x:x + 8], 2)
                         for x in xrange(0, len(padded_binstring), 8)]
@@ -1913,7 +1925,7 @@ class Bits(object):
         """Read bits and interpret as a hex string."""
         if length % 4:
             raise InterpretError("Cannot convert to hex unambiguously - "
-                                           "not multiple of 4 bits.")
+                                 "not multiple of 4 bits.")
         if not length:
             return ''
         # This monstrosity is the only thing I could get to work for both 2.6 and 3.1.
@@ -2293,7 +2305,7 @@ class Bits(object):
                     lst.append(value)
                     continue
                 value, pos = self._readtoken(name, pos, length)
-                if value is not None: # Don't append pad tokens
+                if value is not None:  # Don't append pad tokens
                     lst.append(value)
             return lst, pos
         stretchy_token = False
@@ -2620,12 +2632,12 @@ class Bits(object):
         """
         s = self.__class__()
         i = iter(sequence)
-        print 'join...'
+        print('join...')
         try:
-            nn=next(i)
-            print nn
-            dd=Bits(nn)
-            print dd
+            nn = next(i)
+            print(nn)
+            dd = Bits(nn)
+            print(dd)
             s._append(dd)
             while True:
                 n = next(i)
@@ -2656,7 +2668,7 @@ class Bits(object):
         """
         # If the bitstring is file based then we don't want to read it all
         # in to memory.
-        chunksize = 1024 * 1024 # 1 MB chunks
+        chunksize = 1024 * 1024  # 1 MB chunks
         if not self._offset:
             a = 0
             bytelen = self._datastore.bytelength
@@ -2884,7 +2896,7 @@ name_to_read = {'uint': Bits._readuint,
                 'intbe': Bits._readintbe,
                 'intne': Bits._readintne,
                 'float': Bits._readfloat,
-                'floatbe': Bits._readfloat, # floatbe is a synonym for float
+                'floatbe': Bits._readfloat,  # floatbe is a synonym for float
                 'floatle': Bits._readfloatle,
                 'floatne': Bits._readfloatne,
                 'hex': Bits._readhex,
@@ -3326,7 +3338,7 @@ class BitArray(Bits):
         lengths = [s.len for s in sections]
         if len(lengths) == 1:
             # Didn't find anything to replace.
-            return 0 # no replacements done
+            return 0  # no replacements done
         if new is self:
             # Prevent self assignment woes
             new = copy.copy(self)
@@ -3679,7 +3691,6 @@ class BitArray(Bits):
                       """)
 
 
-
 class ConstBitStream(Bits):
     """A container or stream holding an immutable sequence of bits.
 
@@ -3999,9 +4010,6 @@ class ConstBitStream(Bits):
     bytepos = property(_getbytepos, _setbytepos,
                        doc="""The position in the bitstring in bytes. Read and write.
                       """)
-
-
-
 
 
 class BitStream(ConstBitStream, BitArray):

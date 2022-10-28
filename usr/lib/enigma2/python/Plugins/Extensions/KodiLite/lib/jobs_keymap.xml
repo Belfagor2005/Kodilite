@@ -1,5 +1,5 @@
 <keymap>
 	<map context="GlobalActions">
-                <key id="KEY_HELP" mapto="JobManagerView" flags="mr" />
+		<key id="KEY_HELP" mapto="JobManagerView" flags="mr" />
 	</map>
 </keymap>

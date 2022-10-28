@@ -39,6 +39,7 @@ import zlib
 from .compat import (
     compat_HTMLParseError,
     compat_HTMLParser,
+    compat_HTTPError,
     compat_basestring,
     compat_chr,
     compat_cookiejar,
@@ -1695,6 +1696,17 @@ MONTH_NAMES = {
         'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'],
 }
 
+# Timezone names for RFC2822 obs-zone
+# From https://github.com/python/cpython/blob/3.11/Lib/email/_parseaddr.py#L36-L42
+TIMEZONE_NAMES = {
+    'UT': 0, 'UTC': 0, 'GMT': 0, 'Z': 0,
+    'AST': -4, 'ADT': -3,  # Atlantic (used in Canada)
+    'EST': -5, 'EDT': -4,  # Eastern
+    'CST': -6, 'CDT': -5,  # Central
+    'MST': -7, 'MDT': -6,  # Mountain
+    'PST': -8, 'PDT': -7   # Pacific
+}
+
 KNOWN_EXTENSIONS = (
     'mp4', 'm4a', 'm4p', 'm4b', 'm4r', 'm4v', 'aac',
     'flv', 'f4v', 'f4a', 'f4b',
@@ -1734,12 +1746,17 @@ DATE_FORMATS = (
     '%b %dth %Y %I:%M',
     '%Y %m %d',
     '%Y-%m-%d',
+    '%Y.%m.%d.',
     '%Y/%m/%d',
     '%Y/%m/%d %H:%M',
     '%Y/%m/%d %H:%M:%S',
+    '%Y%m%d%H%M',
+    '%Y%m%d%H%M%S',
+    '%Y%m%d',
     '%Y-%m-%d %H:%M',
     '%Y-%m-%d %H:%M:%S',
     '%Y-%m-%d %H:%M:%S.%f',
+    '%Y-%m-%d %H:%M:%S:%f',
     '%d.%m.%Y %H:%M',
     '%d.%m.%Y %H.%M',
     '%Y-%m-%dT%H:%M:%SZ',
@@ -1752,6 +1769,7 @@ DATE_FORMATS = (
     '%b %d %Y at %H:%M:%S',
     '%B %d %Y at %H:%M',
     '%B %d %Y at %H:%M:%S',
+    '%H:%M %d-%b-%Y',
 )
 
 DATE_FORMATS_DAY_FIRST = list(DATE_FORMATS)
@@ -1762,6 +1780,7 @@ DATE_FORMATS_DAY_FIRST.extend([
     '%d/%m/%Y',
     '%d/%m/%y',
     '%d/%m/%Y %H:%M:%S',
+    '%d-%m-%Y %H:%M',
 ])
 
 DATE_FORMATS_MONTH_FIRST = list(DATE_FORMATS)
@@ -2150,7 +2169,7 @@ def sanitize_url(url):
     for mistake, fixup in COMMON_TYPOS:
         if re.match(mistake, url):
             return re.sub(mistake, fixup, url)
-    return url
+    return escape_url(url)
 
 
 def sanitized_Request(url, *args, **kwargs):
@@ -2209,6 +2228,15 @@ def unescapeHTML(s):
 
     return re.sub(
         r'&([^&;]+;)', lambda m: _htmlentity_transform(m.group(1)), s)
+
+
+def process_communicate_or_kill(p, *args, **kwargs):
+    try:
+        return p.communicate(*args, **kwargs)
+    except BaseException:  # Including KeyboardInterrupt
+        p.kill()
+        p.wait()
+        raise
 
 
 def get_subprocess_encoding():
@@ -2291,12 +2319,30 @@ def formatSeconds(secs):
 
 
 def make_HTTPS_handler(params, **kwargs):
+
+    # https://www.rfc-editor.org/info/rfc7301
+    ALPN_PROTOCOLS = ['http/1.1']
+
+    def set_alpn_protocols(ctx):
+        # From https://github.com/yt-dlp/yt-dlp/commit/2c6dcb65fb612fc5bc5c61937bf438d3c473d8d0
+        # Thanks @coletdjnz
+        # Some servers may (wrongly) reject requests if ALPN extension is not sent. See:
+        # https://github.com/python/cpython/issues/85140
+        # https://github.com/yt-dlp/yt-dlp/issues/3878
+        try:
+            ctx.set_alpn_protocols(ALPN_PROTOCOLS)
+        except (AttributeError, NotImplementedError):
+            # Python < 2.7.10, not ssl.HAS_ALPN
+            pass
+
     opts_no_check_certificate = params.get('nocheckcertificate', False)
     if hasattr(ssl, 'create_default_context'):  # Python >= 3.4 or 2.7.9
         context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        set_alpn_protocols(context)
         if opts_no_check_certificate:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
+
         try:
             return YoutubeDLHTTPSHandler(params, context=context, **kwargs)
         except TypeError:
@@ -2312,6 +2358,7 @@ def make_HTTPS_handler(params, **kwargs):
                                if opts_no_check_certificate
                                else ssl.CERT_REQUIRED)
         context.set_default_verify_paths()
+        set_alpn_protocols(context)
         return YoutubeDLHTTPSHandler(params, context=context, **kwargs)
 
 
@@ -2458,7 +2505,7 @@ class XAttrMetadataError(YoutubeDLError):
 
         # Parsing code and msg
         if (self.code in (errno.ENOSPC, errno.EDQUOT)
-                or 'No space left' in self.msg or 'Disk quota excedded' in self.msg):
+                or 'No space left' in self.msg or 'Disk quota exceeded' in self.msg):
             self.reason = 'NO_SPACE'
         elif self.code == errno.E2BIG or 'Argument list too long' in self.msg:
             self.reason = 'VALUE_TOO_LONG'
@@ -2879,20 +2926,80 @@ class YoutubeDLCookieProcessor(compat_urllib_request.HTTPCookieProcessor):
 
 
 class YoutubeDLRedirectHandler(compat_urllib_request.HTTPRedirectHandler):
-    if sys.version_info[0] < 3:
-        def redirect_request(self, req, fp, code, msg, headers, newurl):
-            # On python 2 urlh.geturl() may sometimes return redirect URL
-            # as byte string instead of unicode. This workaround allows
-            # to force it always return unicode.
-            return compat_urllib_request.HTTPRedirectHandler.redirect_request(self, req, fp, code, msg, headers, compat_str(newurl))
+    """YoutubeDL redirect handler
+
+    The code is based on HTTPRedirectHandler implementation from CPython [1].
+
+    This redirect handler solves two issues:
+     - ensures redirect URL is always unicode under python 2
+     - introduces support for experimental HTTP response status code
+       308 Permanent Redirect [2] used by some sites [3]
+
+    1. https://github.com/python/cpython/blob/master/Lib/urllib/request.py
+    2. https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/308
+    3. https://github.com/ytdl-org/youtube-dl/issues/28768
+    """
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_308 = compat_urllib_request.HTTPRedirectHandler.http_error_302
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """Return a Request or None in response to a redirect.
+
+        This is called by the http_error_30x methods when a
+        redirection response is received.  If a redirection should
+        take place, return a new Request to allow http_error_30x to
+        perform the redirect.  Otherwise, raise HTTPError if no-one
+        else should try to handle this url.  Return None if you can't
+        but another Handler might.
+        """
+        m = req.get_method()
+        if (not (code in (301, 302, 303, 307, 308) and m in ("GET", "HEAD")
+                 or code in (301, 302, 303) and m == "POST")):
+            raise compat_HTTPError(req.full_url, code, msg, headers, fp)
+        # Strictly (according to RFC 2616), 301 or 302 in response to
+        # a POST MUST NOT cause a redirection without confirmation
+        # from the user (of urllib.request, in this case).  In practice,
+        # essentially all clients do redirect in this case, so we do
+        # the same.
+
+        # On python 2 urlh.geturl() may sometimes return redirect URL
+        # as byte string instead of unicode. This workaround allows
+        # to force it always return unicode.
+        if sys.version_info[0] < 3:
+            newurl = compat_str(newurl)
+
+        # Be conciliant with URIs containing a space.  This is mainly
+        # redundant with the more complete encoding done in http_error_302(),
+        # but it is kept for compatibility with other callers.
+        newurl = newurl.replace(' ', '%20')
+
+        CONTENT_HEADERS = ("content-length", "content-type")
+        # NB: don't use dict comprehension for python 2.6 compatibility
+        newheaders = dict((k, v) for k, v in req.headers.items()
+                          if k.lower() not in CONTENT_HEADERS)
+        return compat_urllib_request.Request(
+            newurl, headers=newheaders, origin_req_host=req.origin_req_host,
+            unverifiable=True)
 
 
 def extract_timezone(date_str):
     m = re.search(
-        r'^.{8,}?(?P<tz>Z$| ?(?P<sign>\+|-)(?P<hours>[0-9]{2}):?(?P<minutes>[0-9]{2})$)',
-        date_str)
+        r'''(?x)
+            ^.{8,}?                                              # >=8 char non-TZ prefix, if present
+            (?P<tz>Z|                                            # just the UTC Z, or
+                (?:(?<=.\b\d{4}|\b\d{2}:\d\d)|                   # preceded by 4 digits or hh:mm or
+                   (?<!.\b[a-zA-Z]{3}|[a-zA-Z]{4}|..\b\d\d))     # not preceded by 3 alpha word or >= 4 alpha or 2 digits
+                   [ ]?                                          # optional space
+                (?P<sign>\+|-)                                   # +/-
+                (?P<hours>[0-9]{2}):?(?P<minutes>[0-9]{2})       # hh[:]mm
+            $)
+        ''', date_str)
     if not m:
-        timezone = datetime.timedelta()
+        m = re.search(r'\d{1,2}:\d{1,2}(?:\.\d+)?(?P<tz>\s*[A-Z]+)$', date_str)
+        timezone = TIMEZONE_NAMES.get(m and m.group('tz').strip())
+        if timezone is not None:
+            date_str = date_str[:-len(m.group('tz'))]
+        timezone = datetime.timedelta(hours=timezone or 0)
     else:
         date_str = date_str[:-len(m.group('tz'))]
         if not m.group('sign'):
@@ -2939,15 +3046,12 @@ def unified_strdate(date_str, day_first=True):
     # Remove AM/PM + timezone
     date_str = re.sub(r'(?i)\s*(?:AM|PM)(?:\s+[A-Z]+)?', '', date_str)
     _, date_str = extract_timezone(date_str)
-#--------------- pcd fix -------------------
-##    for expression in date_formats(day_first):
-##        try:
-##            upload_date = datetime.datetime.strptime(date_str, expression).strftime('%Y%m%d')
 
-##        except ValueError:
-##
-##            pass
-#-------------- pcd fix end-------------------
+    for expression in date_formats(day_first):
+        try:
+            upload_date = datetime.datetime.strptime(date_str, expression).strftime('%Y%m%d')
+        except ValueError:
+            pass
     if upload_date is None:
         timetuple = email.utils.parsedate_tz(date_str)
         if timetuple:
@@ -2963,7 +3067,8 @@ def unified_timestamp(date_str, day_first=True):
     if date_str is None:
         return None
 
-    date_str = re.sub(r'[,|]', '', date_str)
+    date_str = re.sub(r'\s+', ' ', re.sub(
+        r'(?i)[,|]|(mon|tues?|wed(nes)?|thu(rs)?|fri|sat(ur)?)(day)?', '', date_str))
 
     pm_delta = 12 if re.search(r'(?i)PM', date_str) else 0
     timezone, date_str = extract_timezone(date_str)
@@ -2989,7 +3094,7 @@ def unified_timestamp(date_str, day_first=True):
             pass
     timetuple = email.utils.parsedate_tz(date_str)
     if timetuple:
-        return calendar.timegm(timetuple) + pm_delta * 3600
+        return calendar.timegm(timetuple) + pm_delta * 3600 - timezone.total_seconds()
 
 
 def determine_ext(url, default_ext='unknown_video'):
@@ -3599,13 +3704,11 @@ def int_or_none(v, scale=1, default=None, get_attr=None, invscale=1):
     if get_attr:
         if v is not None:
             v = getattr(v, get_attr, None)
-    if v == '':
-        v = None
-    if v is None:
+    if v in (None, ''):
         return default
     try:
         return int(v) * invscale // scale
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, OverflowError):
         return default
 
 
@@ -3643,7 +3746,7 @@ def url_or_none(url):
     if not url or not isinstance(url, compat_str):
         return None
     url = url.strip()
-    return url if re.match(r'^(?:[a-zA-Z][\da-zA-Z.+-]*:)?//', url) else None
+    return url if re.match(r'^(?:(?:https?|rt(?:m(?:pt?[es]?|fp)|sp[su]?)|mms|ftps?):)?//', url) else None
 
 
 def parse_duration(s):
@@ -3723,7 +3826,8 @@ def check_executable(exe, args=[]):
     """ Checks if the given binary is installed somewhere in PATH, and returns its name.
     args can be a list of arguments for a short output (like -version) """
     try:
-        subprocess.Popen([exe] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        process_communicate_or_kill(subprocess.Popen(
+            [exe] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
     except OSError:
         return False
     return exe
@@ -3737,10 +3841,10 @@ def get_exe_version(exe, args=['--version'],
         # STDIN should be redirected too. On UNIX-like systems, ffmpeg triggers
         # SIGTTOU if youtube-dl is run in the background.
         # See https://github.com/ytdl-org/youtube-dl/issues/955#issuecomment-209789656
-        out, _ = subprocess.Popen(
+        out, _ = process_communicate_or_kill(subprocess.Popen(
             [encodeArgument(exe)] + args,
             stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
     except OSError:
         return False
     if isinstance(out, bytes):  # Python 2.x
@@ -3866,7 +3970,8 @@ def escape_rfc3986(s):
     """Escape non-ASCII characters as suggested by RFC 3986"""
     if sys.version_info < (3, 0) and isinstance(s, compat_str):
         s = s.encode('utf-8')
-    return compat_urllib_parse.quote(s, b"%/;:@&=+$,!~*'()?#[]")
+    # ensure unicode: after quoting, it can always be converted
+    return compat_str(compat_urllib_parse.quote(s, b"%/;:@&=+$,!~*'()?#[]"))
 
 
 def escape_url(url):
@@ -4081,7 +4186,7 @@ def js_to_json(code):
         v = m.group(0)
         if v in ('true', 'false', 'null'):
             return v
-        elif v.startswith('/*') or v.startswith('//') or v == ',':
+        elif v.startswith('/*') or v.startswith('//') or v.startswith('!') or v == ',':
             return ""
 
         if v[0] in ("'", '"'):
@@ -4091,12 +4196,12 @@ def js_to_json(code):
                 '\\\n': '',
                 '\\x': '\\u00',
             }.get(m.group(0), m.group(0)), v[1:-1])
-
-        for regex, base in INTEGER_TABLE:
-            im = re.match(regex, v)
-            if im:
-                i = int(im.group(1), base)
-                return '"%d":' % i if v.endswith(':') else '%d' % i
+        else:
+            for regex, base in INTEGER_TABLE:
+                im = re.match(regex, v)
+                if im:
+                    i = int(im.group(1), base)
+                    return '"%d":' % i if v.endswith(':') else '%d' % i
 
         return '"%s"' % v
 
@@ -4106,7 +4211,8 @@ def js_to_json(code):
         {comment}|,(?={skip}[\]}}])|
         (?:(?<![0-9])[eE]|[a-df-zA-DF-Z_])[.a-zA-Z_0-9]*|
         \b(?:0[xX][0-9a-fA-F]+|0+[0-7]+)(?:{skip}:)?|
-        [0-9]+(?={skip}:)
+        [0-9]+(?={skip}:)|
+        !+
         '''.format(comment=COMMENT_RE, skip=SKIP_RE), fix_kv, code)
 
 
@@ -4201,6 +4307,7 @@ def mimetype2ext(mt):
         'vnd.ms-sstr+xml': 'ism',
         'quicktime': 'mov',
         'mp2t': 'ts',
+        'x-wav': 'wav',
     }.get(res, res)
 
 
@@ -4208,10 +4315,10 @@ def parse_codecs(codecs_str):
     # http://tools.ietf.org/html/rfc6381
     if not codecs_str:
         return {}
-    splited_codecs = list(filter(None, map(
+    split_codecs = list(filter(None, map(
         lambda str: str.strip(), codecs_str.strip().strip(',').split(','))))
     vcodec, acodec = None, None
-    for full_codec in splited_codecs:
+    for full_codec in split_codecs:
         codec = full_codec.split('.')[0]
         if codec in ('avc1', 'avc2', 'avc3', 'avc4', 'vp9', 'vp8', 'hev1', 'hev2', 'h263', 'h264', 'mp4v', 'hvc1', 'av01', 'theora'):
             if not vcodec:
@@ -4222,10 +4329,10 @@ def parse_codecs(codecs_str):
         else:
             write_string('WARNING: Unknown codec %s\n' % full_codec, sys.stderr)
     if not vcodec and not acodec:
-        if len(splited_codecs) == 2:
+        if len(split_codecs) == 2:
             return {
-                'vcodec': splited_codecs[0],
-                'acodec': splited_codecs[1],
+                'vcodec': split_codecs[0],
+                'acodec': split_codecs[1],
             }
     else:
         return {
@@ -5464,7 +5571,7 @@ def encode_base_n(num, n, table=None):
 
 def decode_packed_codes(code):
     mobj = re.search(PACKED_CODES_RE, code)
-    obfucasted_code, base, count, symbols = mobj.groups()
+    obfuscated_code, base, count, symbols = mobj.groups()
     base = int(base)
     count = int(count)
     symbols = symbols.split('|')
@@ -5477,7 +5584,7 @@ def decode_packed_codes(code):
 
     return re.sub(
         r'\b(\w+)\b', lambda mobj: symbol_table[mobj.group(0)],
-        obfucasted_code)
+        obfuscated_code)
 
 
 def caesar(s, alphabet, shift):
@@ -5677,7 +5784,7 @@ def write_xattr(path, key, value):
                         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
                 except EnvironmentError as e:
                     raise XAttrMetadataError(e.errno, e.strerror)
-                stdout, stderr = p.communicate()
+                stdout, stderr = process_communicate_or_kill(p)
                 stderr = stderr.decode('utf-8', 'replace')
                 if p.returncode != 0:
                     raise XAttrMetadataError(p.returncode, stderr)
@@ -5709,3 +5816,18 @@ def random_birthday(year_field, month_field, day_field):
     }
 
 
+def clean_podcast_url(url):
+    return re.sub(r'''(?x)
+        (?:
+            (?:
+                chtbl\.com/track|
+                media\.blubrry\.com| # https://create.blubrry.com/resources/podcast-media-download-statistics/getting-started/
+                play\.podtrac\.com
+            )/[^/]+|
+            (?:dts|www)\.podtrac\.com/(?:pts/)?redirect\.[0-9a-z]{3,4}| # http://analytics.podtrac.com/how-to-measure
+            flex\.acast\.com|
+            pd(?:
+                cn\.co| # https://podcorn.com/analytics-prefix/
+                st\.fm # https://podsights.com/docs/
+            )/e
+        )/''', '', url)

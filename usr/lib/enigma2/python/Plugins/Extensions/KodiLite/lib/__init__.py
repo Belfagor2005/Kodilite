@@ -1,39 +1,49 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 from Components.Language import language
-from Components.config import config
-from Tools.Directories import resolveFilename, SCOPE_PLUGINS, SCOPE_LANGUAGE
-import os, gettext
+from Tools.Directories import resolveFilename, SCOPE_PLUGINS
+import gettext
+import os
 from skin import loadSkin
-PluginLanguageDomain = 'XBMCAddons'
-PluginLanguagePath = 'Extensions/XBMCAddons/locale'
+
+PluginLanguageDomain = 'xbmcaddons'
+PluginLanguagePath = 'Extensions/KodiLite/locale'
+isDreamOS = False
+
 
 def loadSkinReal(skinPath):
     if os.path.exists(skinPath):
-        print '[XBMCAddons] Loading skin ', skinPath
+        print('Loading skin',skinPath)
         loadSkin(skinPath)
 
 
 def loadPluginSkin(pluginPath):
-    print "config.skin.primary_skin.value  =", config.skin.primary_skin.value
-    loadSkinReal(pluginPath + '/' + config.skin.primary_skin.value)
+#    loadSkinReal(pluginPath + '/' + config.skin.primary_skin.value)
+    loadSkinReal(config.skin.primary_skin.value)
     loadSkinReal(pluginPath + '/skin.xml')
 
 
+if os.path.exists("/var/lib/dpkg/status"):
+    isDreamOS = True
+
+
 def localeInit():
-#    lang = language.getLanguage()[:2]
-#    os.environ['LANGUAGE'] = lang
-#    print '[XBMCAddons] set language to ', lang
+    if isDreamOS:
+        lang = language.getLanguage()[:2]
+        os.environ["LANGUAGE"] = lang
     gettext.bindtextdomain(PluginLanguageDomain, resolveFilename(SCOPE_PLUGINS, PluginLanguagePath))
 
 
-def _(txt):
-    t = gettext.dgettext(PluginLanguageDomain, txt)
-    if t == txt:
-        print '[XBMCAddons] fallback to default translation for', txt
-        t = gettext.gettext(txt)
-    return t
-
-
-localeInit()
-language.addCallback(localeInit)
-
-
+if isDreamOS:
+    _ = lambda txt: gettext.dgettext(PluginLanguageDomain, txt) if txt else ""
+    localeInit()
+    language.addCallback(localeInit)
+else:
+    def _(txt):
+        if gettext.dgettext(PluginLanguageDomain, txt):
+            return gettext.dgettext(PluginLanguageDomain, txt)
+        else:
+            print(("[%s] fallback to default translation for %s" % (PluginLanguageDomain, txt)))
+            return gettext.gettext(txt)
+    language.addCallback(localeInit())

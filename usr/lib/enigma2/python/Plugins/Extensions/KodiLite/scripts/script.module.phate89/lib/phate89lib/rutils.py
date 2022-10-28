@@ -27,7 +27,7 @@ class RUtils:
         if level<=self.LOGLEVEL:
             if isinstance(msg, str):
                 msg = msg.decode("utf-8", 'ignore')
-            print u"#### {name}: {text} ####".format(name=os.path.basename(__file__),text=msg)
+            print(u"#### {name}: {text} ####".format(name=os.path.basename(__file__),text=msg))
 
     def createRequest(self,url,params={},post={},stream=False,addDefault=True):
         if addDefault:

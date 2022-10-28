@@ -20,14 +20,37 @@ import xbmcplugin
 import xbmcgui
 import xbmc
 import xbmcvfs
-import urllib
-import urlparse
+# import urllib
+# import urlparse
 import sys
 import os
 import re
 import time
 import strings
 import CustomProgressDialog
+
+
+PY3 = sys.version_info[0] == 3
+if PY3:
+    import http.client
+    from urllib.parse import quote, unquote_plus, unquote, urlencode
+    from urllib.parse import parse_qs, parse_qsl
+    from urllib.request import urlopen, Request
+    from urllib.error import URLError, HTTPError
+    from urllib.parse import urlparse
+    from urllib.parse import urlencode, quote
+    from urllib.request import urlretrieve
+
+else:
+    import httplib
+    from urllib import quote, unquote_plus, unquote, urlencode
+    from urlparse import parse_qs, parse_qsl
+    from urllib2 import urlopen, Request
+    from urllib2 import URLError, HTTPError
+    from urlparse import urlparse
+    from urllib import urlencode, quote
+    from urllib import urlretrieve
+
 
 addon = xbmcaddon.Addon('script.module.urlresolver')
 get_setting = addon.getSetting
@@ -57,6 +80,7 @@ def set_setting(id, value):
 def get_version():
     return addon.getAddonInfo('version')
 
+
 def get_id():
     return addon.getAddonInfo('id')
 
@@ -66,13 +90,11 @@ def get_name():
 
 
 def kodi_version():
-
     """
     Get kodi version as a float. Useful for various conditionals,
     especially when doing operations that old versions do not support
     :return: float
     """
-
 #    return float(xbmcaddon.Addon('xbmc.addon').getAddonInfo('version')[:4])
     pass
 
@@ -81,15 +103,11 @@ def open_settings():
 
 
 def get_keyboard_legacy(heading, default='', hide_input=False):
-
     keyboard = xbmc.Keyboard(hidden=hide_input)
     keyboard.setHeading(heading)
-
     if default:
         keyboard.setDefault(default)
-
     keyboard.doModal()
-
     if keyboard.isConfirmed():
         return keyboard.getText()
     else:
@@ -101,29 +119,20 @@ def get_keyboard_new(heading, default='', hide_input=False):
     """
     This function has been in support since XBMC Gotham v13
     """
-
     if hide_input is False:
         hide_input = 0
     elif hide_input is True:
         hide_input = xbmcgui.ALPHANUM_HIDE_INPUT
-
     dialog = xbmcgui.Dialog()
-
     keyboard = dialog.input(heading, defaultt=default, type=0, option=hide_input)
-
     if keyboard:
-
         return keyboard
-
     return None
 
 
 if kodi_version() >= 13.0:
-
     get_keyboard = get_keyboard_new
-
 else:
-
     get_keyboard = get_keyboard_legacy
 
 
@@ -137,12 +146,12 @@ def i18n(string_id):
 
 def get_plugin_url(queries):
     try:
-        query = urllib.urlencode(queries)
+        query = urlencode(queries)
     except UnicodeEncodeError:
         for k in queries:
             if isinstance(queries[k], unicode):
                 queries[k] = queries[k].encode('utf-8')
-        query = urllib.urlencode(queries)
+        query = urlencode(queries)
 
     return sys.argv[0] + '?' + query
 
@@ -230,10 +239,10 @@ def get_current_view():
 class WorkingDialog(object):
     def __init__(self):
         xbmc.executebuiltin('ActivateWindow(busydialog)')
-    
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, type, value, traceback):
         xbmc.executebuiltin('Dialog.Close(busydialog)')
 
@@ -266,25 +275,25 @@ class ProgressDialog(object):
                 pd = xbmcgui.DialogProgress()
             pd.create(self.heading, line1, line2, line3)
         return pd
-        
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, type, value, traceback):
         if self.pd is not None:
             self.pd.close()
             del self.pd
-    
+
     def is_canceled(self):
         if self.pd is not None and not self.background:
             return self.pd.iscanceled()
         else:
             return False
-        
+
     def update(self, percent, line1='', line2='', line3=''):
         if self.pd is None and self.timer and (time.time() - self.begin) >= self.timer:
             self.pd = self.__create_dialog(line1, line2, line3)
-            
+
         if self.pd is not None:
             if self.background:
                 msg = line1 + line2 + line3
@@ -295,7 +304,7 @@ class ProgressDialog(object):
 
 class CountdownDialog(object):
     __INTERVALS = 5
-    
+
     def __init__(self, heading, line1='', line2='', line3='', active=True, countdown=60, interval=5):
         self.heading = heading
         self.countdown = countdown
@@ -315,19 +324,19 @@ class CountdownDialog(object):
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, type, value, traceback):
         if self.pd is not None:
             self.pd.close()
             del self.pd
-    
+
     def start(self, func, args=None, kwargs=None):
         if args is None: args = []
         if kwargs is None: kwargs = {}
         result = func(*args, **kwargs)
         if result:
             return result
-        
+
         if self.pd is not None:
             start = time.time()
             expires = time_left = self.countdown
@@ -341,17 +350,17 @@ class CountdownDialog(object):
                     progress = time_left * 100 / expires
                     line3 = 'Expires in: %s seconds' % time_left if not self.line3 else ''
                     self.update(progress, line3=line3)
-                    
+
                 result = func(*args, **kwargs)
                 if result:
                     return result
-    
+
     def is_canceled(self):
         if self.pd is None:
             return False
         else:
             return self.pd.iscanceled()
-        
+
     def update(self, percent, line1='', line2='', line3=''):
         if self.pd is not None:
             self.pd.update(percent, line1, line2, line3)

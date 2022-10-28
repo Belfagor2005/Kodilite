@@ -1,4 +1,4 @@
-#import xbmcinit
+from __future__ import print_function
 
 import os, sys
 #from Screens.MessageBox import MessageBox
@@ -6,19 +6,19 @@ import urllib
 import xbmcplugin
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
 
-myfile = file(r"/tmp/addoncat.txt")       
+myfile = open(r"/tmp/addoncat.txt")       
 icount = 0
 for line in myfile.readlines():
        ADDONCAT = line
 myfile.close()
 
 def getCurrentWindowId():
-	"""Returns the id for the current 'active' window as an integer."""
-	return 0
+        """Returns the id for the current 'active' window as an integer."""
+        return 0
 
 def getCurrentWindowDialogId():
-	"""Returns the id for the current 'active' dialog as an integer."""
-	return 0
+        """Returns the id for the current 'active' dialog as an integer."""
+        return 0
 
 # xbmc/guilib/GUIListItem.h
 ICON_OVERLAY_NONE = 0
@@ -37,25 +37,25 @@ NOTIFICATION_WARNING = 'warning'
 PASSWORD_VERIFY = 1
 
 class mock(object):
-	'''
-	A shapeless self-referring class that never raises
-	an AttributeError, is always callable and will always
-	evaluate as a string, int, float, bool, or container.
-	'''
-	# http://www.rafekettler.com/magicmethods.html
-	def __new__(cls, *args): return object.__new__(cls)
-	def __init__(self, *args): pass
-	def __getattr__(self, name): return self
-	def __call__(self, *args, **kwargs): return self
-	def __int__(self): return 0
-	def __float__(self): return 0
-	def __str__(self): return '0'
-	def __nonzero__(self): return False
-	def __getitem__(self, key): return self
-	def __setitem__(self, key,value): pass
-	def __delitem__(self, key): pass
-	def __len__(self): return 3
-	def __iter__(self): return iter([self,self,self])
+        '''
+        A shapeless self-referring class that never raises
+        an AttributeError, is always callable and will always
+        evaluate as a string, int, float, bool, or container.
+        '''
+        # http://www.rafekettler.com/magicmethods.html
+        def __new__(cls, *args): return object.__new__(cls)
+        def __init__(self, *args): pass
+        def __getattr__(self, name): return self
+        def __call__(self, *args, **kwargs): return self
+        def __int__(self): return 0
+        def __float__(self): return 0
+        def __str__(self): return '0'
+        def __nonzero__(self): return False
+        def __getitem__(self, key): return self
+        def __setitem__(self, key,value): pass
+        def __delitem__(self, key): pass
+        def __len__(self): return 3
+        def __iter__(self): return iter([self,self,self])
 
 #DialogProgress = mock()
 
@@ -94,10 +94,10 @@ class ListItemX:
         def __init__(self, label=" ", label2=" ", iconImage=None, thumbnailImage="DefaultFolder.png", path="path"):
               
               self.__dict__['label'] = label
-	      self.__dict__['label2'] = label2
-	      self.__dict__['iconImage'] = iconImage
-	      self.__dict__['thumbnailImage'] = thumbnailImage
-	      self.__dict__['path'] = path
+              self.__dict__['label2'] = label2
+              self.__dict__['iconImage'] = iconImage
+              self.__dict__['thumbnailImage'] = thumbnailImage
+              self.__dict__['path'] = path
 #              if os.path.exists("/etc/debugxb"):
 ##              try:
               
@@ -130,7 +130,7 @@ class ListItemX:
                       label = label.replace("=", "ExQ")
               if path is not None:
                       if '|' in path:
-		              path,headers = path.split('|')
+                              path,headers = path.split('|')
 #                      path = path.replace(" ", "-")
                       path = path.replace("&", "AxNxD")
                       path = path.replace("=", "ExQ")
@@ -201,79 +201,79 @@ class ListItemX:
               
 class ListItem:
 
-	def __init__(self, label=None, label2=None, iconImage=None, thumbnailImage=None, path=None):
-		self.data = {}
-		self.data['label'] = label
-		self.data['label2'] = label2
-		self.data['iconImage'] = iconImage
-		self.data['thumbnailImage'] = thumbnailImage
-		self.data['path'] = path
-		self.data['type'] = 'VIDEO'
-		self.data['streams'] = []
-		return
+        def __init__(self, label=None, label2=None, iconImage=None, thumbnailImage=None, path=None):
+                self.data = {}
+                self.data['label'] = label
+                self.data['label2'] = label2
+                self.data['iconImage'] = iconImage
+                self.data['thumbnailImage'] = thumbnailImage
+                self.data['path'] = path
+                self.data['type'] = 'VIDEO'
+                self.data['streams'] = []
+                return
 
-	def getLabel(self):
-		"""Returns the listitem label."""
-		return self.data['label']
+        def getLabel(self):
+                """Returns the listitem label."""
+                return self.data['label']
 
-	def getLabel2(self):
-		"""Returns the listitem's second label."""
-		return self.data['label2']
+        def getLabel2(self):
+                """Returns the listitem's second label."""
+                return self.data['label2']
 
-	def setLabel(self, label):
-		"""Sets the listitem's label."""
-		self.data['label'] = label
+        def setLabel(self, label):
+                """Sets the listitem's label."""
+                self.data['label'] = label
 
-	def setLabel2(self, label2):
-		"""Sets the listitem's second label."""
-		self.data['label2'] = label2
+        def setLabel2(self, label2):
+                """Sets the listitem's second label."""
+                self.data['label2'] = label2
 
-	def setIconImage(self, icon):
-		"""Sets the listitem's icon image."""
-		self.data['iconImage'] = icon
+        def setIconImage(self, icon):
+                """Sets the listitem's icon image."""
+                self.data['iconImage'] = icon
 
-	def setThumbnailImage(self, thumb):
-		"""Sets the listitem's thumbnail image."""
-		self.data['thumbnailImage'] = thumb
+        def setThumbnailImage(self, thumb):
+                """Sets the listitem's thumbnail image."""
+                self.data['thumbnailImage'] = thumb
 
-	def select(self, selected):
-		"""Sets the listitem's selected status."""
-		pass
+        def select(self, selected):
+                """Sets the listitem's selected status."""
+                pass
 
-	def isSelected(self):
-		"""Returns the listitem's selected status."""
-		return False
+        def isSelected(self):
+                """Returns the listitem's selected status."""
+                return False
 
-	def setInfo(self, type, infoLabels):
-		"""Sets the listitem's infoLabels."""
-		pass
-#		self.data['type'] = type
-#		self.data.update(infoLabels)
-		
-	def setSubtitles(self, subs):
-        	pass
+        def setInfo(self, type, infoLabels):
+                """Sets the listitem's infoLabels."""
+                pass
+#                self.data['type'] = type
+#                self.data.update(infoLabels)
+                
+        def setSubtitles(self, subs):
+                pass
 
-	def setProperty(self, key, value):
-		"""Sets a listitem property, similar to an infolabel."""
-		self.data[key] = value
+        def setProperty(self, key, value):
+                """Sets a listitem property, similar to an infolabel."""
+                self.data[key] = value
 
-	def getProperty(self, key):
-		"""Returns a listitem property as a string, similar to an infolabel."""
-		return (self.data[key] if key in self.data else None)
+        def getProperty(self, key):
+                """Returns a listitem property as a string, similar to an infolabel."""
+                return (self.data[key] if key in self.data else None)
 
-	def addContextMenuItems(self, items, replaceItems=None):
-		"""Adds item to the context menu for media lists."""
-		pass
+        def addContextMenuItems(self, items, replaceItems=None):
+                """Adds item to the context menu for media lists."""
+                pass
 
-	def setPath(self, path):
-		"""Sets the listitem's path."""
-		self.data['path'] = path
+        def setPath(self, path):
+                """Sets the listitem's path."""
+                self.data['path'] = path
 
-	def addStreamInfo(self, type, values):
-		"""Add a stream with details."""
-		pass#print "*** addStreamInfo ***", [type, values]
-##		values['type'] = type
-##		self.data['streams'].append({k.lower():values[k] for k in values.keys()})
+        def addStreamInfo(self, type, values):
+                """Add a stream with details."""
+                pass#print "*** addStreamInfo ***", [type, values]
+##                values['type'] = type
+##                self.data['streams'].append({k.lower():values[k] for k in values.keys()})
               
 
         def setArt(self, posters):
@@ -315,40 +315,40 @@ class Dialog:
            tkMessageBox.showinfo('Notification', message, parent=root)
            root.destroy()                
                 
-	def ok(self, heading, line1, line2=None, line3=None):
-		"""Show a dialog 'OK'."""
-		pass#print "*** dialog OK ***\n%s" % [heading, line1, line2, line3]
-		return True
-
-	def browse(self, type, heading, shares, mask=None, useThumbs=None, treatAsFolder=None, default=None, enableMultiple=None):
-		"""Show a 'Browse' dialog."""
-#		pass#print "*** dialog browse ***\n%s" % [heading, shares, default]
-		return default
-
-	def numeric(self, type, heading, default=0):
-		"""Show a 'Numeric' dialog."""
-		return self.choose('numeric', heading, [], default)
-
-	def yesno(self, heading, line1, line2=None, line3=None, nolabel='no', yeslabel='yes'):
-		"""Show a dialog 'YES/NO'."""
-		query = '%s%s%s%s' % (heading or '', line1 or '', line2 or '', line3 or '')
-		sel = self.choose('YES/NO', query, [yeslabel, nolabel])
+        def ok(self, heading, line1, line2=None, line3=None):
+                """Show a dialog 'OK'."""
+                pass#print "*** dialog OK ***\n%s" % [heading, line1, line2, line3]
                 return True
-#		return (True if sel == 0 else False)
 
-	def select(self, heading, list, autoclose=None):
-		"""Show a select dialog."""
-		return self.choose('select', heading, list)
+        def browse(self, type, heading, shares, mask=None, useThumbs=None, treatAsFolder=None, default=None, enableMultiple=None):
+                """Show a 'Browse' dialog."""
+#                pass#print "*** dialog browse ***\n%s" % [heading, shares, default]
+                return default
 
-	def chooseX(self, type, query, list, default=0):
-		try: _dialogs
-		except: xbmcinit.read_dialogs()
-		dlg = '%s %s %s' % (repr(query), list, _mainid)
-		sel = (_dialogs[dlg] if dlg in _dialogs else default)
-#		pass#print "*** dialog %s ***\n%s <<< %s" % (type, sel, dlg)
-		return sel
+        def numeric(self, type, heading, default=0):
+                """Show a 'Numeric' dialog."""
+                return self.choose('numeric', heading, [], default)
 
-	def choose(self, type, query, list, default=0):
+        def yesno(self, heading, line1, line2=None, line3=None, nolabel='no', yeslabel='yes'):
+                """Show a dialog 'YES/NO'."""
+                query = '%s%s%s%s' % (heading or '', line1 or '', line2 or '', line3 or '')
+                sel = self.choose('YES/NO', query, [yeslabel, nolabel])
+                return True
+#                return (True if sel == 0 else False)
+
+        def select(self, heading, list, autoclose=None):
+                """Show a select dialog."""
+                return self.choose('select', heading, list)
+
+        def chooseX(self, type, query, list, default=0):
+                try: _dialogs
+                except: xbmcinit.read_dialogs()
+                dlg = '%s %s %s' % (repr(query), list, _mainid)
+                sel = (_dialogs[dlg] if dlg in _dialogs else default)
+#                pass#print "*** dialog %s ***\n%s <<< %s" % (type, sel, dlg)
+                return sel
+
+        def choose(self, type, query, list, default=0):
                 pass#print "Here in xbmcgui.py sys.argv =", sys.argv
                 pass#print "xbmcgui.py choose list =", list
  #               rfile = THISPLUG + "/result.txt"
@@ -393,12 +393,12 @@ class Dialog:
                         os.system(cmd)
                         pass#print "xbmcgui.py yes int(idx) 2=", int(idx)
                         return int(idx)
-	        else:
+                else:
                         sys.exit()
-	def chooseXX(self, type, query, list, default=0):
-	        rfile = "/tmp/sel.txt"
-	        if os.path.exists(rfile):
-	                myfile = open(rfile,"r")       
+        def chooseXX(self, type, query, list, default=0):
+                rfile = "/tmp/sel.txt"
+                if os.path.exists(rfile):
+                        myfile = open(rfile,"r")       
                         icount = 0
                         for line in myfile.readlines(): 
                                idx = line
@@ -419,14 +419,23 @@ class Dialog:
                         
                 pass#print "In xbmcgui rep =", rep        
                 return int(rep)
-	        
-def addDirectoryItem(name, parameters={},pic=""):
+                
+def addDirectoryItemX(name, parameters={},pic=""):
     li = ListItem(name,iconImage="DefaultFolder.png", thumbnailImage=pic)
     
     url = sys.argv[0] + '?' + urllib.urlencode(parameters)
     pass#print "In xbmcgui addDirectoryItem url =", url
     return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=li, isFolder=True)
-	        
+    
+    
+def addDirectoryItem(name, parameters={},pic=""):
+    li = ListItem(name,iconImage="DefaultFolder.png", thumbnailImage=pic)
+    try:
+           url = sys.argv[0] + '?' + urllib.parse.urlencode(parameters)
+    except:
+           url = sys.argv[0] + '?' + urllib.urlencode(parameters)
+    return xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=li, isFolder=True)
+                
 def parameters_string_to_dict(parameters):
     ''' Convert parameters encoded in a URL to a dict. '''
     paramDict = {}
@@ -443,61 +452,61 @@ def parameters_string_to_dict(parameters):
     return paramDict
 
 
-	        
+                
 # mock everything else, mostly
 
 
 class DialogProgress:
 
-	def create(self, heading, line1=None, line2=None, line3=None):
-		"""Create and show a progress dialog."""
-		pass
+        def create(self, heading, line1=None, line2=None, line3=None):
+                """Create and show a progress dialog."""
+                pass
 
-	def update(self, percent, line1=None, line2=None, line3=None):
-		"""Update's the progress dialog."""
-		pass
+        def update(self, percent, line1=None, line2=None, line3=None):
+                """Update's the progress dialog."""
+                pass
 
-	def iscanceled(self):
-		"""Returns True if the user pressed cancel."""
-		return False
+        def iscanceled(self):
+                """Returns True if the user pressed cancel."""
+                return False
 
-	def close(self):
-		"""Close the progress dialog."""
-		pass
+        def close(self):
+                """Close the progress dialog."""
+                pass
 
 class DialogProgressBG:
 
-	def create(self, heading, line1=None, line2=None, line3=None):
-		"""Create and show a progress dialog."""
-		pass
+        def create(self, heading, line1=None, line2=None, line3=None):
+                """Create and show a progress dialog."""
+                pass
 
-#	def update(self, percent, line1=None, line2=None, line3=None):
-	def update(self, percent, heading=None, message=None):
-		"""Update's the progress dialog."""
-		pass
+#        def update(self, percent, line1=None, line2=None, line3=None):
+        def update(self, percent, heading=None, message=None):
+                """Update's the progress dialog."""
+                pass
 
-	def iscanceled(self):
-		"""Returns True if the user pressed cancel."""
-		return False
+        def iscanceled(self):
+                """Returns True if the user pressed cancel."""
+                return False
 
-	def close(self):
-		"""Close the progress dialog."""
-		pass
+        def close(self):
+                """Close the progress dialog."""
+                pass
 
 class ControlLabel:
 
         def __init__(self):
                 pass#print "In xbmcgui.py ControlLabel"
 
-	def setLabel(self, label):
-	                pass#print "In xbmcgui.py ControlLabel label =", label
-                        pass		
+        def setLabel(self, label):
+                        pass#print "In xbmcgui.py ControlLabel label =", label
+                        pass                
 class ControlTextBox:
         def __init__(self):
                 pass#print "In xbmcgui.py ControlTextBox"
-	def setText(self, text):
-	                pass#print "In xbmcgui.py ControlTextBox text =", text
-	                rfile = "/tmp/show.txt"
+        def setText(self, text):
+                        pass#print "In xbmcgui.py ControlTextBox text =", text
+                        rfile = "/tmp/show.txt"
                         f = open("/tmp/show.txt", "w")
                         f.write(text)
                         f.close()
@@ -510,7 +519,7 @@ class ControlTextBox:
                         pass#print "xbmcgui.py choose arg1.txt created text =", text
                         f2.write(text)
                         f2.close()
-	
+        
                         params = parameters_string_to_dict(sys.argv[2])
                         mode =  str(params.get("mode", ""))
                         pic = " "
@@ -518,59 +527,59 @@ class ControlTextBox:
 
 class Window:
 
-	def __init__(self, windowId):
-		self.properties = {}
-		self.properties['windowId'] = windowId;
+        def __init__(self, windowId):
+                self.properties = {}
+                self.properties['windowId'] = windowId;
 
-#	def addControl(self, control):
-#		"""Add a Control to this window."""
-#		pass
+#        def addControl(self, control):
+#                """Add a Control to this window."""
+#                pass
 
-#	def addControls(self, controlList):
-#		"""Add a list of Controls to this window."""
-#		pass
+#        def addControls(self, controlList):
+#                """Add a list of Controls to this window."""
+#                pass
 
-#	def clearProperties(self):
-#		"""Clears all window properties."""
-#		self.properties = {}
+#        def clearProperties(self):
+#                """Clears all window properties."""
+#                self.properties = {}
 
-	def clearProperty(self, key):
-#		"""Clears the specific window property."""
-		self.properties[key] = None
+        def clearProperty(self, key):
+#                """Clears the specific window property."""
+                self.properties[key] = None
 
-#	def close(self):
-#		"""Closes this window."""
-#		pass
+#        def close(self):
+#                """Closes this window."""
+#                pass
 
-#	def doModal(self):
-#		"""Display this window until close() is called."""
-#		pass
+#        def doModal(self):
+#                """Display this window until close() is called."""
+#                pass
 
-	def getControl(self, controlId):
-		"""Get's the control from this window."""
-		pass#print "In xbmcgui.py getControl controlId =", controlId
-		if controlId == 1:
-		        return ControlLabel()
-		elif controlId == 5:        
-		        return ControlTextBox()
-		else:
+        def getControl(self, controlId):
+                """Get's the control from this window."""
+                pass#print "In xbmcgui.py getControl controlId =", controlId
+                if controlId == 1:
+                        return ControlLabel()
+                elif controlId == 5:        
                         return ControlTextBox()
-		        
-		        
-#	def getFocus(self, control):
-#		"""returns the control which is focused."""
-#		pass
+                else:
+                        return ControlTextBox()
+                        
+                        
+#        def getFocus(self, control):
+#                """returns the control which is focused."""
+#                pass
 
-#	def getFocusId(self):
-#		"""returns the id of the control which is focused."""
-#		return 0
+#        def getFocusId(self):
+#                """returns the id of the control which is focused."""
+#                return 0
 
-#	def getHeight(self):
-#		"""Returns the height of this screen."""
-#		return 480
+#        def getHeight(self):
+#                """Returns the height of this screen."""
+#                return 480
 
-	def getProperty(self, key):
-#		"""Returns a window property as a string, similar to an infolabel."""
+        def getProperty(self, key):
+#                """Returns a window property as a string, similar to an infolabel."""
             try:
                 myfile = file(r"/tmp/guiprop.txt")       
                 icount = 0
@@ -586,113 +595,114 @@ class Window:
                 
             except:
                 return ""    
-####		return self.properties[key] if key in self.properties else ''
+####                return self.properties[key] if key in self.properties else ''
 
-#	def getResolution(self):
-#		"""Returns the resolution of the screen. The returned value is one of the following:"""
-#		return 5 # NTSC 16:9 (720x480)
+#        def getResolution(self):
+#                """Returns the resolution of the screen. The returned value is one of the following:"""
+#                return 5 # NTSC 16:9 (720x480)
 
-#	def getWidth(self):
-#		"""Returns the width of this screen."""
-#		return 720
+#        def getWidth(self):
+#                """Returns the width of this screen."""
+#                return 720
 
-#	def onAction(self, action):
-#		"""onAction method."""
-#		pass
+#        def onAction(self, action):
+#                """onAction method."""
+#                pass
 
-#	def onClick(self, control):
-#		"""onClick method."""
-#		pass
+#        def onClick(self, control):
+#                """onClick method."""
+#                pass
 
-#	def onFocus(self, control):
-#		"""onFocus method."""
-#		pass
+#        def onFocus(self, control):
+#                """onFocus method."""
+#                pass
 
-#	def onInit(self):
-#		"""onInit method."""
-#		pass
+#        def onInit(self):
+#                """onInit method."""
+#                pass
 
-#	def removeControl(self, control):
-#		"""Removes the control from this window."""
-#		pass
+#        def removeControl(self, control):
+#                """Removes the control from this window."""
+#                pass
 
-#	def removeControls(self, controlList):
-#		"""Removes a list of controls from this window."""
-#		pass
+#        def removeControls(self, controlList):
+#                """Removes a list of controls from this window."""
+#                pass
 
-#	def setCoordinateResolution(self, resolution):
-#		"""Sets the resolution"""
-#		pass
+#        def setCoordinateResolution(self, resolution):
+#                """Sets the resolution"""
+#                pass
 
-#	def setFocus(self, control):
-#		"""Give the supplied control focus."""
-#		pass
+#        def setFocus(self, control):
+#                """Give the supplied control focus."""
+#                pass
 
-#	def setFocusId(self):
-#		"""Gives the control with the supplied focus."""
-#		pass
+#        def setFocusId(self):
+#                """Gives the control with the supplied focus."""
+#                pass
 
-	def setProperty(self, key, value):
-#		"""Sets a window property, similar to an infolabel."""
+        def setProperty(self, key, value):
+#                """Sets a window property, similar to an infolabel."""
                 f = open("/tmp/guiprop.txt", "w")
                 txt = str(key) + "###" + str(value) + "\n"
                 f.write(txt)
                 f.close()
 
 
-		self.properties[key] = value;
+                self.properties[key] = value;
 
-#	def show(self):
-#		"""Show this window."""
-#		pass
+#        def show(self):
+#                """Show this window."""
+#                pass
 
 #class WindowDialog(Window):
 
-#	def __init__(self):
-#		Window.__init__(self, 0)
-#		pass
+#        def __init__(self):
+#                Window.__init__(self, 0)
+#                pass
 
 #class WindowXML(Window):
 
-#	def __init__(self, xmlFilename, scriptPath=None, defaultSkin=None, forceFallback=False):
-#		Window.__init__(self, 0)
+#        def __init__(self, xmlFilename, scriptPath=None, defaultSkin=None, forceFallback=False):
+#                Window.__init__(self, 0)
 
-#	def addItem(item, position=None):
-#		"""addItem(item[, position]) -- Add a new item to this Window List."""
-#		pass
+#        def addItem(item, position=None):
+#                """addItem(item[, position]) -- Add a new item to this Window List."""
+#                pass
 
-#	def clearList():
-#		"""clearList() -- Clear the Window List."""
-#		pass
+#        def clearList():
+#                """clearList() -- Clear the Window List."""
+#                pass
 
-#	def getCurrentListPosition():
-#		"""getCurrentListPosition() -- Gets the current position in the Window List."""
-#		return 0
+#        def getCurrentListPosition():
+#                """getCurrentListPosition() -- Gets the current position in the Window List."""
+#                return 0
 
-#	def getListItem(position):
-#		"""getListItem(position) -- Returns a given ListItem in this Window List."""
-#		return None
+#        def getListItem(position):
+#                """getListItem(position) -- Returns a given ListItem in this Window List."""
+#                return None
 
-#	def getListSize():
-#		"""getListSize() -- Returns the number of items in this Window List."""
-#		return 0
+#        def getListSize():
+#                """getListSize() -- Returns the number of items in this Window List."""
+#                return 0
 
-#	def removeItem(position):
-#		"""removeItem(position) -- Removes a specified item based on position, from the Window List."""
-#		pass
+#        def removeItem(position):
+#                """removeItem(position) -- Removes a specified item based on position, from the Window List."""
+#                pass
 
-#	def setCurrentListPosition(position):
-#		"""setCurrentListPosition(position) -- Set the current position in the Window List."""
-#		return 0
+#        def setCurrentListPosition(position):
+#                """setCurrentListPosition(position) -- Set the current position in the Window List."""
+#                return 0
 
 ## xbmc/interfaces/python/xbmcmodule/winxmldialog.cpp
 #class WindowXMLDialog(WindowXML):
 
-#	def __init__(self, xmlFilename, scriptPath=None, defaultSkin=None, defaultRes=None):
-#		"""Create a new WindowXMLDialog script."""
-#		WindowXML.__init__(self, xmlFilename, scriptPath, defaultSkin)
+#        def __init__(self, xmlFilename, scriptPath=None, defaultSkin=None, defaultRes=None):
+#                """Create a new WindowXMLDialog script."""
+#                WindowXML.__init__(self, xmlFilename, scriptPath, defaultSkin)
 
-class ControlSlider(Control):
+##class ControlSlider(Control):
+class ControlSlider():
 
     """
     ControlSlider class.
@@ -727,8 +737,8 @@ class ControlSlider(Control):
 
 
 #noinspection PyUnusedLocal
-class ControlGroup(Control):
-
+##class ControlGroup(Control):
+class ControlGroup():
     """ControlGroup class."""
 
     def __init__(self, x, y, width, height):
@@ -746,8 +756,8 @@ class ControlGroup(Control):
 
 
 #noinspection PyUnusedLocal
-class ControlEdit(Control):
-
+##class ControlEdit(Control):
+class ControlEdit():
     """
     ControlEdit class.
     ControlEdit(x, y, width, height, label[, font, textColor,
@@ -816,6 +826,12 @@ class ControlEdit(Control):
         - self.edit.setText('online')
         """
         pass
+
+
+
+
+
+
 
 
 

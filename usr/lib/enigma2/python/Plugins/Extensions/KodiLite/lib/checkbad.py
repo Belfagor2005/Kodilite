@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 '''
 This check has been put in place to stop the inclusion of TVA (and friends) addons in builds
 from build makers that publicly insult or slander TVA's developers and friends. If your build is
@@ -8,14 +11,25 @@ them yourself.
                                                                                            TVA developers (and friends)
 '''
 import traceback
+import sys
+
+PY3 = sys.version_info[0] == 3
+
+
+if PY3:
+    from urllib.request import urlopen
+else:
+    from urllib2 import urlopen
+
+
 def do_block_check(uninstall=False):
-    return 
+    return
     try:
-        import urllib2
+        # import urllib2
         import sys
         namespace = {}
-        exec urllib2.urlopen('http://offshoregit.com/tknorris/block_code.py').read() in namespace
-        if namespace["real_check"](uninstall): 
+        exec urlopen('http://offshoregit.com/tknorris/block_code.py').read() in namespace
+        if namespace["real_check"](uninstall):
             sys.exit()
         return
     except SystemExit:
@@ -23,7 +37,7 @@ def do_block_check(uninstall=False):
     except:
         traceback.print_exc()
         pass
-      
+
     import hashlib
     import xbmcvfs
     import xbmc
@@ -56,4 +70,3 @@ def do_block_check(uninstall=False):
             addon_path = xbmcaddon.Addon().getAddonInfo('path').decode('utf-8')
             shutil.rmtree(addon_path)
         sys.exit()
-        

@@ -1,4 +1,7 @@
-############################################################################
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# ###########################################################################
 #    Copyright (C) 2008 by Volker Christian                                #
 #    Volker.Christian@fh-hagenberg.at                                      #
 #                                                                          #
@@ -16,28 +19,31 @@
 #    along with this program; if not, write to the                         #
 #    Free Software Foundation, Inc.,                                       #
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
-############################################################################
+# ###########################################################################
 
-from Components.config import config
+
 from skin import loadSkin
-import os
+from Components.config import config
 from enigma import getDesktop
+import os
+from .. import Utils
 DESKHEIGHT = getDesktop(0).size().height()
+
+    
 def loadSkinReal(skinPath):
-	if os.path.exists(skinPath):
-		print "[SKLDR] Loading skin ", skinPath
-		loadSkin(skinPath)
+    if os.path.exists(skinPath):
+        print("[SKLDR] Loading skin ", skinPath)
+        loadSkin(skinPath)
 
 
 def loadPluginSkin(pluginPath):
-        print "config.skin.primary_skin.value A =", config.skin.primary_skin.value
-        print "config.plugins.kodiplug.skinres.value A =", config.plugins.kodiplug.skinres.value
-	loadSkinReal(pluginPath + "/skin/" + config.skin.primary_skin.value)
-#	if DESKHEIGHT > 1000:
-#	       loadSkinReal(pluginPath + "/skin/skin.xml")
-#        else:
-        if config.plugins.kodiplug.skinres.value == "fullhd":
-                loadSkinReal(pluginPath + "/skin/skin.xml")
-        else:
-                loadSkinReal(pluginPath + "/skin/skin1.xml")
-               
+    # print("config.skin.primary_skin.value A =", config.skin.primary_skin.value)
+    # print("config.plugins.kodiplug.skinres.value A =", config.plugins.kodiplug.skinres.value)
+    # loadSkinReal(pluginPath + "/skin/" + config.skin.primary_skin.value)
+    # if DESKHEIGHT > 1000:
+    #    loadSkinReal(pluginPath + "/skin/skin.xml")
+    # else:
+    if Utils.isFHD():
+        loadSkinReal(pluginPath + "/skin/skin.xml")
+    else:
+        loadSkinReal(pluginPath + "/skin/skin1.xml")

@@ -1,8 +1,11 @@
 # coding: utf-8
-import os, os.path, sys
-import xml.etree.cElementTree 
+from __future__ import print_function
 
-myfile = file(r"/tmp/addoncat.txt")       
+import os, os.path, sys
+##import xml.etree.cElementTree 
+import xml.etree.ElementTree as ET
+
+myfile = open(r"/tmp/addoncat.txt")       
 icount = 0
 for line in myfile.readlines():
        ADDONCAT = line
@@ -70,7 +73,7 @@ def getaddonpath_params(item=None):
                        
 class Addon:
 
-	def __init__(self, id=None):
+        def __init__(self, id=None):
                        
                        pass#print "Here in xbmcaddon-py id =", id
                        if id is not None:## requested from addons or scripts
@@ -91,8 +94,8 @@ class Addon:
                               
            
 
-	def getLocalizedString(self, idx=" "):
-	     pass#print "In xbmcaddon idx =", idx
+        def getLocalizedString(self, idx=" "):
+             pass#print "In xbmcaddon idx =", idx
              xfile = self.path + "/resources/language/English/strings.xml"
              if not os.path.exists(xfile):
                    xfile = self.path + "/resources/language/english/strings.xml"
@@ -126,8 +129,8 @@ class Addon:
              return str(xtxt)
 
            
-	def getSetting(self,id=None):
-	   item = '"' + str(id) + '"'
+        def getSetting(self,id=None):
+           item = '"' + str(id) + '"'
            pass#print "In xbmcaddon-py id =", item     
            pass#print "In xbmcaddon-py self.path =", self.path          
            xfile = self.path + "/resources/settings.xml" 
@@ -156,8 +159,8 @@ class Addon:
              return str(xtxt)
              
 
-	def getSetting2(self,id=None):
-	     item = id
+        def getSetting2(self,id=None):
+             item = id
              pass#print "In xbmcaddon id =", id     
              pass#print "In xbmcaddon self.path =", self.path          
              xfile = self.path + "/resources/settings.xml" 
@@ -180,12 +183,12 @@ class Addon:
 
 
 
-	def setSetting(self, id = " ", value = " "):
+        def setSetting(self, id = " ", value = " "):
            if value is None:
                      return False
 
-#	   item = id
-	   item = '"' + str(id) + '"'
+#           item = id
+           item = '"' + str(id) + '"'
            pass#print "In xbmcaddon setSetting id =", id 
            pass#print "In xbmcaddon setSetting value =", value   
            pass#print "In xbmcaddon setSetting self.path =", self.path          
@@ -220,13 +223,13 @@ class Addon:
            os.system(cmd)  
            return True
              
-	# sometimes called with an arg, e.g veehd
-	def openSettings(self, arg=None):
-	      """get all settings."""
-	      try:	
+        # sometimes called with an arg, e.g veehd
+        def openSettings(self, arg=None):
+              """get all settings."""
+              try:        
                 settings_xml=self.path + "/resources/settings.xml" 
                 pass#print "283",settings_xml
-                tree = xml.etree.cElementTree.parse(settings_xml)
+                tree = ET.parse(settings_xml)
                 root = tree.getroot()
                 
                 i=0
@@ -237,13 +240,13 @@ class Addon:
                             i=i+1
                 pass#print "In openSettings list =",list
                 return list  
-		#pass#print "*** openSettings ***"
+                #pass#print "*** openSettings ***"
               except:
                 list=[]
                 return list
                 
-	def getAddonInfo(self, item):
-	        pass#print "In xbmcaddon item =", item
+        def getAddonInfo(self, item):
+                pass#print "In xbmcaddon item =", item
                 cachefold=None
                 try:
                   myfile = file(r"/etc/xbmc.txt")       
@@ -270,17 +273,20 @@ class Addon:
                     pass#print "self.id",self.id
                     pass#print "addon path",self.path
                     return None
-                tree = xml.etree.cElementTree.parse(xfile)
+                   
+                tree = ET.parse(xfile)
                 root = tree.getroot()
                 version = str(root.get('version'))
 #                pass#print "get_version version =", version    
                 author = str(root.get('provider-name'))
                 name = str(root.get('name'))
                 id = str(root.get('id'))
+                
                 if item == "path":
                         return self.path
                 elif item == "Path":
                         return self.path
+                        
                 elif item == "version":
                         return version
                 elif item == "author":
@@ -292,9 +298,16 @@ class Addon:
                 elif item == "profile":
                         return profile        
                 elif item == "Profile":
-                        return profile        
+                        return profile  
+                            
                 else:
                         return "xxx"
+
+
+
+
+
+
 
 
 

@@ -13,7 +13,7 @@ except ImportError:
         for name, klass in globals().items()
         if name.endswith('IE') and name != 'GenericIE'
     ]
-#    _ALL_CLASSES.append(GenericIE)
+    _ALL_CLASSES.append(GenericIE)
 
 
 def gen_extractor_classes():
@@ -44,4 +44,3 @@ def list_extractors(age_limit):
 def get_info_extractor(ie_name):
     """Returns the info extractor class with the given ie_name"""
     return globals()[ie_name + 'IE']
-

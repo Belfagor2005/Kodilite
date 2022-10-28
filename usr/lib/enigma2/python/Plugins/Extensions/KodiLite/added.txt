@@ -1,8 +1,8 @@
-import sys, xpath, xbmc
+import os, sys, xpath, xbmc
 libs = sys.argv[0].replace("default.py", "resources/lib")
 if os.path.exists(libs):
    sys.path.append(libs)
-print "Here in default-py sys.argv =", sys.argv
+print( "Here in default-py sys.argv =", sys.argv)
 if ("?plugin%3A%2F%2F" in sys.argv[2]) or ("?plugin://" in sys.argv[2]):
        argtwo = sys.argv[2]
        n2 = argtwo.find("?", 0)
@@ -18,6 +18,8 @@ if ("?plugin%3A%2F%2F" in sys.argv[2]) or ("?plugin://" in sys.argv[2]):
 else:
        sys.argv[0] = sys.argv[0].replace('/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins/', 'plugin://') 
        sys.argv[0] = sys.argv[0].replace('default.py', '')
-print "Here in default-py sys.argv B=", sys.argv
+print( "Here in default-py sys.argv B=", sys.argv)
+
+
 
 
