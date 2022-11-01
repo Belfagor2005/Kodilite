@@ -1,0 +1,389 @@
+import os
+import re
+# from Plugins.Extensions.KodiLite.adnutils import *
+from Plugins.Extensions.KodiLite.Utils import *
+# ###########20220115#########################
+THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
+LATEST = " "
+pass  # print("Starting Update2-py")
+
+
+def updstart2():
+    url2 = "https://ytdl-org.github.io/youtube-dl/download.html"
+    # pass  # print("In Update2.py url2 =", url2)
+    xdest = "/tmp/down.txt"
+    # downloadPage(url2, xdest).addCallback(getdown).addErrback(showError)
+    # fdest = THISPLUG + "/scripts"
+    # dest = "/tmp/urlresolver.zip"
+    # xfile = "https://github.com/tvaddonsco/tva-resolvers-repo/raw/master/zips/script.module.urlresolver/script.module.urlresolver-" + newvers + ".zip"
+    # pass  # print("upd_done xfile =", xfile)
+    f = getUrlresp(url2)
+    pass  # print("f =", f)
+    p = f.read()
+    f1 = open(xdest, "wb")
+    f1.write(p)
+    f1.close()
+    fplug = ""
+    getdown(fplug)
+
+
+def getdown(fplug):
+    fpage = open("/tmp/down.txt", "r").read()
+    # pass  # print("In checkvers fpage =", fpage)
+    txt = fpage
+    n1 = txt.find('<h2><a href=', 0)
+    n2 = txt.find('">', (n1+15))
+    n3 = txt.find('</a>', (n2+4))
+    latest = txt[(n2+2):n3]
+    pass  # print( "checkvers latest =", latest)
+
+    global LATEST
+    LATEST = latest
+
+    tfile = THISPLUG + "/scripts/script.module.ytdl/lib/youtube_dl/version.py"
+    f = open(tfile, "r")
+    txt = f.read()
+    pass  # print("In upd_done1 txt = ", txt)
+    n1 = txt.find('__version__ = ', 0)
+    n2 = txt.find("'", (n1+18))
+
+    version = txt[(n1+15):n2]
+    f.close()
+    pass  # print("In upd_done1 version youtube.dl= ", version)
+    newvers = latest
+    pass  # print("In upd_done1 newvers youtube.dl= ", newvers)
+    if newvers == " ":
+        upd_done()
+    elif newvers != version:
+        dest = "/tmp/youtube-dl.zip"
+        xfile = "https://yt-dl.org/downloads/latest/youtube-dl"
+        # downloadPage(xfile, dest).addCallback(ytdl).addErrback(showError)
+        # fdest = THISPLUG + "/scripts"
+        # dest = "/tmp/urlresolver.zip"
+        # xfile = "https://github.com/tvaddonsco/tva-resolvers-repo/raw/master/zips/script.module.urlresolver/script.module.urlresolver-" + newvers + ".zip"
+        # pass  # print("upd_done xfile =", xfile)
+        f = getUrlresp(xfile)
+        pass  # print("f =", f)
+        p = f.read()
+        f1 = open(dest, "wb")
+        f1.write(p)
+        f1.close()
+        fplug = ""
+        ytdl(fplug)
+    else:
+        upd_done()
+
+
+def showError(error):
+    pass  # print("ERROR :", error)
+    cmd = "wget https://yt-dl.org/downloads/" + LATEST + "/youtube-dl -O /tmp/youtube-dl.zip"
+    os.system(cmd)
+    ytdl()
+
+
+def ytdl(fplug=" "):
+    try:
+        fdest = THISPLUG + "/scripts/script.module.ytdl/lib"
+        import zipfile
+        zip_ref = zipfile.ZipFile('/tmp/youtube-dl.zip', 'r')
+        zip_ref.extractall(fdest)
+        zip_ref.close()
+        upd_done()
+    except:
+        upd_done()
+
+
+def findmax(items=[]):
+    pass  # print("In Update2 items =", items)
+    maxitem = max(items)
+    pass  # print("In Update2 maxitem =", maxitem)
+    return maxitem
+
+
+def findmaxX(match=[]):
+    A = []
+    B = []
+    C = []
+    D = []
+    E = []
+    imax = 0
+    for item in match:
+        item = item.replace("%7E", "~")
+        x = item.split(".")
+        # pass  # print("In findmax x =", x)
+        A.append(int(x[0]))
+        # A.append((x[0]))
+    lx = len(x)
+    # print "In findmax A =", A
+    Amax = max(A)
+    # print "In findmax Amax =", Amax
+    i1 = 0
+    for a in A:
+        if a == Amax:
+            imax = i1
+            break
+        i1 = i1+1
+    # maxitem = str(Amax)
+    # print "In findnax imax A=", imax
+    maxitem = str(Amax)
+    if lx > 1:
+        for item in match:
+            x = item.split(".")
+            if int(x[0]) == int(Amax):
+                B.append(x[1])
+            else:
+                # continue
+                B.append(int('0'))
+        # print "In findmax B =", B
+        Bmax = max(B)
+        # print "In findnax Bmax =", Bmax
+        i2 = 0
+        for b in B:
+            if b == Bmax:
+                imax = i2
+                break
+            i2 = i2+1
+        maxitem = str(Amax) + "." + str(Bmax)
+        # print "In findnax imax B=", imax
+    if lx > 2:
+        for item in match:
+            x = item.split(".")
+            if (int(x[0]) == int(Amax)) and (int(x[1]) == int(Bmax)):
+                # C.append(int(x[2]))
+                C.append(x[2])
+            else:
+                C.append(int('0'))
+        # print "In findmax C =", C
+        Cmax = max(C)
+        # print "In findnax Cmax =", Cmax
+        i3 = 0
+        for c in C:
+            if c == Cmax:
+                imax = i3
+                break
+            i3 = i3+1
+        maxitem = str(Amax) + "." + str(Bmax) + "." + str(Cmax)
+    if lx > 3:
+        for item in match:
+            x = item.split(".")
+            if (int(x[0]) == int(Amax)) and (int(x[1]) == int(Bmax)) and ((x[2]) == Cmax):
+                # C.append(int(x[2]))
+                D.append(x[3])
+            else:
+                D.append(int('0'))
+        # print "In findmax D =", D
+        Dmax = max(D)
+        # print "In findnax Dmax =", Dmax
+        i4 = 0
+        for d in D:
+            if d == Dmax:
+                imax = i4
+                break
+            i4 = i4+1
+        maxitem = str(Amax) + "." + str(Bmax) + "." + str(Cmax) + "." + str(Dmax)
+    # print "In findnax imax C=", imax
+    # print "In findnax imax final =", imax
+    # maxitem = match[imax]
+    # print "maxitem =", maxitem
+    return maxitem
+
+
+def checkvers3(name):
+    # try:
+    # url2 = "https://github.com/tvaddonsco/tva-resolvers-repo/tree/master/leia/script.module.urlresolver/"
+    # url2 = "https://mirror.xbmc-kodi.cz/addons/matrix/script.module.resolveurl/"
+    url2 = "https://raw.githubusercontent.com/Gujal00/smrzips/master/addons.xml"  # repository.gujal-2.0.0.zip
+    fpage = getUrl(url2)
+    pass  # print("In checkvers3 fpage =", fpage)
+    rx = 'addon id="script.module.resolveurl".*?version="(.*?)"'
+    pass  # print( "checkvers3 rx =", rx)
+    match = re.compile(rx, re.DOTALL).findall(fpage)
+    pass  # print( "checkvers3 match =", match)
+    latest = match[0]
+    # latest = findmax(match)
+    pass  # print( "checkvers3 latest =", latest)
+    return latest
+    # except:
+    # return " "
+
+
+def checkvers4(name):
+    try:
+        # url2 = "https://github.com/tvaddonsco/tva-resolvers-repo/tree/master/leia/script.module.urlresolver/"
+        url2 = "https://github.com/host505/repository.host505/tree/master/script.module.oathscrapers/"
+        fpage = getUrl(url2)
+        pass  # print("In checkvers3 fpage =", fpage)
+        rx = name + '-(.*?).zip'
+        pass  # print( "checkvers4 rx =", rx)
+        match = re.compile(rx, re.DOTALL).findall(fpage)
+        pass  # print( "checkvers4 match =", match)
+        latest = findmax(match)
+        pass  # print( "checkvers4 latest =", latest)
+        return latest
+    except:
+        return " "
+
+
+def upd_done():
+    tfile = THISPLUG + "/scripts/script.module.resolveurl/addon.xml"
+    if not os.path.exists(tfile):
+        upd_done1()
+    else:
+        f = open(tfile, "r")
+        txt = f.read()
+        pass  # print("In main txt = ", txt)
+        n1 = txt.find('<addon', 0)
+        n11 = txt.find('id', n1)
+        n2 = txt.find("version", n11)
+        n3 = txt.find('"', n2)
+        n4 = txt.find('"', (n3+2))
+        version = txt[(n3+1):n4]
+        f.close()
+        pass  # print("In main version resolveurl= ", version)
+        newvers = checkvers3("script.module.resolveurl")
+        pass  # print("In main newvers resolveurl= ", newvers)
+        if newvers == " ":
+            upd_done1()
+        if newvers != version:
+            # plug = "resolveurl.zip"
+            # fdest = THISPLUG + "/scripts"
+            dest = "/tmp/resolveurl.zip"
+            xfile = "https://raw.githubusercontent.com/Gujal00/smrzips/master/zips/script.module.resolveurl/script.module.resolveurl-" + newvers + ".zip"
+            pass  # print("upd_done xfile =", xfile)
+            f = getUrlresp(xfile)
+            pass  # print("f =", f)
+            p = f.read()
+            f1 = open(dest, "wb")
+            f1.write(p)
+            f1.close()
+            fplug = ""
+            uresolv(fplug)
+        else:
+            upd_done1()
+
+
+def uresolv(fplug):
+    tfile = THISPLUG + "/scripts/script.module.resolveurl"
+    cmd1 = "rm -rf " + tfile
+    fdest = THISPLUG + "/scripts"
+    cmd2 = "unzip -o -q '/tmp/resolveurl.zip' -d " + fdest
+    # title = _("Installing script resolveurl")
+    cmd = cmd1 + " && " + cmd2
+    os.system(cmd)
+    tfile2 = THISPLUG + "/scripts/script.module.resolveurl-master"
+    try:
+        cmd3 = "mv -f " + tfile2 + " " + tfile
+        pass  # print("In uresolv cmd3 =", cmd3)
+        os.system(cmd3)
+    except:
+        pass  # print("In uresolv finished")
+        pass
+    tfile3A = THISPLUG + "/script.module.resolveurl.zip"
+    cmd3 = "unzip -o -q '" + tfile3A + "' -d " + fdest
+    pass  # print("Update2.py cmd3 =", cmd3)
+    os.system(cmd3)
+    pass  # print("Update2.py cmd3 done")
+    tfile3 = tfile + "/lib/oathscrapers/sources_oathscrapers/en/123movies.py"
+    tfile4 = tfile + "/lib/oathscrapers/sources_oathscrapers/en/one23movies.py"
+    try:
+        cmd4 = "mv -f " + tfile3 + " " + tfile4
+        pass  # print("In uresolv cmd4 =", cmd4)
+        os.system(cmd4)
+    except:
+        pass  # print("In uresolv finished")
+        pass
+
+    upd_done1()
+
+
+def upd_done1():
+    fdest = THISPLUG + "/scripts"
+    tfile3A = THISPLUG + "/script.module.resolveurl.zip"
+    cmd3 = "unzip -o -q '" + tfile3A + "' -d " + fdest
+    pass  # print("Update2.py cmd3 =", cmd3)
+    os.system(cmd3)
+    pass  # print("Update2.py cmd3 done")
+    upd_done2()
+    """
+    tfile = THISPLUG + "/scripts/script.module.oathscrapers/addon.xml"
+    if not os.path.exists(tfile):
+        upd_done2()
+    else:
+        f = open(tfile, "r")
+        txt = f.read()
+        pass  # print("In main txt = ", txt)
+        n1 = txt.find('<addon', 0)
+        n11 = txt.find('id', n1)
+        n2 = txt.find("version", n11)
+        n3 = txt.find('"', n2)
+        n4 = txt.find('"', (n3+2))
+        version = txt[(n3+1):n4]
+        f.close()
+        pass  # print("In main version oathscrapers= ", version)
+        newvers = checkvers4("script.module.oathscrapers")
+        pass  # print("In main newvers oathscrapers= ", newvers)
+        if newvers == " ":
+            upd_done2()
+        if newvers != version:
+            plug = "oathscrapers.zip"
+            fdest = THISPLUG + "/scripts"
+            dest = "/tmp/oathscrapers.zip"
+            xfile = "https://github.com/host505/repository.host505/raw/master/script.module.oathscrapers/script.module.oathscrapers-" + newvers + ".zip"
+            pass  # print("upd_done xfile =", xfile)
+            f = getUrlresp(xfile)
+            pass  # print("f =", f)
+            p = f.read()
+            f1=open(dest,"wb")
+            f1.write(p)
+            f1.close()
+            fplug = ""
+            uresolv2(fplug)
+        else:
+            tfile = THISPLUG + "/scripts/script.module.oathscrapers"
+            tfile3 = tfile + "/lib/oathscrapers/sources_oathscrapers/en/123movies.py"
+            tfile4 = tfile + "/lib/oathscrapers/sources_oathscrapers/en/one23movies.py"
+            try:
+                cmd4 = "cp -rf " + tfile3 + " " + tfile4
+                pass  # print("In upd_done1 cmd4 =", cmd4)
+                os.system(cmd4)
+            except:
+                pass  # print("In upd_done1 finished")
+                pass
+            upd_done2()
+    """
+
+
+def uresolv2(fplug):
+    tfile = THISPLUG + "/scripts/script.module.oathscrapers"
+    cmd1 = "rm -rf " + tfile
+    fdest = THISPLUG + "/scripts"
+    cmd2 = "unzip -o -q '/tmp/oathscrapers.zip' -d " + fdest
+    # title = _("Installing script oathscrapers")
+    cmd = cmd1 + " && " + cmd2
+    os.system(cmd)
+    pass  # print("In uresolv2 cmd =", cmd)
+    """
+    tfile2 = THISPLUG + "/scripts/script.module.oathscrapers-master"
+    if os.path.exists(tfile2):
+        cmd3 = "mv -f " + tfile2 + " " + tfile
+        pass  # print("In uresolv cmd3 =", cmd3)
+        os.system(cmd3)
+    else:
+        pass  # print("In uresolv finished")
+        pass
+    """
+    tfile3 = tfile + "/lib/oathscrapers/sources_oathscrapers/en/123movies.py"
+    tfile4 = tfile + "/lib/oathscrapers/sources_oathscrapers/en/one23movies.py"
+    try:
+        cmd4 = "cp -rf " + tfile3 + " " + tfile4
+        pass  # print("In uresolv2 cmd4 =", cmd4)
+        os.system(cmd4)
+    except:
+        pass  # print("In uresolv finished")
+        pass
+    upd_done2()
+
+
+def upd_done2():
+    pass
+
