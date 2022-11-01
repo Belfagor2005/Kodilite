@@ -1,7 +1,6 @@
 <skin>
 	<screen name="xbmc4A" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
 		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
 
 		<!-- TIME -->	
@@ -20,29 +19,26 @@
 		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
 		<!-- MENU -->
 		<widget name="menu" position="582,103" size="662,300" foregroundColorSelected="#ff9900" backgroundColorSelected="#000000" zPosition="3" scrollbarMode="showOnDemand" transparent="1" />		
-		
 		<widget name="bild" position="480,650" size="100,100" transparent="1" zPosition="5" />
 		<widget name="info" position="36,374" zPosition="4" size="473,198" font="Regular; 22" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="top" />
 		<widget name="infoc" position="714,666" size="150,33" font="Regular;21" halign="right" foregroundColor="#00ff00" backgroundColor="#00000000" transparent="1" zPosition="3" />
 		<widget name="infoc2" position="866,666" halign="left" size="396,33" zPosition="3" font="Regular;21" foregroundColor="#ffff00" backgroundColor="#00000000" transparent="1" />
-		
-		<widget source="label20" render="Label" position="600,433" size="300,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
-		<widget source="label2" render="Label" position="716,433" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
-		<widget source="label30" render="Label" position="600,466" size="300,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
-		<widget source="label3" render="Label" position="716,466" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
-		<widget source="label4" render="Label" position="600,500" size="350,85" font="Regular;16" valign="top" backgroundColor="#000000" transparent="1" />
+		<widget source="label20" render="Label" position="578,432" size="100,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
+		<widget source="label2" render="Label" position="686,433" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
+		<widget source="label30" render="Label" position="578,466" size="100,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
+		<widget source="label3" render="Label" position="686,466" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
+		<widget source="label4" render="Label" position="578,501" size="408,85" font="Regular; 18" valign="top" backgroundColor="#000000" transparent="1" />
 
 		<!-- BUTTON -->
 		<widget name="pixmap1" position="1075,465" size="166,133" zPosition="2" backgroundColor="#000000" alphatest="blend" scale="1" />
 		<widget name="key_red" position="8,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="red" transparent="1" />
 		<widget name="key_green" position="227,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="green" transparent="1" />
 		<widget name="key_yellow" position="449,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="yellow" transparent="1" />
-		<!-- <widget name="key_blue" position="671,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="blue" transparent="1" /> -->
+		<widget name="key_blue" position="671,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="blue" transparent="1" />
 		<eLabel position="8,654" size="220,6" backgroundColor="red" zPosition="1" />
 		<eLabel position="229,654" size="220,6" backgroundColor="green" zPosition="1" />
 		<eLabel position="451,654" size="220,6" backgroundColor="yellow" zPosition="1" />
-		<!-- <eLabel position="672,654" size="220,6" backgroundColor="blue" zPosition="1" /> -->
-		
+		<eLabel position="672,654" size="220,6" backgroundColor="blue" zPosition="1" /> 
 		<!-- scale="strech" -->
 	</screen>
 	
@@ -59,7 +55,7 @@
 			<convert type="ClockToText">Default</convert>
 		</widget>
 		<ePixmap position="0,73" size="1280,1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/sep2.png" alphatest="blend" transparent="1" zPosition="1" />
-		
+
 		<!-- PIG CHANNEL -->
 		<eLabel position="33,86" size="480,282" backgroundColor="#1b3c85" />
 		<eLabel position="36,90" size="473,275" backgroundColor="#20000000" />
@@ -85,7 +81,6 @@
 	<screen name="XbmcPluginScreenS" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
 		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
 		<!-- TIME -->	
 		<widget source="global.CurrentTime" render="Label" position="1053,16" size="200,33" font="Regular;20" halign="right" valign="center" backgroundColor="black" foregroundColor="grey" transparent="1">
 			<convert type="ClockToText">Format:%d.%m.%Y</convert>
@@ -102,17 +97,15 @@
 		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
 		<!-- MENU -->
 		<widget name="menu" position="582,103" size="662,300" foregroundColorSelected="#ff9900" backgroundColorSelected="#000000" zPosition="3" scrollbarMode="showOnDemand" transparent="1" />		
-		
 		<widget name="bild" position="480,650"  size="100,100" transparent="1" zPosition="5" />
 		<widget name="info" position="36,374" zPosition="4" size="473,198" font="Regular; 22" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="top" />
 		<widget name="infoc" position="714,666" size="150,33" font="Regular;21" halign="right" foregroundColor="#00ff00" backgroundColor="#00000000" transparent="1" zPosition="3" />
 		<widget name="infoc2" position="866,666" halign="left" size="396,33" zPosition="3" font="Regular;21" foregroundColor="#ffff00" backgroundColor="#00000000" transparent="1" />
-		
-		<widget source="label20" render="Label" position="600,433" size="300,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
-		<widget source="label2" render="Label" position="716,433" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
-		<widget source="label30" render="Label" position="600,466" size="300,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
-		<widget source="label3" render="Label" position="716,466" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
-		<widget source="label4" render="Label" position="600,500" size="350,85" font="Regular;16" valign="top" backgroundColor="#000000" transparent="1" />
+		<widget source="label20" render="Label" position="578,432" size="100,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
+		<widget source="label2" render="Label" position="686,433" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
+		<widget source="label30" render="Label" position="578,466" size="100,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
+		<widget source="label3" render="Label" position="686,466" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
+		<widget source="label4" render="Label" position="578,501" size="408,85" font="Regular; 18" valign="top" backgroundColor="#000000" transparent="1" />
 
 		<!-- BUTTON -->
 		<widget name="pixmap1" position="1075,465" size="166,133" zPosition="2" backgroundColor="#000000" alphatest="blend" scale="1" />
@@ -133,7 +126,6 @@
 	<screen name="XbmcPluginScreenF" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
 		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
 		<!-- TIME -->	
 		<widget source="global.CurrentTime" render="Label" position="1053,16" size="200,33" font="Regular;20" halign="right" valign="center" backgroundColor="black" foregroundColor="grey" transparent="1">
 			<convert type="ClockToText">Format:%d.%m.%Y</convert>
@@ -150,15 +142,11 @@
 		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
 		<!-- MENU -->
 		<widget name="menu" position="582,103" size="662,300" foregroundColorSelected="#ff9900" backgroundColorSelected="#000000" zPosition="3" scrollbarMode="showOnDemand" transparent="1" />		
-		
 		<widget name="bild" position="480,650"  size="100,100" transparent="1" zPosition="5" />
 		<widget name="info" position="36,374" zPosition="4" size="473,198" font="Regular; 22" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="top" />
 		<widget name="infoc" position="714,666" size="150,33" font="Regular;21" halign="right" foregroundColor="#00ff00" backgroundColor="#00000000" transparent="1" zPosition="3" />
 		<widget name="infoc2" position="866,666" halign="left" size="396,33" zPosition="3" font="Regular;21" foregroundColor="#ffff00" backgroundColor="#00000000" transparent="1" />
 		
-		<!--
-		<widget name="pixmap" position="1117,481" size="134,130" zPosition="4" alphatest="on" />
-		-->
 		<!-- BUTTON -->
 		<widget name="pixmap1" position="1075,465" size="166,133" zPosition="2" backgroundColor="#000000" alphatest="blend" scale="1" />
 		<widget name="key_red" position="8,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="red" transparent="1" />
@@ -178,7 +166,6 @@
 	<screen name="Fav" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
 		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
 		<!-- TIME -->	
 		<widget source="global.CurrentTime" render="Label" position="1053,16" size="200,33" font="Regular;20" halign="right" valign="center" backgroundColor="black" foregroundColor="grey" transparent="1">
 			<convert type="ClockToText">Format:%d.%m.%Y</convert>
@@ -195,35 +182,34 @@
 		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
 		<!-- MENU -->
 		<widget name="menu" position="582,103" size="662,300" foregroundColorSelected="#ff9900" backgroundColorSelected="#000000" zPosition="3" scrollbarMode="showOnDemand" transparent="1" />		
-		
 		<widget name="info" position="36,374" zPosition="4" size="473,198" font="Regular; 22" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="top" />
 		<widget name="infoc" position="714,666" size="150,33" font="Regular;21" halign="right" foregroundColor="#00ff00" backgroundColor="#00000000" transparent="1" zPosition="3" />
 		<widget name="infoc2" position="866,666" halign="left" size="396,33" zPosition="3" font="Regular;21" foregroundColor="#ffff00" backgroundColor="#00000000" transparent="1" />
-		
-		<widget source="label20" render="Label" position="600,433" size="300,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
-		<widget source="label2" render="Label" position="716,433" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
-		<widget source="label30" render="Label" position="600,466" size="300,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
-		<widget source="label3" render="Label" position="716,466" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
-		<widget source="label4" render="Label" position="600,500" size="350,85" font="Regular;16" valign="top" backgroundColor="#000000" transparent="1" />
-		<!--
-		<widget name="pixmap" position="1117,481" size="134,130" zPosition="4" alphatest="on" />
-		-->
+		<widget source="label20" render="Label" position="578,432" size="100,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
+		<widget source="label2" render="Label" position="686,433" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
+		<widget source="label30" render="Label" position="578,466" size="100,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
+		<widget source="label3" render="Label" position="686,466" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
+		<widget source="label4" render="Label" position="578,501" size="408,85" font="Regular; 18" valign="top" backgroundColor="#000000" transparent="1" />
+
 		<!-- BUTTON -->
 		<widget name="pixmap1" position="1075,465" size="166,133" zPosition="2" backgroundColor="#000000" alphatest="blend" scale="1" />
 		<widget name="key_red" position="8,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="red" transparent="1" />
 		<widget name="key_green" position="227,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="green" transparent="1" />
  		<widget name="key_yellow" position="449,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="yellow" transparent="1" />
-<!--		<widget name="key_blue" position="671,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="blue" transparent="1" /> -->
+		<!--
+		<widget name="key_blue" position="671,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="blue" transparent="1" /> 
+		-->
 		<eLabel position="8,654" size="220,6" backgroundColor="red" zPosition="1" />
 		<eLabel position="229,654" size="220,6" backgroundColor="green" zPosition="1" />
  		<eLabel position="451,654" size="220,6" backgroundColor="yellow" zPosition="1" />
-<!--		<eLabel position="672,654" size="220,6" backgroundColor="blue" zPosition="1" /> -->
+		<!--
+		<eLabel position="672,654" size="220,6" backgroundColor="blue" zPosition="1" /> 
+		-->
 	</screen>
 	
 	<screen name="ShowPage" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
 		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
 		<!-- TIME -->	
 		<widget source="global.CurrentTime" render="Label" position="1053,16" size="200,33" font="Regular;20" halign="right" valign="center" backgroundColor="black" foregroundColor="grey" transparent="1">
 			<convert type="ClockToText">Format:%d.%m.%Y</convert>
@@ -240,41 +226,42 @@
 		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
 		<!-- MENU -->
 		<widget name="menu" position="582,103" size="662,300" foregroundColorSelected="#ff9900" backgroundColorSelected="#000000" zPosition="3" scrollbarMode="showOnDemand" transparent="1" />		
-		
 		<widget name="info" position="36,374" zPosition="4" size="473,198" font="Regular; 22" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="top" />
 		<widget name="infoc" position="714,666" size="150,33" font="Regular;21" halign="right" foregroundColor="#00ff00" backgroundColor="#00000000" transparent="1" zPosition="3" />
 		<widget name="infoc2" position="866,666" halign="left" size="396,33" zPosition="3" font="Regular;21" foregroundColor="#ffff00" backgroundColor="#00000000" transparent="1" />
-		
-		<widget source="label20" render="Label" position="600,433" size="300,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
-		<widget source="label2" render="Label" position="716,433" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
-		<widget source="label30" render="Label" position="600,466" size="300,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
-		<widget source="label3" render="Label" position="716,466" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
-		<widget source="label4" render="Label" position="600,500" size="350,85" font="Regular;16" valign="top" backgroundColor="#000000" transparent="1" />
-		<!--
-		<widget name="pixmap" position="1117,481" size="134,130" zPosition="4" alphatest="on" />
-		-->
+		<widget source="label20" render="Label" position="578,432" size="100,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
+		<widget source="label2" render="Label" position="686,433" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
+		<widget source="label30" render="Label" position="578,466" size="100,24" font="Regular;22" foregroundColor="#7bd7f7" backgroundColor="#000000" transparent="1" />
+		<widget source="label3" render="Label" position="686,466" size="300,24" font="Regular;22" backgroundColor="#000000" transparent="1" />
+		<widget source="label4" render="Label" position="578,501" size="408,85" font="Regular; 18" valign="top" backgroundColor="#000000" transparent="1" />
+
 		<!-- BUTTON -->
 		<widget name="pixmap1" position="1075,465" size="166,133" zPosition="2" backgroundColor="#000000" alphatest="blend" scale="1" />
 		<widget name="key_red" position="8,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="red" transparent="1" />
 		<widget name="key_green" position="227,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="green" transparent="1" />
-<!-- 		<widget name="key_yellow" position="449,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="yellow" transparent="1" />
-		<widget name="key_blue" position="671,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="blue" transparent="1" /> -->
+		<!--
+ 		<widget name="key_yellow" position="449,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="yellow" transparent="1" />
+		<widget name="key_blue" position="671,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="blue" transparent="1" />
+		-->
 		<eLabel position="8,654" size="220,6" backgroundColor="red" zPosition="1" />
 		<eLabel position="229,654" size="220,6" backgroundColor="green" zPosition="1" />
-<!-- 		<eLabel position="451,654" size="220,6" backgroundColor="yellow" zPosition="1" />
-		<eLabel position="672,654" size="220,6" backgroundColor="blue" zPosition="1" /> -->
+		<!--
+ 		<eLabel position="451,654" size="220,6" backgroundColor="yellow" zPosition="1" />
+		<eLabel position="672,654" size="220,6" backgroundColor="blue" zPosition="1" /> 
+		-->
 	</screen>
 	
 	<screen name="Kodiconfig" position="center,center" size="840,500" title=" ">
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
-		<!--ePixmap name="red"    position="0,300"   zPosition="2" size="93,26" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
-		<ePixmap name="green"  position="93,300" zPosition="2" size="93,26" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
-		<widget name="key_red" position="0,300" size="93,26" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;13" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /> 
-		<widget name="key_green" position="93,300" size="93,26" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;13" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /-->
 		<widget name="config" position="50,72" size="716,368" itemHeight="40" scrollbarMode="showOnDemand" />
         <widget name="HelpMenu" position="352,405" size="486,102" zPosition="5" transparent="1" alphatest="blend" />
-        <widget name="VKeyIcon" pixmap="skin_default/buttons/key_text.png" position="775,352" size="55,38" alphatest="blend" transparent="1" zPosition="2" />	
+        <widget name="VKeyIcon" pixmap="skin_default/buttons/key_text.png" position="775,352" size="55,38" alphatest="blend" transparent="1" zPosition="2" />			
+		<!-- 
+		<ePixmap name="red"    position="0,300"   zPosition="2" size="93,26" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
+		<ePixmap name="green"  position="93,300" zPosition="2" size="93,26" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
+		<widget name="key_red" position="0,300" size="93,26" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;13" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /> 
+		<widget name="key_green" position="93,300" size="93,26" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;13" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
+		 -->
 	</screen>
 
 	<screen name="XbmcPluginPics" position="0,0" size="1280,720" title="XbmcPluginPics">
@@ -372,103 +359,157 @@
 		</widget>
 	</screen>
 
-
-
-
-
+	<screen name="Getcats" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
+		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
+		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
+		<!-- TIME -->	
+		<widget source="global.CurrentTime" render="Label" position="1053,16" size="200,33" font="Regular;20" halign="right" valign="center" backgroundColor="black" foregroundColor="grey" transparent="1">
+			<convert type="ClockToText">Format:%d.%m.%Y</convert>
+		</widget>
+		<widget source="global.CurrentTime" render="Label" position="1053,46" size="200,33" font="Regular;20" halign="right" backgroundColor="black" transparent="1">
+			<convert type="ClockToText">Default</convert>
+		</widget>
+		<ePixmap position="0,73" size="1280,1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/sep2.png" alphatest="blend" transparent="1" zPosition="1" />
+		<!-- PIG CHANNEL -->
+		<eLabel position="33,86" size="480,282" backgroundColor="#1b3c85" />
+		<eLabel position="36,90" size="473,275" backgroundColor="#20000000" />
+		<eLabel position="43,96" size="460,262" backgroundColor="#FFFFFFFF" />
+		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
+		<!-- MENU -->
+		<widget name="menu" position="582,103" size="662,300" foregroundColorSelected="#ff9900" backgroundColorSelected="#000000" zPosition="3" scrollbarMode="showOnDemand" transparent="1" />		
+		<widget name="info" position="36,374" zPosition="4" size="473,198" font="Regular; 22" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="top" />
+		<!--
+ 		<widget name="infoc" position="714,666" size="150,33" font="Regular;21" halign="right" foregroundColor="#00ff00" backgroundColor="#00000000" transparent="1" zPosition="3" />
+		<widget name="infoc2" position="866,666" halign="left" size="396,33" zPosition="3" font="Regular;21" foregroundColor="#ffff00" backgroundColor="#00000000" transparent="1" /> 
+		-->
+		<!-- BUTTON -->
+		<widget name="key_red" position="8,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="red" transparent="1" />
+		<widget name="key_green" position="227,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="green" transparent="1" />
+		<eLabel position="8,654" size="220,6" backgroundColor="red" zPosition="1" />
+		<eLabel position="229,654" size="220,6" backgroundColor="green" zPosition="1" />
+	</screen>	
 	
-	<screen name="Getcats" position="center,center" size="1280,720" title="KodiLite" flags="wfNoBorder" backgroundColor="transparent">
-		<eLabel position="40,40" zPosition="1" size="1200,640" backgroundColor="#40000000"/>
-		<eLabel position="780,150" zPosition="2" size="400,300" backgroundColor="transparent"/>
+	<screen name="Getcats2" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
-		<!--widget name="pixmap" position="533,266" size="200,173" zPosition="3" backgroundColor="#000000" alphatest="on" /-->
-		<widget name="menu" position="100,100" size="580,480" itemHeight="60" zPosition="2" foregroundColor="#ffffff" backgroundColor="#40000000" foregroundColorSelected="#ffffff" backgroundColorSelected="#000000" scrollbarMode="showOnDemand"/>
-		<widget name="info" position="800,460" zPosition="4" size="370,246" font="Regular;26" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="center"/>
-		<eLabel position="150,660" zPosition="1" size="200,30" backgroundColor="#f23d21"/>
-		<eLabel position="152,662" zPosition="1" size="196,26" backgroundColor="#000000"/>
-		<eLabel position="350,660" zPosition="1" size="200,30" backgroundColor="#389416"/>
-		<eLabel position="352,662" zPosition="1" size="196,26" backgroundColor="#000000"/>
-		<!--eLabel position="550,660" zPosition="1" size="200,30" backgroundColor="#bab329" />
-		<eLabel position="552,662" zPosition="1" size="196,26" backgroundColor="#000000" />
-		<eLabel position="750,660" zPosition="1" size="200,30" backgroundColor="#0064c7" />
-		<eLabel position="752,662" zPosition="1" size="196,26" backgroundColor="#000000" /-->
-		<widget name="key_red" position="150,660" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2"/>
-		<widget name="key_green" position="350,660" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2"/>
-		<!--widget name="key_yellow" position="550,660" size="200,30" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
-		<widget name="key_blue" position="750,660" size="200,30" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /-->
-		<!--widget name="pixmap" position="942,372" size="200,200" zPosition="1" alphatest="on" /-->
-	</screen>
-	<screen name="Getcats2" position="center,center" size="1280,720" title="KodiLite" flags="wfNoBorder" backgroundColor="transparent">
-		<eLabel position="40,40" zPosition="1" size="1200,640" backgroundColor="#40000000"/>
-		<eLabel position="780,150" zPosition="2" size="400,300" backgroundColor="transparent"/>
-		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
-		<!--widget name="pixmap" position="533,266" size="200,173" zPosition="3" backgroundColor="#000000" alphatest="on" /-->
-		<widget name="menu" position="100,100" size="580,480" itemHeight="60" zPosition="2" foregroundColor="#ffffff" backgroundColor="#40000000" foregroundColorSelected="#ffffff" backgroundColorSelected="#000000" scrollbarMode="showOnDemand"/>
-		<widget name="info" position="800,460" zPosition="4" size="370,246" font="Regular;26" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="center"/>
-		<eLabel position="150,660" zPosition="1" size="200,30" backgroundColor="#f23d21"/>
-		<eLabel position="152,662" zPosition="1" size="196,26" backgroundColor="#000000"/>
-		<eLabel position="350,660" zPosition="1" size="200,30" backgroundColor="#389416"/>
-		<eLabel position="352,662" zPosition="1" size="196,26" backgroundColor="#000000"/>
-		<eLabel position="550,660" zPosition="1" size="200,30" backgroundColor="#bab329"/>
-		<eLabel position="552,662" zPosition="1" size="196,26" backgroundColor="#000000"/>
-		<!--eLabel position="750,660" zPosition="1" size="200,30" backgroundColor="#0064c7" />
-		<eLabel position="752,662" zPosition="1" size="196,26" backgroundColor="#000000" /-->
-		<widget name="key_red" position="150,660" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2"/>
-		<widget name="key_green" position="350,660" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2"/>
-		<widget name="key_yellow" position="550,660" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2"/>
-		<!--widget name="key_blue" position="750,660" size="200,30" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /-->
-		<!--widget name="pixmap" position="942,372" size="200,200" zPosition="1" alphatest="on" /-->
-	</screen>
+		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
+		<!-- TIME -->	
+		<widget source="global.CurrentTime" render="Label" position="1053,16" size="200,33" font="Regular;20" halign="right" valign="center" backgroundColor="black" foregroundColor="grey" transparent="1">
+			<convert type="ClockToText">Format:%d.%m.%Y</convert>
+		</widget>
+		<widget source="global.CurrentTime" render="Label" position="1053,46" size="200,33" font="Regular;20" halign="right" backgroundColor="black" transparent="1">
+			<convert type="ClockToText">Default</convert>
+		</widget>
+		<ePixmap position="0,73" size="1280,1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/sep2.png" alphatest="blend" transparent="1" zPosition="1" />
+		
+		<!-- PIG CHANNEL -->
+		<eLabel position="33,86" size="480,282" backgroundColor="#1b3c85" />
+		<eLabel position="36,90" size="473,275" backgroundColor="#20000000" />
+		<eLabel position="43,96" size="460,262" backgroundColor="#FFFFFFFF" />
+		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
+		<!-- MENU -->
+		<widget name="menu" position="582,103" size="662,300" foregroundColorSelected="#ff9900" backgroundColorSelected="#000000" zPosition="3" scrollbarMode="showOnDemand" transparent="1" />		
+		<widget name="info" position="36,374" zPosition="4" size="473,198" font="Regular; 22" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="top" />
+		<!--
+ 		<widget name="infoc" position="714,666" size="150,33" font="Regular;21" halign="right" foregroundColor="#00ff00" backgroundColor="#00000000" transparent="1" zPosition="3" />
+		<widget name="infoc2" position="866,666" halign="left" size="396,33" zPosition="3" font="Regular;21" foregroundColor="#ffff00" backgroundColor="#00000000" transparent="1" /> 
+		-->
+		<!-- BUTTON -->
+		<widget name="key_red" position="8,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="red" transparent="1" />
+		<widget name="key_green" position="227,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="green" transparent="1" />
+ 		<widget name="key_yellow" position="449,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="yellow" transparent="1" />
+		<eLabel position="8,654" size="220,6" backgroundColor="red" zPosition="1" />
+		<eLabel position="229,654" size="220,6" backgroundColor="green" zPosition="1" />
+		<eLabel position="451,654" size="220,6" backgroundColor="yellow" zPosition="1" />
+	</screen>	
 
 	<screen name="KodiconfigFont" position="center,center" size="840,500" title=" ">
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />	
-		<widget name="config" position="50,20" size="716,420" font="Regular;18" scrollbarMode="showOnDemand"/>		
-		<!--ePixmap position="0,0" zPosition="-10" size="413,480" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/WebMedia/icons/menu.png" /-->
-		<!--ePixmap name="red"    position="0,300"   zPosition="2" size="93,26" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
+		<widget name="config" position="50,72" size="716,368" itemHeight="40" scrollbarMode="showOnDemand" />
+        <!-- 
+		<widget name="HelpMenu" position="352,405" size="486,102" zPosition="5" transparent="1" alphatest="blend" />
+        <widget name="VKeyIcon" pixmap="skin_default/buttons/key_text.png" position="775,352" size="55,38" alphatest="blend" transparent="1" zPosition="2" />			
+		<ePixmap name="red"    position="0,300"   zPosition="2" size="93,26" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
 		<ePixmap name="green"  position="93,300" zPosition="2" size="93,26" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
 		<widget name="key_red" position="0,300" size="93,26" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;13" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /> 
-		<widget name="key_green" position="93,300" size="93,26" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;13" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /-->
+		<widget name="key_green" position="93,300" size="93,26" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;13" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
+		 -->
 	</screen>
 
-
-	<screen name="PlayXXXoptions" position="center,center" size="1280,720" title=" " flags="wfNoBorder" backgroundColor="transparent">
+	<screen name="XBMCAddonsdownloadsscreen" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
+		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
-		<eLabel position="40,40" zPosition="1" size="1200,640" backgroundColor="#40000000"/>
-		<eLabel position="780,150" zPosition="2" size="400,300" backgroundColor="transparent"/>
-		<eLabel text=" " position="850,68" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416"/>
-		<!--widget name="pixmap" position="533,266" size="200,173" zPosition="3" backgroundColor="#000000" alphatest="on" /-->
-		<widget name="list" position="100,100" size="660,520" itemHeight="60" zPosition="2" foregroundColor="#ffffff" backgroundColor="#40000000" foregroundColorSelected="#ffffff" backgroundColorSelected="#000000" scrollbarMode="showOnDemand"/>
-		<widget name="info" position="100,500" zPosition="4" size="1000,120" font="Regular;23" foregroundColor="#ffffff" backgroundColor="#40000000" transparent="1" halign="left" valign="center"/>
+		<!-- TIME -->	
+		<widget source="global.CurrentTime" render="Label" position="1053,16" size="200,33" font="Regular;20" halign="right" valign="center" backgroundColor="black" foregroundColor="grey" transparent="1">
+			<convert type="ClockToText">Format:%d.%m.%Y</convert>
+		</widget>
+		<widget source="global.CurrentTime" render="Label" position="1053,46" size="200,33" font="Regular;20" halign="right" backgroundColor="black" transparent="1">
+			<convert type="ClockToText">Default</convert>
+		</widget>
+		<ePixmap position="0,73" size="1280,1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/sep2.png" alphatest="blend" transparent="1" zPosition="1" />
+		<!-- PIG CHANNEL -->
+		<eLabel position="33,86" size="480,282" backgroundColor="#1b3c85" />
+		<eLabel position="36,90" size="473,275" backgroundColor="#20000000" />
+		<eLabel position="43,96" size="460,262" backgroundColor="#FFFFFFFF" />
+		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
+		<!-- MENU -->
+		<widget name="list" position="582,103" size="662,300" foregroundColorSelected="#ff9900" backgroundColorSelected="#000000" zPosition="3" scrollbarMode="showOnDemand" transparent="1" />		
+		<widget name="info" position="36,374" zPosition="4" size="473,198" font="Regular; 22" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="top" />
+
+		<!-- BUTTON -->
+		<widget name="key_red" position="8,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="red" transparent="1" />
+		<widget name="key_green" position="227,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="green" transparent="1" />
+ 		<widget name="key_yellow" position="449,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="yellow" transparent="1" />
+		<widget name="key_blue" position="671,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="blue" transparent="1" /> 
+		<eLabel position="8,654" size="220,6" backgroundColor="red" zPosition="1" />
+		<eLabel position="229,654" size="220,6" backgroundColor="green" zPosition="1" />
+ 		<eLabel position="451,654" size="220,6" backgroundColor="yellow" zPosition="1" />
+		<eLabel position="672,654" size="220,6" backgroundColor="blue" zPosition="1" /> 
 	</screen>
-
-
-
-	<screen name="XBMCAddonsdownloadsscreen" position="center,center" size="1280,720" title="KodiLite" flags="wfNoBorder" backgroundColor="transparent">
+	
+	<screen name="XBMCAddonsinfoScreen" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
+		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
 		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
-		<eLabel text="KodiLite 9.0" position="354,746" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" alphatest="blend" transparent="1" />		
-		<!--widget source="session.VideoPicture" render="Pig"  position="810,24" size="410,290" zPosition="3" backgroundColor="#ff000000"/>
-		<ePixmap position="1000,80" zPosition="3" size="100,80" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/images/kodi.png"  backgroundColor="black" /-->
-		<eLabel position="60,20" zPosition="-1" size="1160,680" backgroundColor="#40000000"/>
-		<ePixmap position="942,372" size="200,200" zPosition="1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/images/defaultL.png" alphatest="on"/>
-		<widget name="list" position="100,100" size="580,296" itemHeight="40" backgroundColor="#000000" foregroundColor="#b3b3b9" foregroundColorSelected="#ffffff" backgroundColorSelected="#000000" scrollbarMode="showOnDemand"/>
-		<widget name="info" position="80,440" zPosition="4" size="620,200" font="Regular;24" foregroundColor="#ffffff" backgroundColor="#40000000" transparent="1" halign="left" valign="center"/>
-		<eLabel position="150,660" zPosition="1" size="200,30" backgroundColor="#f23d21"/>
-		<eLabel position="152,662" zPosition="1" size="196,26" backgroundColor="#40000000"/>
-		<eLabel position="350,660" zPosition="1" size="200,30" backgroundColor="#389416"/>
-		<eLabel position="352,662" zPosition="1" size="196,26" backgroundColor="#40000000"/>
-		<eLabel position="550,660" zPosition="1" size="200,30" backgroundColor="#bab329"/>
-		<eLabel position="552,662" zPosition="1" size="196,26" backgroundColor="#40000000"/>
-		<eLabel position="750,660" zPosition="1" size="200,30" backgroundColor="#0064c7"/>
-		<eLabel position="752,662" zPosition="1" size="196,26" backgroundColor="#40000000"/>
-		<widget name="key_red" position="150,660" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2"/>
-		<widget name="key_green" position="350,660" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2"/>
-		<widget name="key_yellow" position="550,660" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2"/>
-		<widget name="key_blue" position="750,660" size="200,30" valign="center" halign="center" zPosition="4" foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2"/>
-		<!-- <ePixmap position="100,650" zPosition="1" size="50,50" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/images/Exit2.png"/> -->
+		<!-- TIME -->	
+		<widget source="global.CurrentTime" render="Label" position="1053,16" size="200,33" font="Regular;20" halign="right" valign="center" backgroundColor="black" foregroundColor="grey" transparent="1">
+			<convert type="ClockToText">Format:%d.%m.%Y</convert>
+		</widget>
+		<widget source="global.CurrentTime" render="Label" position="1053,46" size="200,33" font="Regular;20" halign="right" backgroundColor="black" transparent="1">
+			<convert type="ClockToText">Default</convert>
+		</widget>
+		<ePixmap position="0,73" size="1280,1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/sep2.png" alphatest="blend" transparent="1" zPosition="1" />
+		<!-- PIG CHANNEL -->
+		<eLabel position="33,86" size="480,282" backgroundColor="#1b3c85" />
+		<eLabel position="36,90" size="473,275" backgroundColor="#20000000" />
+		<eLabel position="43,96" size="460,262" backgroundColor="#FFFFFFFF" />
+		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
+		<!-- MENU -->
+		<widget name="text" position="582,103" size="662,300" zPosition="3" transparent="1" />		
 	</screen>
+	
+	<screen name="StartPlugin_mainmenu" flags="wfNoBorder" position="0,0" size="1280,720" title=" " backgroundColor="#ff000000">
+		<widget name="title" position="46,22" size="1201,44" zPosition="3" halign="center" foregroundColor="#7bd7f7" backgroundColor="black" font="Regular; 38" transparent="1" />
+		<ePixmap position="0,0" size="1280,720" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/menu_plug_FHD.png" zPosition="-1" />
+		<!-- TIME -->	
+		<widget source="global.CurrentTime" render="Label" position="1053,16" size="200,33" font="Regular;20" halign="right" valign="center" backgroundColor="black" foregroundColor="grey" transparent="1">
+			<convert type="ClockToText">Format:%d.%m.%Y</convert>
+		</widget>
+		<widget source="global.CurrentTime" render="Label" position="1053,46" size="200,33" font="Regular;20" halign="right" backgroundColor="black" transparent="1">
+			<convert type="ClockToText">Default</convert>
+		</widget>
+		<ePixmap position="0,73" size="1280,1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/res/FullHD/sep2.png" alphatest="blend" transparent="1" zPosition="1" />
+		<!-- PIG CHANNEL -->
+		<eLabel position="33,86" size="480,282" backgroundColor="#1b3c85" />
+		<eLabel position="36,90" size="473,275" backgroundColor="#20000000" />
+		<eLabel position="43,96" size="460,262" backgroundColor="#FFFFFFFF" />
+		<widget source="session.VideoPicture" render="Pig" position="48,100" size="453,255" backgroundColor="#AA001842" transparent="1" zPosition="2" />
+		<!-- MENU -->
+		<widget name="menu" position="582,103" size="662,300" foregroundColorSelected="#ff9900" backgroundColorSelected="#000000" zPosition="3" scrollbarMode="showOnDemand" transparent="1" />		
+		<widget name="info" position="36,374" zPosition="4" size="473,198" font="Regular; 22" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="top" />
+		<widget name="pixmap" position="1075,465" size="166,133" zPosition="2" backgroundColor="#000000" alphatest="blend" scale="1" />
+		<!-- BUTTON -->
+		<widget name="key_red" position="8,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="red" transparent="1" />
+		<widget name="key_green" position="227,597" zPosition="3" size="220,56" font="Regular;26" halign="center" foregroundColor="green" transparent="1" />
+		<eLabel position="8,654" size="220,6" backgroundColor="red" zPosition="1" />
+		<eLabel position="229,654" size="220,6" backgroundColor="green" zPosition="1" />
+	</screen>	
 </skin>
-

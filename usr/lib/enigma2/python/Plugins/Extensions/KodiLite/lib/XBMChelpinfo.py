@@ -4,6 +4,7 @@
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
 from Components.ScrollLabel import ScrollLabel
+from Components.Button import Button
 import os
 
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
@@ -22,6 +23,7 @@ class XBMChelpinfo(Screen):
         self.closeOnSuccess = False
         cmdlist = None
         self.plugin_id = plugin_id
+        self["title"] = Button(title)
         self["text"] = ScrollLabel("")
         self["actions"] = ActionMap(["WizardActions",
                                      "DirectionActions",

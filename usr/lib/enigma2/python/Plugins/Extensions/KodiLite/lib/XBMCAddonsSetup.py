@@ -10,31 +10,62 @@ from Components.Button import Button
 from Components.ActionMap import NumberActionMap
 from Components.Label import Label
 from Tools.Directories import copyfile
-from enigma import RT_HALIGN_LEFT
 from enigma import eListboxPythonMultiContent
 from enigma import gFont
 from enigma import eTimer
 from Components.Pixmap import Pixmap
 from Components.MenuList import MenuList
 from ..plugin import cfg
-from Plugins.Extensions.KodiLite.lib.xUtils import *
+from Plugins.Extensions.KodiLite.Utils import *
 
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
 
 
-class RSList(MenuList):
+class tvList(MenuList):
     def __init__(self, list):
         MenuList.__init__(self, list, False, eListboxPythonMultiContent)
-        self.l.setItemHeight(40)
-        textfont = int(cfg.textfont.value)
-        self.l.setFont(0, gFont("Regular", textfont))
+        self.l.setFont(0, gFont('Regular', 20))
+        self.l.setFont(1, gFont('Regular', 22))
+        self.l.setFont(2, gFont('Regular', 24))
+        self.l.setFont(3, gFont('Regular', 26))
+        self.l.setFont(4, gFont('Regular', 28))
+        self.l.setFont(5, gFont('Regular', 30))
+        self.l.setFont(6, gFont('Regular', 32))
+        self.l.setFont(7, gFont('Regular', 34))
+        self.l.setFont(8, gFont('Regular', 36))
+        self.l.setFont(9, gFont('Regular', 40))
+        if isFHD():
+            self.l.setItemHeight(50)
+        else:
+            self.l.setItemHeight(50)
 
 
-def showlist(entry):
-    return [entry,
-            (eListboxPythonMultiContent.TYPE_TEXT,  55, 10, 320, 37, 0, RT_HALIGN_LEFT, str(entry[0])),
-            (eListboxPythonMultiContent.TYPE_TEXT,  340, 10, 250, 37, 0, RT_HALIGN_LEFT, str(entry[1]))
-            ]
+def rvListEntry(name, idx):
+    from Components.MultiContent import MultiContentEntryText
+    from Components.MultiContent import MultiContentEntryPixmapAlphaTest
+    from enigma import RT_HALIGN_LEFT, RT_VALIGN_CENTER
+    from enigma import loadPNG
+    from Tools.Directories import SCOPE_PLUGINS
+    from Tools.Directories import resolveFilename
+    res = [name]
+    pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/tv.png".format('KodiLite'))
+    if isFHD():
+        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
+        res.append(MultiContentEntryText(pos=(90, 0), size=(1900, 50), font=7, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
+    else:
+        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
+        res.append(MultiContentEntryText(pos=(90, 0), size=(1000, 50), font=2, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
+    return res
+
+
+def showlist(data, list):
+    idx = 0
+    plist = []
+    for line in data:
+        name = data[idx]
+        plist.append(rvListEntry(name, idx))
+        idx = idx + 1
+        list.setList(plist)
 
 
 def getproxylinks(plugin_id):
@@ -87,12 +118,13 @@ class AddonsettScreen(Screen):
     def __init__(self, session, plug):
         Screen.__init__(self, session)
         self.skinName = "StartPlugin_mainmenu"
-        self["menu"] = RSList([])
+        self["menu"] = tvList([])
         self["info"] = Label("Press ok to change value")
+        title = "Start Plugin Main Setting"
+        self["title"] = Button(title)
         self["pixmap"] = Pixmap()
-        self["actions"] = NumberActionMap(["OkCancelActions"], {
-               "ok": self.okClicked,
-               "cancel": self.close}, -1)
+        self["actions"] = NumberActionMap(["OkCancelActions"], {"ok": self.okClicked,
+                                                                "cancel": self.close}, -1)
         self.plug = plug
         sys.argv = []
         sys.argv.append(THISPLUG + "/plugins/" + self.plug + "/default.py")
@@ -160,14 +192,16 @@ class Addonsett2Screen(Screen):
         self.skinName = "StartPlugin_mainmenu"
         self['key_red'] = Button(_('Cancel'))
         self['key_green'] = Button(_('Save'))
-        self["menu"] = RSList([])
+        self["menu"] = tvList([])
         self["info"] = Label("Press ok to change default value")
+        title = "Start Plugin Main Setting"
+        self["title"] = Button(title)
         self["pixmap"] = Pixmap()
-        self["actions"] = NumberActionMap(['ColorActions', "OkCancelActions"], {
-               "ok": self.okClicked,
-               "green": self.save,
-               "red": self.exit,
-               "cancel": self.exit}, -1)
+        self["actions"] = NumberActionMap(['ColorActions',
+                                           "OkCancelActions"], {"ok": self.okClicked,
+                                                                "green": self.save,
+                                                                "red": self.exit,
+                                                                "cancel": self.exit}, -1)
         self.plug = plug
         self.addon = xbmcaddon.Addon(self.plug)
         self.list = list

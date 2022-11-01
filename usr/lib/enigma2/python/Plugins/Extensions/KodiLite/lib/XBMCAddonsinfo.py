@@ -4,6 +4,7 @@
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
 from Components.ScrollLabel import ScrollLabel
+from Components.Button import Button
 
 
 class XBMCAddonsinfoScreen(Screen):
@@ -19,7 +20,7 @@ class XBMCAddonsinfoScreen(Screen):
         self.closeOnSuccess = False
         cmdlist = None
         self.plugin_id = plugin_id
-
+        self["title"] = Button(title)
         self["text"] = ScrollLabel("")
         self["actions"] = ActionMap(["WizardActions", "DirectionActions", "ColorActions"],
                                     {

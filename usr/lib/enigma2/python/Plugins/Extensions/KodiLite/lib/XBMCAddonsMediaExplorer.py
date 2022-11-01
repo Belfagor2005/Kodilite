@@ -20,9 +20,9 @@ PLUGIN_PATH = THISPLUG
 
 def XBMCAddonsScreen1_channels(entry):
     return [entry,
-        (eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, 0, 1, 35, 35, loadPNG(PLUGIN_PATH+'/skin/images/movie.png')),
-        (eListboxPythonMultiContent.TYPE_TEXT, 45, 10, 860, 37, 0, RT_HALIGN_LEFT, str(entry[0].strip()))
-           ]
+            (eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, 0, 1, 35, 35, loadPNG(PLUGIN_PATH+'/skin/images/movie.png')),
+            (eListboxPythonMultiContent.TYPE_TEXT, 45, 10, 860, 37, 0, RT_HALIGN_LEFT, str(entry[0].strip()))
+            ]
 
 
 def mkdir(backuppath):
@@ -66,7 +66,7 @@ def freespace():
         # self.freespace=nspace
         spacestr = 'Free space(' + str(fspace) + 'MB) Total space(' + str(tspace) + 'MB)'
         # self["info1"].setText('Free space available:' +str(fspace)+'MB Total space:' + str(tspace)+' MB')
-        return fspace
+        return spacestr
     except:
         return 0
 
@@ -102,19 +102,22 @@ class XBMCAddonsMediaExplorer(Screen):
         # self.glist.onSelectionChanged.append(self.groupselectionchanged)
         self.streamMenuList.onSelectionChanged.append(self.moviesselectionchanged)
         self.onShown.append(self.getlocalmedia)
-        self["actions"] = ActionMap(["ColorActions", "SetupActions", "DirectionActions", "PiPSetupActions", "WizardActions", "NumberActions", "EPGSelectActions"],
-                                    {
-                                    "red": self.deletefile,
-                                    "green": self.keyOK,
-                                    "blue": self.deletefile,
-                                    "yellow": self.renamefile,
-                                    "ok": self.keyOK,
-                                    "cancel": self.exit,
-                                    "up": self["list"].up,
-                                    "down": self["list"].down,
-                                    "left": self["list"].pageUp,
-                                    "right": self["list"].pageDown,
-                                    }, -1)
+        self["actions"] = ActionMap(["ColorActions",
+                                     "SetupActions",
+                                     "DirectionActions",
+                                     "PiPSetupActions",
+                                     "WizardActions",
+                                     "NumberActions",
+                                     "EPGSelectActions"], {"red": self.deletefile,
+                                                           "green": self.keyOK,
+                                                           "blue": self.deletefile,
+                                                           "yellow": self.renamefile,
+                                                           "ok": self.keyOK,
+                                                           "cancel": self.exit,
+                                                           "up": self["list"].up,
+                                                           "down": self["list"].down,
+                                                           "left": self["list"].pageUp,
+                                                           "right": self["list"].pageDown}, -1)
         self.pages = []
         cat_movies = []
         self.movies = []

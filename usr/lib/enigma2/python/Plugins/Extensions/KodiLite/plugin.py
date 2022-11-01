@@ -21,6 +21,7 @@
 
 """
 # ############## 20220730 v9.0 py3 ######
+# ############## 20221030 v9.1 recoded by Lululla ######
 from __future__ import print_function
 from . import _
 from Components.ActionMap import ActionMap, NumberActionMap
@@ -76,7 +77,7 @@ try:
     from Plugins.Extensions.KodiLite.lib.xUtils import *
 except:
     from .lib.xUtils import *
-    
+
 try:
     from Plugins.Extensions.KodiLite.lib.SkinLoader import loadPluginSkin
 except:
@@ -106,7 +107,9 @@ try:
 except:
     import Image
 
-PlugDescription = 'KODILITE by PCD '
+
+HTTPConnection.debuglevel = 1
+PlugDescription = 'KODILITE '
 Version = 'V.9.1'
 select_file = "/tmp/select.txt"
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
@@ -137,10 +140,13 @@ if Utils.isFHD():
     # skin_path = res_plugin_path + 'skins/fhd/'
     defpic = res_plugin_path + "defaultL.png"
     dblank = res_plugin_path + "blankL.png"
+    exitz = res_plugin_path + "ExitL.png"
+
 else:
     # skin_path = res_plugin_path + 'skins/hd/'
     defpic = res_plugin_path + "default.png"
     dblank = res_plugin_path + "blank.png"
+    exitz = res_plugin_path + "Exit.png"
 
 
 config.plugins.kodiplug = ConfigSubsection()
@@ -149,6 +155,7 @@ cfg.tempdel = ConfigYesNo(False)
 cfg.picdel = ConfigYesNo(False)
 cfg.subtitle = ConfigYesNo(False)
 cfg.elog = ConfigYesNo(True)
+cfg.update = ConfigYesNo(False)
 # cfg.cachefold = ConfigText("/media/hdd", False)
 cfg.cachefold = ConfigDirectory("/media/hdd")
 cfg.vlcip = ConfigText("192.168.1.1", False)
@@ -166,7 +173,6 @@ cfg.listcol = NoSave(ConfigSelection(default="0x000000", choices=[("0x40000000",
 cfg.mainback = NoSave(ConfigSelection(default="default", choices=[("default", _("default")), ("skin2", _("skin2"))]))
 cfg.viewdownloads = NoSave(ConfigSelection(default="disabled", choices=[("disabled", _("Not assigned")), ("help", _("Key help"))]))
 cfg.youtubequal = NoSave(ConfigSelection(default="2", choices=[("1", _("SD")), ("2", _("720p")), ("3", _("1080p"))]))
-
 
 
 def findmax(match=[]):
@@ -274,6 +280,9 @@ def dellog():  # to clear log files
         os.remove("/tmp/type.txt")
 
 
+dellog()  # del log to open plugin
+
+
 def jointext(file1, file2):
     f1 = open(file1, "r+")
     txt1 = f1.read()
@@ -319,161 +328,6 @@ class tvList(MenuList):
             self.l.setItemHeight(50)
         else:
             self.l.setItemHeight(50)
-
-
-# def getpics(names, pics, tmpfold, picfold):
-    # if Utils.isFHD():
-        # nw = 500
-    # else:
-        # nw = 320
-    # pix = []
-    # if cfg.thumb.value == "False":
-        # if Utils.isFHD():
-            # defpic = res_plugin_path + "defaultL.png"
-        # else:
-            # defpic = res_plugin_path + "default.png"
-        # npic = len(pics)
-        # i = 0
-        # while i < npic:
-            # pix.append(defpic)
-            # i = i+1
-        # return pix
-    # cmd = "rm " + tmpfold + "/*"
-    # os.system(cmd)
-    # npic = len(pics)
-    # j = 0
-    # print("In getpics names =", names)
-    # while j < npic:
-        # name = names[j]
-        # print("In getpics name =", name)
-        # if name is None:
-            # name = "Video"
-        # try:
-            # name = name.replace("&", "")
-            # name = name.replace(":", "")
-            # name = name.replace("(", "-")
-            # name = name.replace(")", "")
-            # name = name.replace(" ", "")
-        # except:
-            # pass
-        # url = pics[j]
-        # if url is None:
-            # url = ""
-        # url = url.replace(" ", "%20")
-        # url = url.replace("ExQ", "=")
-        # url = url.replace("AxNxD", "&")
-        # print("In getpics url =", url)
-        # if ".png" in url:
-            # tpicf = tmpfold + "/" + name + ".png"
-        # # picf = picfold + "/" + name + ".png"
-        # else:
-            # tpicf = tmpfold + "/" + name + ".jpg"
-        # # picf = picfold + "/" + name + ".jpg"
-        # picf = picfold + "/" + name + ".png"
-        # if fileExists(picf):
-            # cmd = "cp " + picf + " " + tmpfold
-            # print("In getpics fileExists(picf) cmd =", cmd)
-            # os.system(cmd)
-
-        # if not fileExists(picf):
-        # # print  "In getpics not fileExists(picf) url =", url
-            # if THISPLUG in url:
-                # try:
-                    # cmd = "cp " + url + " " + tpicf
-                    # print("In getpics not fileExists(picf) cmd =", cmd)
-                    # os.system(cmd)
-                # except:
-                    # pass
-            # else:
-                # try:
-                    # if "|" in url:
-                        # n3 = url.find("|", 0)
-                        # n1 = url.find("Referer", n3)
-                        # n2 = url.find("=", n1)
-                        # url1 = url[:n3]
-                        # # print  "In getpics not fileExists(picf) url1 =", url1
-                        # referer = url[n2:]
-                        # # print  "In getpics not fileExists(picf) referer =", referer
-                        # p = Utils.getUrl2(url1, referer)
-                        # f1 = open(tpicf, "wb")
-                        # f1.write(p)
-                        # f1.close()
-                    # else:
-                        # print("Going in urlopen url =", url)
-                        # f = Utils.getUrlresp(url)
-                        # print("f =", f)
-                        # p = f.read()
-                        # f1 = open(tpicf, "wb")
-                        # f1.write(p)
-                        # f1.close()
-                # except:
-                    # if Utils.isFHD():
-                        # cmd = "cp " + res_plugin_path + "defaultL.png " + tpicf
-                    # else:
-                        # cmd = "cp " + res_plugin_path + "default.png " + tpicf
-                    # os.system(cmd)
-
-            # if not fileExists(tpicf):
-                # print("In getpics not fileExists(tpicf) tpicf=", tpicf)
-                # """
-                # # if ".png" in tpicf:
-                # #     cmd = "cp " + res_plugin_path + "default.png " + tpicf
-                # # else:
-                # #     cmd = "cp " + res_plugin_path + "default.jpg " + tpicf
-                # """
-                # if Utils.isFHD():
-                    # cmd = "cp " + res_plugin_path + "defaultL.png " + tpicf
-                # else:
-                    # cmd = "cp " + res_plugin_path + "default.png " + tpicf
-                # print("In getpics not fileExists(tpicf) cmd=", cmd)
-                # os.system(cmd)
-            # try:
-                # try:
-                    # import Image
-                # except:
-                    # from PIL import Image
-                # im = Image.open(tpicf)
-                # imode = im.mode
-                # if im.mode != "P":
-                    # im = im.convert("P")
-                # w = im.size[0]      # 1
-                # d = im.size[1]      # 2
-                # r = float(d)/float(w)  # 2.0
-
-                # d1 = r*nw
-                # if w != nw:
-                    # x = int(nw)
-
-                    # y = int(d1)
-                    # im = im.resize((x, y), Image.ANTIALIAS)
-                # """
-                # if w > d:
-                     # y = int(nw)
-                     # x = w*r
-                     # x = int(x)
-                # else:
-                     # x = int(nw)
-                     # y = d/r
-                     # y = int(y)
-                # """
-                # """
-                # x = 300
-                # y = 300
-                # im = im.resize((x,y), Image.ANTIALIAS)
-
-                # """
-                # tpicf = tmpfold + "/" + name + ".png"
-                # picf = picfold + "/" + name + ".png"
-                # im.save(tpicf)
-
-            # except:
-                # tpicf = res_plugin_path + "default.png"
-        # pix.append(j)
-        # pix[j] = picf
-        # j = j+1
-    # cmd1 = "cp " + tmpfold + "/* " + picfold + " && rm " + tmpfold + "/* &"
-    # os.system(cmd1)
-    # return pix
 
 
 def getpics(names, pics, tmpfold, picfold):
@@ -605,6 +459,7 @@ def getpics(names, pics, tmpfold, picfold):
     os.system(cmd1)
     return pix
 
+
 def up(names, tmppics, pos, menu, pixmap):
     menu.up()
     pos = pos - 1
@@ -614,10 +469,7 @@ def up(names, tmppics, pos, menu, pixmap):
         menu.moveToIndex(pos)
     name = names[pos]
     if name == "Exit":
-        pic = res_plugin_path + "Exit.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "ExitL.png"
-        pixmap.instance.setPixmapFromFile(pic)
+        pixmap.instance.setPixmapFromFile(exitz)
     else:
         try:
             pic = tmppics[pos]
@@ -637,10 +489,7 @@ def down(names, tmppics, pos, menu, pixmap):
         menu.moveToIndex(pos)
     name = names[pos]
     if name == "Exit":
-        pic = res_plugin_path + "Exit.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "ExitL.png"
-        pixmap.instance.setPixmapFromFile(pic)
+        pixmap.instance.setPixmapFromFile(exitz)
     else:
         try:
             pic = tmppics[pos]
@@ -660,10 +509,7 @@ def left(names, tmppics, pos, menu, pixmap):
         pixmap.instance.setPixmapFromFile(pic)
     else:
         try:
-            pic = res_plugin_path + "Exit.png"
-            if Utils.isFHD():
-                pic = res_plugin_path + "ExitL.png"
-            pixmap.instance.setPixmapFromFile(pic)
+            pixmap.instance.setPixmapFromFile(exitz)
         except:
             pass
     return pos
@@ -678,10 +524,7 @@ def right(names, tmppics, pos, menu, pixmap):
         pixmap.instance.setPixmapFromFile(pic)
     else:
         try:
-            pic = res_plugin_path + "Exit.png"
-            if Utils.isFHD():
-                pic = res_plugin_path + "ExitL.png"
-            pixmap.instance.setPixmapFromFile(pic)
+            pixmap.instance.setPixmapFromFile(exitz)
         except:
             pass
     return pos
@@ -700,24 +543,24 @@ def update_xbmc_text(addon_id):  # #mfaraj to update the file from xbmc client t
 
 
 def startspinner():
-    cursel = THISPLUG+"/skin/spinner"
+    cursel = THISPLUG + "/skin/spinner"
     Bilder = []
     if cursel:
         for i in range(30):
-            if (os.path.isfile("%s/wait%d.png" % (cursel, i+1))):
-                Bilder.append("%s/wait%d.png" % (cursel, i+1))
+            if (os.path.isfile("%s/wait%d.png" % (cursel, i + 1))):
+                Bilder.append("%s/wait%d.png" % (cursel, i + 1))
     else:
         Bilder = []
     return Spinner(Bilder)
 
 
 def buildBilder():
-    cursel = THISPLUG+"/skin/spinner"
+    cursel = THISPLUG + "/skin/spinner"
     Bilder = []
     if cursel:
         for i in range(30):
-            if (os.path.isfile("%s/wait%d.png" % (cursel, i+1))):
-                Bilder.append("%s/wait%d.png" % (cursel, i+1))
+            if (os.path.isfile("%s/wait%d.png" % (cursel, i + 1))):
+                Bilder.append("%s/wait%d.png" % (cursel, i + 1))
     else:
         Bilder = []
     return Bilder
@@ -725,173 +568,175 @@ def buildBilder():
 
 class XbmcConfigScreen(ConfigListScreen, Screen):
 
-        def __init__(self, session, args=0):
-            self.session = session
-            self.setup_title = _("Kodilite Settings")
-            self["title"] = Button(self.setup_title)
-            Screen.__init__(self, session)
-            self.skinName = "Kodiconfig"
-            self.list = [
-                        getConfigListEntry(_("Cache folder"), cfg.cachefold),
-                        # getConfigListEntry(_("Skin resolution-(restart e2 after change)"), cfg.skinres),
-                        getConfigListEntry(_("Enigma log (/tmp/e.log)"), cfg.elog),
-                        getConfigListEntry(_("Show thumbpic ?"), cfg.thumb),
-                        getConfigListEntry(_("Wait time for lists (sec)"), cfg.wait),
-                        getConfigListEntry(_("vlc server ip"), cfg.vlcip),
-                         ]
-            ConfigListScreen.__init__(self, self.list, session=self.session, on_change=self.changedEntry)
-            # self["status"] = Label()
-            self["key_red"] = Button(_("Exit"))
-            self["key_green"] = Button(_("Save"))
-            self["HelpWindow"] = Pixmap()
-            self["HelpWindow"].hide()
-            self["VKeyIcon"] = Pixmap()
-            self["VKeyIcon"].hide()
-            self["setupActions"] = ActionMap(["SetupActions", "ColorActions", "VirtualKeyboardActions"],
-                                             {"red": self.cancel,
-                                              "green": self.save,
-                                              "cancel": self.cancel,
-                                              "showVirtualKeyboard": self.KeyText}, -2)
-            self.onChangedEntry = []
-            self.handleInputHelpers()
+    def __init__(self, session, args=0):
+        self.session = session
+        self.setup_title = _("Kodilite Settings")
+        self["title"] = Button(self.setup_title)
+        Screen.__init__(self, session)
+        self.skinName = "Kodiconfig"
+        self.list = [
+                    getConfigListEntry(_("Autoupdate"), cfg.update),
+                    getConfigListEntry(_("Cache folder"), cfg.cachefold),
+                    # getConfigListEntry(_("Skin resolution-(restart e2 after change)"), cfg.skinres),
+                    getConfigListEntry(_("Enigma log (/tmp/e.log)"), cfg.elog),
+                    getConfigListEntry(_("Show thumbpic ?"), cfg.thumb),
+                    getConfigListEntry(_("Use subtitle support ?"), cfg.subtitle),
+                    getConfigListEntry(_("Wait time for lists (sec)"), cfg.wait),
+                    getConfigListEntry(_("vlc server ip"), cfg.vlcip),
+                     ]
+        ConfigListScreen.__init__(self, self.list, session=self.session, on_change=self.changedEntry)
+        # self["status"] = Label()
+        self["key_red"] = Button(_("Exit"))
+        self["key_green"] = Button(_("Save"))
+        self["HelpWindow"] = Pixmap()
+        self["HelpWindow"].hide()
+        self["VKeyIcon"] = Pixmap()
+        self["VKeyIcon"].hide()
+        self["setupActions"] = ActionMap(["SetupActions", "ColorActions", "VirtualKeyboardActions"],
+                                         {"red": self.cancel,
+                                          "green": self.save,
+                                          "cancel": self.cancel,
+                                          "showVirtualKeyboard": self.KeyText}, -2)
+        self.onChangedEntry = []
+        self.handleInputHelpers()
 
-        def changedEntry(self):
-            for x in self.onChangedEntry:
-                x()
-            # try:
-                # if isinstance(self["config"].getCurrent()[1], ConfigYesNo) or isinstance(self["config"].getCurrent()[1], ConfigSelection):
-                    # self.createSetup()
-            # except:
-                # pass
+    def changedEntry(self):
+        for x in self.onChangedEntry:
+            x()
+        # try:
+            # if isinstance(self["config"].getCurrent()[1], ConfigYesNo) or isinstance(self["config"].getCurrent()[1], ConfigSelection):
+                # self.createSetup()
+        # except:
+            # pass
 
-        def getCurrentEntry(self):
-            return self["config"].getCurrent() and self["config"].getCurrent()[0] or ""
+    def getCurrentEntry(self):
+        return self["config"].getCurrent() and self["config"].getCurrent()[0] or ""
 
-        def getCurrentValue(self):
-            return self["config"].getCurrent() and str(self["config"].getCurrent()[1].getText()) or ""
+    def getCurrentValue(self):
+        return self["config"].getCurrent() and str(self["config"].getCurrent()[1].getText()) or ""
 
-        def createSummary(self):
-            from Screens.Setup import SetupSummary
-            return SetupSummary
+    def createSummary(self):
+        from Screens.Setup import SetupSummary
+        return SetupSummary
 
-        def cancel(self):
-            for x in self["config"].list:
-                x[1].cancel()
-            self.close()
+    def cancel(self):
+        for x in self["config"].list:
+            x[1].cancel()
+        self.close()
 
-        def IsOk(self):
-            sel = self["config"].getCurrent()[1]
-            # sel = self["config"].getCurrent()[0]  # self.getCurrentEntry()
-            print('sel ', sel)
-            # sel2 = self.getCurrentValue()
-            # print('sel2 ', sel2)
-            if sel and sel == cfg.cachefold:
-                self.openDirectoryBrowser(cfg.cachefold.value)
+    def IsOk(self):
+        sel = self["config"].getCurrent()[1]
+        # sel = self["config"].getCurrent()[0]  # self.getCurrentEntry()
+        print('sel ', sel)
+        # sel2 = self.getCurrentValue()
+        # print('sel2 ', sel2)
+        if sel and sel == cfg.cachefold:
+            self.openDirectoryBrowser(cfg.cachefold.value)
+        else:
+            self.save()
+        ConfigListScreen.keyOK(self)
+
+    def openDirectoryBrowser(self, path):
+        if os.path.exists("/usr/bin/apt-get"):
+            path = None
+        try:
+            from Screens.LocationBox import LocationBox
+            self.session.openWithCallback(
+                self.openDirectoryBrowserCB,
+                LocationBox,
+                windowTitle=_("Choose Directory:"),
+                text=_("Choose directory"),
+                currDir=str(path),
+                bookmarks=cfg.cachefold.value,
+                autoAdd=False,
+                editDir=True,
+                inhibitDirs=["/bin", "/boot", "/dev", "/home", "/lib", "/proc", "/run", "/sbin", "/sys", "/var"],
+                minFree=15)
+        except Exception as ex:
+            print("openDirectoryBrowser get failed: ", str(ex))
+        # ConfigListScreen.keyOK(self)
+
+    def openDirectoryBrowserCB(self, path):
+        if path is not None:
+            cfg.cachefold.setValue(path)
+        return
+
+    def KeyText(self):
+        from Screens.VirtualKeyBoard import VirtualKeyBoard
+        sel = self["config"].getCurrent()
+        if sel:
+            self.session.openWithCallback(self.VirtualKeyBoardCallback, VirtualKeyBoard, title=self["config"].getCurrent()[0], text=self["config"].getCurrent()[1].value)
+
+    def VirtualKeyBoardCallback(self, callback=None):
+        if callback is not None and len(callback):
+            self["config"].getCurrent()[1].value = callback
+            self["config"].invalidate(self["config"].getCurrent())
+        return
+
+    def save(self, answer=None):
+        if answer is None:
+            self.session.openWithCallback(self.save, MessageBox, _("Save Config??\nReboot system necessary!!"), MessageBox.TYPE_YESNO)
+        elif answer:
+            if self["config"].isChanged():
+                for x in self["config"].list:
+                    x[1].save()
+                self.mbox = self.session.open(MessageBox, _("Settings saved successfully !"), MessageBox.TYPE_INFO, timeout=5)
+            self.saveAll()
+            picfold = cfg.cachefold.value + "/xbmc/pic"
+            cmd = "rm -rf " + picfold
+            os.system(cmd)
+            subs = cfg.subtitle.value
+            tfile = THISPLUG + "/scripts/script.module.SubsSupport"
+            if not os.path.exists(tfile):
+                if subs is True:
+                    fdest = THISPLUG + "/scripts"
+                    dest = "/tmp/subssupport.zip"
+                    xfile = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiLite/Script-modules/kodi/script.module.SubsSupport-1.0.0.zip"
+                    cmd1 = "wget -O '" + dest + "' '" + xfile + "'"
+                    cmd2 = "unzip -o -q '/tmp/subssupport.zip' -d " + fdest
+                    cmd = []
+                    cmd.append(cmd1)
+                    cmd.append(cmd2)
+                    print("In main cmd =", cmd)
+                    title = _("Installing script subssupport %s")
+                    self.session.openWithCallback(self.subsdown, Console, _(title), cmd)
             else:
-                self.save()
-            ConfigListScreen.keyOK(self)
+                pass
+            self.session.open(TryQuitMainloop, 3)
 
-        def openDirectoryBrowser(self, path):
-            if os.path.exists("/usr/bin/apt-get"):
-                path = None
-            try:
-                from Screens.LocationBox import LocationBox
-                self.session.openWithCallback(
-                    self.openDirectoryBrowserCB,
-                    LocationBox,
-                    windowTitle=_("Choose Directory:"),
-                    text=_("Choose directory"),
-                    currDir=str(path),
-                    bookmarks=cfg.cachefold.value,
-                    autoAdd=False,
-                    editDir=True,
-                    inhibitDirs=["/bin", "/boot", "/dev", "/home", "/lib", "/proc", "/run", "/sbin", "/sys", "/var"],
-                    minFree=15)
-            except Exception as ex:
-                print("openDirectoryBrowser get failed: ", str(ex))
-            # ConfigListScreen.keyOK(self)
+    def subsdown(self):
+        pass
 
-        def openDirectoryBrowserCB(self, path):
-            if path is not None:
-                cfg.cachefold.setValue(path)
-            return
+    def handleInputHelpers(self):
+        from enigma import ePoint
+        currConfig = self["config"].getCurrent()
+        if currConfig is not None:
+            if isinstance(currConfig[1], ConfigText):
+                if "VKeyIcon" in self:
+                    try:
+                        self["VirtualKB"].setEnabled(True)
+                    except:
+                        pass
+                    try:
+                        self["virtualKeyBoardActions"].setEnabled(True)
+                    except:
+                        pass
+                    self["VKeyIcon"].show()
 
-        def KeyText(self):
-            from Screens.VirtualKeyBoard import VirtualKeyBoard
-            sel = self["config"].getCurrent()
-            if sel:
-                self.session.openWithCallback(self.VirtualKeyBoardCallback, VirtualKeyBoard, title=self["config"].getCurrent()[0], text=self["config"].getCurrent()[1].value)
-
-        def VirtualKeyBoardCallback(self, callback=None):
-            if callback is not None and len(callback):
-                self["config"].getCurrent()[1].value = callback
-                self["config"].invalidate(self["config"].getCurrent())
-            return
-
-        def save(self, answer=None):
-            if answer is None:
-                self.session.openWithCallback(self.save, MessageBox, _("Save Config??\nReboot system necessary!!"), MessageBox.TYPE_YESNO)
-            elif answer:
-                if self["config"].isChanged():
-                    for x in self["config"].list:
-                        x[1].save()
-                    self.mbox = self.session.open(MessageBox, _("Settings saved successfully !"), MessageBox.TYPE_INFO, timeout=5)
-                self.saveAll()
-                picfold = cfg.cachefold.value + "/xbmc/pic"
-                cmd = "rm -rf " + picfold
-                os.system(cmd)
-                subs = cfg.subtitle.value
-                tfile = THISPLUG + "/scripts/script.module.SubsSupport"
-                if not os.path.exists(tfile):
-                    if subs is True:
-                        fdest = THISPLUG + "/scripts"
-                        dest = "/tmp/subssupport.zip"
-                        xfile = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiLite/Script-modules/kodi/script.module.SubsSupport-1.0.0.zip"
-                        cmd1 = "wget -O '" + dest + "' '" + xfile + "'"
-                        cmd2 = "unzip -o -q '/tmp/subssupport.zip' -d " + fdest
-                        cmd = []
-                        cmd.append(cmd1)
-                        cmd.append(cmd2)
-                        print("In main cmd =", cmd)
-                        title = _("Installing script subssupport %s")
-                        self.session.openWithCallback(self.subsdown, Console, _(title), cmd)
-                else:
-                    pass
-                self.session.open(TryQuitMainloop, 3)
-
-        def subsdown(self):
-            pass
-
-        def handleInputHelpers(self):
-            from enigma import ePoint
-            currConfig = self["config"].getCurrent()
-            if currConfig is not None:
-                if isinstance(currConfig[1], ConfigText):
-                    if "VKeyIcon" in self:
-                        try:
-                            self["VirtualKB"].setEnabled(True)
-                        except:
-                            pass
-                        try:
-                            self["virtualKeyBoardActions"].setEnabled(True)
-                        except:
-                            pass
-                        self["VKeyIcon"].show()
-
-                    if "HelpWindow" in self and currConfig[1].help_window and currConfig[1].help_window.instance is not None:
-                        helpwindowpos = self["HelpWindow"].getPosition()
-                        currConfig[1].help_window.instance.move(ePoint(helpwindowpos[0], helpwindowpos[1]))
-                else:
-                    if "VKeyIcon" in self:
-                        try:
-                            self["VirtualKB"].setEnabled(False)
-                        except:
-                            pass
-                        try:
-                            self["virtualKeyBoardActions"].setEnabled(False)
-                        except:
-                            pass
-                        self["VKeyIcon"].hide()
+                if "HelpWindow" in self and currConfig[1].help_window and currConfig[1].help_window.instance is not None:
+                    helpwindowpos = self["HelpWindow"].getPosition()
+                    currConfig[1].help_window.instance.move(ePoint(helpwindowpos[0], helpwindowpos[1]))
+            else:
+                if "VKeyIcon" in self:
+                    try:
+                        self["VirtualKB"].setEnabled(False)
+                    except:
+                        pass
+                    try:
+                        self["virtualKeyBoardActions"].setEnabled(False)
+                    except:
+                        pass
+                    self["VKeyIcon"].hide()
 
 
 class Rundefault(Screen):
@@ -944,7 +789,6 @@ class Rundefault(Screen):
                 print("In Rundefault going in picshow")
                 self.picshow(urla)
             else:
- # ######################pictures#############
                 global HANDLE
                 hdl = int(HANDLE)
                 hdl = hdl + 1
@@ -1055,9 +899,9 @@ class Rundefault(Screen):
             args = sysarg.split(" ")
             cmd = "python '" + args[0] + "' '1' '" + args[2] + "'"
         else:
-            xpath_file = THISPLUG + "/" + ADDONCAT + "/" + self.plugin_id + "/xpath.py"
-            fixed2_file = THISPLUG + "/" + ADDONCAT + "/" + self.plugin_id + "/fixed2"
-            default_file = THISPLUG + "/" + ADDONCAT + "/" + self.plugin_id + "/default.py"
+            # xpath_file = THISPLUG + "/" + ADDONCAT + "/" + self.plugin_id + "/xpath.py"
+            # fixed2_file = THISPLUG + "/" + ADDONCAT + "/" + self.plugin_id + "/fixed2"
+            # default_file = THISPLUG + "/" + ADDONCAT + "/" + self.plugin_id + "/default.py"
             # if not os.path.exists(xpath_file):
             #   os.system("cp -f "+THISPLUG+"/lib/xpath.py "+xpath_file)
             #   os.system("touch " + fixed2_file)
@@ -1169,7 +1013,7 @@ class Rundefault(Screen):
         if os.path.exists("/tmp/stopaddon"):
             self.stoprun()
             return
-        str = self.data1
+        # str = self.data1
         print("In Rundefault action 2")
         self.data = []
         self.names = []
@@ -1177,16 +1021,13 @@ class Rundefault(Screen):
         self.pics = []
         self.names.append("Exit")
         self.urls.append(" ")
-        exitpic = res_plugin_path + "Exit.png"
-        if Utils.isFHD():
-            exitpic = res_plugin_path + "ExitL.png"
-        self.pics.append(exitpic)
+        self.pics.append(exitz)
         self.tmppics = []
         self.lines = []
         self.vidinfo = []
         afile = open("/tmp/test.txt", "w")
         afile.write("\nin action=")
-        datain = ""
+        # datain = ""
         parameters = []
         print("In Rundefault action 3")
         self.data = []
@@ -1307,14 +1148,10 @@ class Rundefault(Screen):
                         pic = iconImage
                         print("Rundefault pic B=", pic)
                     else:
-                        pic = res_plugin_path + "default.png"
-                        if Utils.isFHD():
-                            pic = res_plugin_path + "defaultL.png"
+                        pic = defpic
 
                 except:
-                    pic = res_plugin_path + "default.png"
-                    if Utils.isFHD():
-                        pic = res_plugin_path + "defaultL.png"
+                    pic = defpic
 
                 if DEBUG == 1:
                     print("Rundefault pic=", pic)
@@ -1324,13 +1161,13 @@ class Rundefault(Screen):
                 i = i+1
 
             if DEBUG == 1:
-                    print("Rundefault self.names=", self.names)
-                    print("Rundefault self.urls=", self.urls)
-                    print("Rundefault self.pics=", self.pics)
-                    # print  "Here in Rundefault tmppics =", tmppics
+                print("Rundefault self.names=", self.names)
+                print("Rundefault self.urls=", self.urls)
+                print("Rundefault self.pics=", self.pics)
+                # print  "Here in Rundefault tmppics =", tmppics
         picindic = 0
         ipc = 4
-        plen =  len(self.pics)
+        plen = len(self.pics)
         if plen < 10:
             ipcn = plen
         else:
@@ -1338,7 +1175,7 @@ class Rundefault(Screen):
         if plen > 3:
             while ipc < ipcn:
                 print("Here in Rundefault self.pics[ipc] =", self.pics[ipc])
-                if (not "default.png" in self.pics[ipc]) and (not "defaultL.png" in self.pics[ipc]):
+                if ("default.png" not in self.pics[ipc]) and ("defaultL.png" not in self.pics[ipc]):
                     print("Here in Rundefault default not in self.pics[ipc]")
                     picindic = 1
                 ipc = ipc+1
@@ -1452,11 +1289,8 @@ class Rundefault(Screen):
             while ipic < npic:
                 pic = self.pics[ipic]
                 if pic == cpic:
-                    self.pics[ipic] = res_plugin_path + "default.png"
-                    if Utils.isFHD():
-                        self.pics[ipic] = res_plugin_path + "defaultL.png"
+                    self.pics[ipic] = defpic
                 ipic = ipic + 1
-
             print("self.pics B=", self.pics)
             print("In rundefault picindic =", picindic)
             if cfg.thumb.value == "True":
@@ -1622,7 +1456,6 @@ class XbmcPluginPics(Screen):
         self["menu"] = List(list)
         for x in list:
             print("x in list =", x)
-
         ip = 0
         print("self.pics = ", self.pics)
         self["frame"] = MovingPixmap()
@@ -1654,13 +1487,6 @@ class XbmcPluginPics(Screen):
     def cancel(self):
         self.close()
 
-    def startSpinner(self):
-        if self.spinner_running is False:
-            Bilder = buildBilder()
-            self["bild"].start(Bilder)
-            self.spinner_running = True
-        return
-
     def showIMDB(self):
         TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
         IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
@@ -1679,6 +1505,13 @@ class XbmcPluginPics(Screen):
         else:
             text_clear = self.name
             self.session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
+
+    def startSpinner(self):
+        if self.spinner_running is False:
+            Bilder = buildBilder()
+            self["bild"].start(Bilder)
+            self.spinner_running = True
+        return
 
     def stopSpinner(self):
         if self.spinner_running is True:
@@ -1701,10 +1534,7 @@ class XbmcPluginPics(Screen):
                 pass
         else:
             self.stopSpinner()
-            # self['bild']=None
-            # dellog()
             self.close()
-            # self['bild']=None
 
     def progressCallBack(self, progress):
         try:
@@ -1729,13 +1559,6 @@ class XbmcPluginPics(Screen):
             self["info"].setText(self.select)
         except:
             pass
-
-    # def showerror(self):
-        # try:
-            # from Plugins.Extensions.KodiLite.lib.XBMCAddonsinfo import XBMCAddonsinfoScreen
-        # except:
-            # from .lib.XBMCAddonsinfo import XBMCAddonsinfoScreen
-        # self.session.open(XBMCAddonsinfoScreen, None)
 
     def paintFrame(self):
         print("In paintFrame self.index, self.minentry, self.maxentry =", self.index, self.minentry, self.maxentry)
@@ -1902,7 +1725,7 @@ class XbmcPluginPics(Screen):
 
         else:
             if itype == 0:
-                self.close()
+                self.cancel()
             elif itype == 1 and self.curr_run == 1:
                 if name == "Setup":  # ##to generate e2 e2sett.py
                     d = THISPLUG + "/plugins/" + self.plug
@@ -2007,7 +1830,7 @@ class XbmcPluginScreen(Screen):
         Screen.__init__(self, session)
         print("Here in XbmcPluginScreen picindic =", picindic)
         if picindic == 0:
-                self.skinName = "XbmcPluginScreenF"
+            self.skinName = "XbmcPluginScreenF"
         else:
             if cfg.thumb.value == "Single":
                 self.skinName = "XbmcPluginScreenS"
@@ -2152,10 +1975,7 @@ class XbmcPluginScreen(Screen):
                 pass
         else:
             self.stopSpinner()
-            # self['bild']=None
-            # dellog()
             self.close()
-            # self['bild']=None
 
     def progressCallBack(self, progress):
         try:
@@ -2189,7 +2009,7 @@ class XbmcPluginScreen(Screen):
         self.session.open(XBMCAddonsinfoScreen, None)
 
     def home(self):
-        self.session.open(StartPlugin)
+        self.session.open(StartPlugin)  # not exist this ??
         self.close()
 
     def action(self):
@@ -2215,9 +2035,7 @@ class XbmcPluginScreen(Screen):
             pass
 
         if cfg.thumb.value == "False":
-            picthumb = res_plugin_path + "default.png"
-            if Utils.isFHD():
-                picthumb = res_plugin_path + "defaultL.png"
+            picthumb = defpic
             self["pixmap1"].instance.setPixmapFromFile(picthumb)
         # print   "In XbmcPluginScreen self.names1 =", self.names1
         Utils.showlist(self.names1, self["menu"])
@@ -2306,7 +2124,7 @@ class XbmcPluginScreen(Screen):
 
         else:
             if itype == 0:
-                self.close()
+                self.cancel()
             elif itype == 1 and self.curr_run == 1:
                 if name == "Setup":  # ##to generate e2 e2sett.py
                     d = THISPLUG + "/plugins/" + self.plug
@@ -2441,9 +2259,7 @@ class Favorites(Screen):
         self.onLayoutFinish.append(self.source)
 
     def source(self):
-        pic = res_plugin_path + "default.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "defaultL.png"
+        pic = defpic
         self["pixmap1"].instance.setPixmapFromFile(pic)
         Utils.showlist(self.names, self["menu"])
 
@@ -2509,7 +2325,11 @@ class Start_mainmenu(Screen):
         self["key_red"] = Button(_("Delete addon"))
         self["key_green"] = Button(_("Install addon"))
         self["key_yellow"] = Button(_("Config"))
-        # self["key_blue"] = Button(_(" "))
+        self["key_blue"] = Button(_("Show Error"))
+        self["key_blue"].hide()
+        user_log = '/tmp/error.log'
+        if fileExists(user_log):
+            self["key_blue"].show()
         system("rm /tmp/select.txt")
         self["menu"].onSelectionChanged.append(self.selection_changed)
         self.onShown.append(self.selection_changed)
@@ -2523,7 +2343,7 @@ class Start_mainmenu(Screen):
                                            "red": self.delete,
                                            "green": self.addon,
                                            "yellow": self.conf,
-                                           "blue": self.close,
+                                           "blue": self.openVi,
                                            "ok": self.okClicked,
                                            "epg": self.showIMDB,
                                            "info": self.showIMDB,
@@ -2556,6 +2376,15 @@ class Start_mainmenu(Screen):
         print("StartPlugin_mainmenu 2")
         self.onLayoutFinish.append(self.listplugs)
         self.onLayoutFinish.append(self.showhide)
+
+    def openVi(self):
+        from .lib.type_utils import vEditor
+        user_log = '/tmp/error.log'
+        if fileExists(user_log):
+            self.session.open(vEditor, user_log)
+
+    def cancel(self):
+        self.close()
 
     def exit(self):
         self.close()
@@ -2613,165 +2442,77 @@ class Start_mainmenu(Screen):
 
     def showhide(self):
         self.pos = self["menu"].getSelectionIndex()
-        if self.pos == 0:
-            pic = res_plugin_path + "Exit.png"
-            if Utils.isFHD():
-                pic = res_plugin_path + "ExitL.png"
-            print('EXITTTT')
-            self["pixmap1"].instance.setPixmapFromFile(pic)
-        pass
-
-    def up(self):
-        if self.keylock:
-            return
-        print('1 self.pos ', self.pos)
-        self.pos = self["menu"].getSelectionIndex()
-        self["menu"].up()
         num = len(self.names)
         name = self.names[self.pos]
-        print('2 self.pos ', self.pos)
-        pic = res_plugin_path + "default.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "defaultL.png"
+        # print('2 self.pos ', self.pos)
+        pname = PlugDescription
+        version = Version
+        provider = "Provider:"
+        self["label30"].setText("Thank's to: ")
+        prov = 'Lululla'
+        desc = 'Copyright (C) 2014'
+        pic = defpic
+
+        if self.pos == 0:
+            pic = exitz
+            provider = "Thank's to :"
+            print('sel pos is == 0')
+
         if self.pos < -1:
             self.pos = num - 1
             self["menu"].moveToIndex(self.pos)
             name = self.names[self.pos]
+            print('sel pos is < 0')
+
         if self.pos > 0:
             pic = THISPLUG + "/" + ADDONCAT + "/" + name + "/icon.png"
             self["pixmap1"].instance.setPixmapFromFile(pic)
             pname, version, prov, desc = self.getinfo(name)
             self["label1"].setText(pname)
-            self["label20"].setText("Version :")
+            self["label20"].setText("Version:")
             self["label2"].setText(version)
-            self["label30"].setText("Provider :")
+            self["label30"].setText(provider)
             self["label3"].setText(prov)
             self["label4"].setText(desc)
             print('sel pos is > 0')
 
-            if not fileExists(pic):
-                pic = res_plugin_path + "default.png"
-                if Utils.isFHD():
-                    pic = res_plugin_path + "defaultL.png"
-                self["pixmap1"].instance.setPixmapFromFile(pic)
-                self["label1"].setText(" ")
-                self["label20"].setText(" ")
-                self["label2"].setText(" ")
-                self["label30"].setText(" ")
-                self["label3"].setText(" ")
-                self["label4"].setText(" ")
-                print('sel pos not exist')
+        if not fileExists(pic):
+            pic = defpic
+            self["pixmap1"].instance.setPixmapFromFile(pic)
+            print('sel pos not exist')
+        self["label1"].setText(pname)
+        self["label20"].setText("Version:")
+        self["label2"].setText(version)
+        self["label30"].setText(provider)
+        self["label3"].setText(prov)
+        self["label4"].setText(desc)
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        user_log = '/tmp/error.log'
+        if fileExists(user_log):
+            self["key_blue"].show()
+
+    def up(self):
+        if self.keylock:
+            return
+        self["menu"].up()
         self.showhide()
 
     def down(self):
         if self.keylock:
             return
-        self.pos = self["menu"].getSelectionIndex()
         self["menu"].down()
-        num = len(self.names)
-        name = self.names[self.pos]
-        pic = res_plugin_path + "default.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "defaultL.png"
-        if self.pos == num:
-            self.pos = 0
-            self["menu"].moveToIndex(0)
-            pic = res_plugin_path + "Exit.png"
-            if Utils.isFHD():
-                pic = res_plugin_path + "ExitL.png"
-            print('EXITTTT')
-        if self.pos > 0:  # and self.pos < num:
-            pic = THISPLUG + "/" + ADDONCAT + "/" + name + "/icon.png"
-            self["pixmap1"].instance.setPixmapFromFile(pic)
-            pname, version, prov, desc = self.getinfo(name)
-            self["label1"].setText(pname)
-            self["label20"].setText("Version :")
-            self["label2"].setText(version)
-            self["label30"].setText("Provider :")
-            self["label3"].setText(prov)
-            desc = desc.replace(":", "-")
-            self["label4"].setText(desc)
-            print('sel pos is > 0')
-            if not fileExists(pic):
-                pic = res_plugin_path + "default.png"
-                if Utils.isFHD():
-                    pic = res_plugin_path + "defaultL.png"
-                self["pixmap1"].instance.setPixmapFromFile(pic)
-                self["label1"].setText(" ")
-                self["label20"].setText(" ")
-                self["label2"].setText(" ")
-                self["label30"].setText(" ")
-                self["label3"].setText(" ")
-                self["label4"].setText(" ")
-                print('sel pos not exist')
         self.showhide()
 
     def left(self):
         if self.keylock:
             return
         self["menu"].pageUp()
-        self.pos = self["menu"].getSelectionIndex()
-        name = self.names[self.pos]
-        pic = res_plugin_path + "default.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "defaultL.png"
-        if self.pos > 0:
-            pic = THISPLUG + "/" + ADDONCAT + "/" + name + "/icon.png"
-            self["pixmap1"].instance.setPixmapFromFile(pic)
-            pname, version, prov, desc = self.getinfo(name)
-            self["label1"].setText(pname)
-            self["label20"].setText("Version :")
-            self["label2"].setText(version)
-            self["label30"].setText("Provider :")
-            self["label3"].setText(prov)
-            self["label4"].setText(desc)
-            print('sel pos is > 0')
-            if not fileExists(pic):
-                pic = res_plugin_path + "default.png"
-                if Utils.isFHD():
-                    pic = res_plugin_path + "defaultL.png"
-                self["pixmap1"].instance.setPixmapFromFile(pic)
-                self["label1"].setText(" ")
-                self["label20"].setText(" ")
-                self["label2"].setText(" ")
-                self["label30"].setText(" ")
-                self["label3"].setText(" ")
-                self["label4"].setText(" ")
-                print('sel pos not exist')
         self.showhide()
 
     def right(self):
         if self.keylock:
             return
         self["menu"].pageDown()
-        self.pos = self["menu"].getSelectionIndex()
-        name = self.names[self.pos]
-        pic = res_plugin_path + "default.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "defaultL.png"
-        if self.pos > 0:
-            pic = THISPLUG + "/" + ADDONCAT + "/" + name + "/icon.png"
-            self["pixmap1"].instance.setPixmapFromFile(pic)
-            pname, version, prov, desc = self.getinfo(name)
-            self["label1"].setText(pname)
-            self["label20"].setText("Version :")
-            self["label2"].setText(version)
-            self["label30"].setText("Provider :")
-            self["label3"].setText(prov)
-            self["label4"].setText(desc)
-            print('sel pos is > 0')
-            if not fileExists(pic):
-                pic = res_plugin_path + "default.png"
-                if Utils.isFHD():
-                    pic = res_plugin_path + "defaultL.png"
-                self["pixmap1"].instance.setPixmapFromFile(pic)
-                self["label1"].setText(" ")
-                self["label20"].setText(" ")
-                self["label2"].setText(" ")
-                self["label30"].setText(" ")
-                self["label3"].setText(" ")
-                self["label4"].setText(" ")
-                print('sel pos not exist')
         self.showhide()
 
     def getinfo(self, name):
@@ -2955,7 +2696,7 @@ class Start_mainmenu(Screen):
                 items = line.split("###")
                 n = len(items)
                 print("In checkUpd items =", items)
-                name = items[0]
+                # name = items[0]
                 # url1 = items[1]
                 if items[2] != '':
                     # url2 = items[2]
@@ -3199,7 +2940,7 @@ class Start_mainmenu(Screen):
         if DEBUG == 1:
             print("idx =", idx)
         if idx == 0:
-            self.close()
+            self.exit()
         # elif "Get more" in self.names[idx]:
         # self.addon()
         else:
@@ -3266,7 +3007,7 @@ class Start_mainmenu(Screen):
         fpath2 = fpath1 + "/fixed2"
         fpathf = fpath1 + "/default.py"
         f = open(fpathf, 'r')
-        deftxtf = f.read()
+        # deftxtf = f.read()
         f.close()
         if fileExists(fpath2):
         # if "import sys, xpath, xbmc" in deftxtf:
@@ -3321,9 +3062,9 @@ class Start_mainmenu(Screen):
                 os.system(cmdrm)
                 f1 = open('/tmp/default.txt', 'w')
                 icount = 0
-#               f = open(fpath, 'r')
+                # f = open(fpath, 'r')
                 for line in data:
-#                   line = line.decode("ISO-8859-1")
+                    # line = line.decode("ISO-8859-1")
                     line = line + "\n"
                     if not (line.startswith("#")):
                         if icount == 0:
@@ -3389,7 +3130,7 @@ class Start_mainmenu(Screen):
         # dellog()
         # ##############################
         xpath_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/xpath.py"
-        fixed2_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/fixed2"
+        # fixed2_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/fixed2"
         default_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/default.py"
         # if not os.path.exists(xpath_file):
         os.system("cp -f " + THISPLUG + "/lib/xpath.py " + xpath_file)
@@ -3500,14 +3241,10 @@ class Start_mainmenu(Screen):
                 try:
                     pic = params.get("thumbnailImage")
                     if (pic == "DefaultFolder.png") or (pic is None):
-                        pic = res_plugin_path + "default.png"
-                        if Utils.isFHD():
-                            pic = res_plugin_path + "defaultL.png"
+                        pic = defpic
                     print("StartPlugin_mainmenu pic 1 =", pic)
                 except:
-                    pic = res_plugin_path + "default.png"
-                    if Utils.isFHD():
-                        pic = res_plugin_path + "defaultL.png"
+                    pic = defpic
                 print("StartPlugin_mainmenu pic 2 =", pic)
                 self.name = name
                 self.names2.append(name)
@@ -3546,7 +3283,7 @@ class Start_mainmenu(Screen):
                 desc = " "
                 url = self.urls2[1]
                 self.progressCallBack("Finished")
-                self.session.open(Playoptions, name, url, desc) # playoptions defin
+                self.session.open(Playoptions, name, url, desc)  # playoptions defin
                 self.close()
             else:
                 if DEBUG == 1:
@@ -3704,140 +3441,6 @@ class DelAdd1(Screen):
         self["menu"].number(number)
 
 
-class GetaddonsA3(Screen):
-
-    def __init__(self, session, line):
-        Screen.__init__(self, session)
-        # if config.plugins.polar.menutype.value == "icons1":
-            # self.skinName = "Downloads"
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.line = line
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self["bild"] = startspinner()
-        self.info = (_(" "))
-        self["info"].setText(self.info)
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onShown.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        items = self.line.split("###")
-        print("In openTest items =", items)
-        name = items[0]
-        url1 = items[1]
-        # url2 = items[2]
-        fdest = THISPLUG + "/plugins/" + name
-        cmd = "mkdir -p " + fdest
-        os.system(cmd)
-        self.getfolder(name, url1, fdest)
-
-    def getfolder(self, name, url, xdest):
-        # f = urlopen(url)
-        fpage = Utils.getUrl(url)
-        # f.close()
-        print("In Repo2 getfolder name, url C=", name, url)
-        print("In Repo2 getfolder xdest=", xdest)
-        print("In Repo2 getfolder fpage =", fpage)
-        regexcat = '<li><a href="(.*?)">.*?</a><'
-        match = re.compile(regexcat, re.DOTALL).findall(fpage)
-        for url1 in match:
-            if "../" in url1:
-                continue
-            if url1.endswith("/"):
-                url2 = url + url1
-                xdest4 = xdest + "/" + url1
-                print("In Repo2 getfolder name, url D=", name, url)
-                print("In Repo2 getfolder xdest4 D=", xdest4)
-                if not os.path.exists(xdest4):
-                    cmd = "mkdir " + xdest4
-                    os.system(cmd)
-                self.foldback(name, url2, xdest4)
-            else:
-                url2 = url + url1
-                print("In Repo2 getfolder url2 =", url2)
-                fpage2 = Utils.getUrl(url2)
-                xdest3 = xdest + "/" + url1
-                f3 = open(xdest3, "w")
-                f3.write(fpage2)
-                # f2.close()
-                f3.close()
-                self.close()
-        return
-
-    def foldback(self, name, url, xdest):
-        self.getfolder(name, url, xdest)
-
-    def okClicked(self):
-        sel = self["menu"].getSelectionIndex()
-        if sel is None:
-            self.close()
-        else:
-            name = self.data[sel]
-        # if "Frodo" in name:
-        # url = "http://mirrors.kodi.tv/addons/jarvis/"
-        # global HOST
-        # HOST = url
-        # self.session.open(Addons, url)
-        # self.close()
-            if "Adult" in name:
-                self.catname = name
-                self.allow()
-            else:
-                self.session.open(GetaddonsA2, name)
-                self.close()
-
-    def allow(self):
-        # perm = config.ParentalControl.configured.value
-        # ####print  "perm =", perm
-        if config.ParentalControl.configured.value:
-            # ####print  "Here Ad 1"
-            # from Screens.InputBox import InputBox, PinInput
-            self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
-        else:
-            # ####print  "Here Ad 2"
-            self.pinEntered(True)
-        # return
-
-    def pinEntered(self, result):
-        # ####print  "Here Ad 3 result =", result
-        if result:
-            self.session.open(GetaddonsA2, self.catname)
-        else:
-            self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
-            self.close()
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
 class Getadds(Screen):
 
     def __init__(self, session):
@@ -3903,194 +3506,6 @@ class Getadds(Screen):
             # self.session.open(Getadds4)
         # else:
             # self.session.open(Fusion)
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Fusion(Screen):
-
-    def __init__(self, session):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = (_("Please select repository type"))
-        self["info"].setText(self.info)
-        self["bild"] = startspinner()
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        self.methods = []
-        self.urls = []
-        # self.methods.append("superrepo")
-        # self.urls.append("https://cdimage.debian.org/mirror/addons.superrepo.org/v7/addons/")
-        self.methods.append("English")
-        self.urls.append("http://fusion.tvaddons.co/kodi-repos/english/")
-        self.methods.append("International")
-        self.urls.append("http://fusion.tvaddons.co/kodi-repos/international/")
-        self.methods.append("XXX-Adult")
-        self.urls.append("http://fusion.tvaddons.co/kodi-repos/xxx-adult/")
-        Utils.showlist(self.methods, self["menu"])
-
-    def okClicked(self):
-        sel = self["menu"].getSelectionIndex()
-        url = self.urls[sel]
-        name = self.methods[sel]
-        self.selname = name
-        self.selurl = url
-        if sel is None:
-            self.close()
-        elif "adult" in name.lower():
-            self.allow()
-        else:
-            self.session.open(Fusion2, name, url)
-
-    def allow(self):
-        # perm = config.ParentalControl.configured.value
-        # ####print  "perm =", perm
-        if config.ParentalControl.configured.value:
-            # ####print  "Here Ad 1"
-            # from Screens.InputBox import InputBox, PinInput
-            self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
-
-        else:
-            # ####print  "Here Ad 2"
-            self.pinEntered(True)
-        # return
-
-    def pinEntered(self, result):
-        # ####print  "Here Ad 3 result =", result
-        if result:
-            self.session.open(Fusion2, self.selname, self.selurl)
-        else:
-            self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
-            self.close()
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Fusion2(Screen):
-
-    def __init__(self, session, name, url):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = (_("Please select repository type"))
-        self["info"].setText(self.info)
-        self["bild"] = startspinner()
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.name = name
-        self.url = url
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        self.names = []
-        self.urls = []
-        try:
-            fpage = Utils.getUrl(self.url)
-        except:
-            fpage = " "
-        # http://fusion.tvaddons.co/kodi-repos/english/repository.BludhavenGrayson-1.0.0.zip
-        regexcat = 'a href="(.*?)">(.*?)<'
-        match = re.compile(regexcat, re.DOTALL).findall(fpage)
-        print("In Repo2 match =", match)
-        # http://fusion.tvaddons.co/kodi-repos/english/repository.nextup-0.0.1.zip
-        for url, name in match:
-            name = name.replace("&gt", "")
-            name = name.replace("..", "")
-            name = name.replace(";", "")
-            self.names.append(name)
-            url1 = self.url + url
-            self.urls.append(url1)
-        Utils.showlist(self.names, self["menu"])
-
-    def okClicked(self):
-        sel = self["menu"].getSelectionIndex()
-        url = self.urls[sel]
-        if sel is None:
-            self.close()
-        else:
-            xurl = url
-            print("xurl =", xurl)
-            xdest = "/tmp/plug.zip"
-            # downloadPage(xurl, xdest).addCallback(self.install).addErrback(self.showError)
-            fpage = Utils.getUrl(xurl)
-            f = open(xdest, 'w')
-            f.write(fpage)
-            f.close()
-            self.install()
-
-    def showError(self, error):
-        print("ERROR :", error)
-
-    def install(self):
-        fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/repos"
-        cmd = "unzip -o -q '/tmp/plug.zip' -d " + fdest
-        title = (_("Installing repo"))
-        self.session.openWithCallback(self.doneinst, Console, _(title), [cmd])
-
-    def doneinst(self):
-        self.session.open(Getadds4)
 
     def keyLeft(self):
         self["menu"].left()
@@ -4249,886 +3664,6 @@ class Getadds7(Screen):
         self["menu"].number(number)
 
 
-class Getadds3(Screen):
-
-    def __init__(self, session):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request."))
-        self["info"].setText(self.info)
-        self["bild"] = startspinner()
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        methods = []
-        self.urls = []
-        methods.append("Matrix")
-        self.urls.append("http://mirrors.kodi.tv/addons/matrix/")
-        Utils.showlist(methods, self["menu"])
-
-    def okClicked(self):
-        sel = self["menu"].getSelectionIndex()
-        url = self.urls[sel]
-        if sel is None:
-            self.close()
-        else:
-            self.session.open(Getadds5, url)
-
-    def keyLeft(self):
-        self["text"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Getadds4(Screen):
-
-    def __init__(self, session):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request.."))
-        self["info"].setText(self.info)
-        self["bild"] = startspinner()
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        self.names = []
-        self.urls = []
-        path = THISPLUG + "/repos"
-        print("In Getadds4 path", path)
-        for name in os.listdir(path):
-            if "repository." not in name:
-                continue
-            else:
-                url = path + "/" + name + "/"
-            self.names.append(name)
-            self.urls.append(url)
-        print("In Getadds4 self.urls =", self.urls)
-        Utils.showlist(self.names, self["menu"])
-
-    def okClicked(self):
-        sel = self["menu"].getSelectionIndex()
-        if sel is None:
-            self.close()
-        else:
-            # name = self.names[sel]
-            url = self.urls[sel]
-            tfile = url + "addon.xml"
-            print("In Getadds4 tfile =", tfile)
-            f = open(tfile, "r")
-            for line in f.readlines():
-                print("In Repo line =", line)
-                if "<info" in line:
-                    n1 = line.find(">", 0)
-                    n2 = line.find('<', n1)
-                    infourl = line[(n1+1):n2]
-                    print("In Repo infourl A=", infourl)
-                if "<datadir" in line:
-                    n1 = line.find(">", 0)
-                    n2 = line.find('<', n1)
-                    plugurl = line[(n1+1):n2]
-                    print("In Repo plugurl =", plugurl)
-                    if "false" in line:
-                        zipcode = "false"
-                    else:
-                        zipcode = "true"
-                    break
-                print("In Repo infourl =", infourl)
-                print("In Repo plugurl =", plugurl)
-                print("In Repo zipcode =", zipcode)
-            self.session.open(Repo2, infourl, plugurl, zipcode)
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Repo2(Screen):
-
-    def __init__(self, session, infourl, plugurl, zipcode):
-        Screen.__init__(self, session)
-        # if config.plugins.polar.menutype.value == "icons1":
-        # self.skinName = "Downloads"
-        # else:
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self["bild"] = startspinner()
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = "Please select"
-        self.infourl = infourl
-        self.plugurl = plugurl
-        self.zipcode = zipcode
-        self["info"].setText(self.info)
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        xurl = self.infourl
-        print("In Repo2 xurl =", xurl)
-        # getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
-        html = Utils.getUrl(xurl)
-        self.gotPage(html)
-
-    def gotPage(self, html):
-        # try:
-        if DEBUG == 1:
-            print("In Repo2 html = ", html)
-        self.html = html
-        self.names = []
-        self.urls = []
-        regexcat = '<add.*?id="(.*?)".*?version="(.*?)"'
-        match = re.compile(regexcat, re.DOTALL).findall(html)
-        print("In Repo2 match =", match)
-        for name, url in match:
-        # if "plugin.video" not in name:
-            # continue
-            self.names.append(name)
-            self.urls.append(url)
-        Utils.showlist(self.names, self["menu"])
-        # except Exception, error:
-        # print  "[plugins]: Could not download HTTP Page\n" + str(error)
-
-    def getfeedError(self, error=""):
-        error = str(error)
-        print("Download error =", error)
-
-    def okClicked(self):
-        if self.zipcode == "false":
-            sel = self["menu"].getSelectionIndex()
-            if sel is None:
-                self.close()
-            name = self.names[sel]
-            url1 = self.plugurl + name + "/"
-            url2 = self.infourl
-            line = name + "###" + url1 + "###" + url2 + "###"
-            print("In Repo2 line =", line)
-            #############################
-            """
-            adpath = THISPLUG + "/useradlist.txt"
-            f1 = open(adpath,"a")
-            f1.write(line)
-            f1.close()
-            """
-            #############################
-            self.session.open(GetaddonsA3, line)
-        else:
-            sel = self["menu"].getSelectionIndex()
-            if sel is None:
-                self.close()
-            name = self.names[sel]
-            url = self.urls[sel]
-            if self.plugurl.endswith("/"):
-                # url = self.plugurl + name + "/" + name + "-" + url + ".zip?raw=true"
-                url = self.plugurl + name + "/" + name + "-" + url + ".zip"
-            else:
-                # url = self.plugurl + "/" + name + "/" + name + "-" + url + ".zip?raw=true"
-                url = self.plugurl + "/" + name + "/" + name + "-" + url + ".zip"
-            print("In Repo2 url B= ", url)
-            ##########################
-            url2 = self.infourl
-            line = name + "###" + url + "###" + url2 + "###\n"
-            print("In Repo2 line 2 =", line)
-            adpath = THISPLUG + "/useradlist.txt"
-            f1 = open(adpath, "a")
-            f1.write(line)
-            f1.close()
-            ##########################
-            self.session.open(Addons3, name, url)
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Repo3(Screen):
-
-    def __init__(self, session, url, plugurl, zipcode):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self["bild"] = startspinner()
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = " "
-        print("In Repo3 url =", url)
-        self.url = plugurl + url
-        self.zipcode = zipcode
-        print("In Addons2 self.url =", self.url)
-        self["info"].setText(self.info)
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        xurl = self.url
-        print("Repo3 xurl=", xurl)
-        getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
-
-    def gotPage(self, html):
-        # try:
-        if DEBUG == 1:
-            print("Repo3 html = ", html)
-        self.html = html
-        self.names = []
-        self.urls = []
-        regexcat = '<a href="plugin.video(.*?)">(.*?)</a><'
-        match = re.compile(regexcat, re.DOTALL).findall(html)
-        for url, name in match:
-            name = name.replace("plugin.video.", "")
-            self.names.append(name)
-            self.urls.append(url)
-        Utils.showlist(self.names, self["menu"])
-        # except Exception, error:
-        # #print  "[plugins]: Could not download HTTP Page\n" + str(error)
-
-    def getfeedError(self, error=""):
-        error = str(error)
-        print("Download error =", error)
-
-    def okClicked(self):
-        if self.errcount == 1:
-            self.close()
-        else:
-            sel = self["menu"].getSelectionIndex()
-            name = self.names[sel]
-            url = self.urls[sel]
-            url = self.url + "/plugin.video" + url
-            print("Here in Repo3 name, url =", name, url)
-            self.session.open(Addons3, name, url)
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Getadds5(Screen):
-
-    def __init__(self, session, url):
-        Screen.__init__(self, session)
-        self.session = session
-        print("Addons url =", url)
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = " "
-        self.url = url
-        self["info"].setText(self.info)
-        self["bild"] = startspinner()
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        xurl = self.url
-        print("In Getadds5 xurl =", xurl)
-        # getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
-        html = Utils.getUrl(xurl)
-        self.gotPage(html)
-
-    def gotPage(self, html):
-        # try:
-        if DEBUG == 1:
-            print("In Getadds5 html = ", html)
-        self.html = html
-        self.names = []
-        self.urls = []
-        regexcat = '<tr><td><a href="plugin(.*?)" title="(.*?)".*?</td><td>202(.*?)<'
-        match = re.compile(regexcat, re.DOTALL).findall(html)
-        print("In Addons match =", match)
-        for url, name, rev in match:
-            if ("plugin.video" not in name) and ("plugin.audio" not in name) and ("plugin.image" not in name) and ("plugin.picture" not in name):
-                continue
-            rev = rev.replace(" ", "")
-            rev = rev.replace("\n", "")
-            rev1 = "2" + rev
-            name = name + " (" + rev1 + ")"
-            url1 = self.url + "plugin" + url
-            name = name.replace("/", "")
-            name = name.replace("()", "")
-            print("In Getadds5 name = ", name)
-            print("In Getadds5 url1 = ", url1)
-            self.names.append(name)
-            self.urls.append(url1)
-        Utils.showlist(self.names, self["menu"])
-        # except Exception, error:
-        # print  "[plugins]: Could not download HTTP Page\n" + str(error)
-
-    def getfeedError(self, error=""):
-        error = str(error)
-        print("Download error =", error)
-
-    def okClicked(self):
-        if self.errcount == 1:
-            self.close()
-        else:
-            sel = self["menu"].getSelectionIndex()
-            name = self.names[sel]
-            url = self.urls[sel]
-            print("In Getadds5 url = ", url)
-            self.session.open(Getadds6, name, url)
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Getadds6(Screen):
-
-    def __init__(self, session, name, url):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self["bild"] = startspinner()
-        self.info = " "
-        self.name = name
-        print("In Getadds6 url =", url)
-        self.url = url
-        print("In Getadds6 self.url =", self.url)
-        self["info"].setText(self.info)
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        xurl = self.url
-        print("xurl 2=", xurl)
-        # getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
-        html = Utils.getUrl(xurl)
-        self.gotPage(html)
-
-    def gotPage(self, html):
-        # try:
-        if DEBUG == 1:
-            print("html 2= ", html)
-        self.html = html
-        self.names = []
-        self.urls = []
-        if "plugin.video" in self.name:
-            regexcat = '<tr><td><a href="plugin.video(.*?)" title="(.*?)".*?td><td>20(.*?)<'
-            match = re.compile(regexcat, re.DOTALL).findall(html)
-            for url, name, rev in match:
-                name = name + " :" + "20" + rev
-                name = name.replace("plugin.video.", "")
-                self.names.append(name)
-                self.urls.append(url)
-        elif "plugin.audio" in self.name:
-            regexcat = '<<tr><td><a href="plugin.audio(.*?)" title="(.*?)".*?</td><td>20(.*?)<'
-            match = re.compile(regexcat, re.DOTALL).findall(html)
-            for url, name, rev in match:
-                name = name + " :" + "20" + rev
-                name = name.replace("plugin.audio.", "")
-                self.names.append(name)
-                self.urls.append(url)
-        if "plugin.image" in self.name:
-            regexcat = '<tr><td><a href="plugin.image(.*?)" title="(.*?)".*?</td><td>20(.*?)<'
-            match = re.compile(regexcat, re.DOTALL).findall(html)
-            for url, name, rev in match:
-                name = name + " :" + "20" + rev
-                name = name.replace("plugin.image.", "")
-                self.names.append(name)
-                self.urls.append(url)
-        if "plugin.picture" in self.name:
-            regexcat = '<tr><td><a href="plugin.picture(.*?)" title="(.*?)".*?</td><td>20(.*?)<'
-            match = re.compile(regexcat, re.DOTALL).findall(html)
-            for url, name, rev in match:
-                name = name + " :" + "20" + rev
-                name = name.replace("plugin.picture.", "")
-                self.names.append(name)
-                self.urls.append(url)
-        Utils.showlist(self.names, self["menu"])
-
-# except Exception, error:
-# print  "[plugins]: Could not download HTTP Page\n" + str(error)
-
-    def getfeedError(self, error=""):
-        error = str(error)
-        print("Download error =", error)
-
-    def okClicked(self):
-        if self.errcount == 1:
-            self.close()
-        else:
-            sel = self["menu"].getSelectionIndex()
-            name = self.names[sel]
-            url = self.urls[sel]
-            # http://mirrors.kodi.tv/addons/krypton/plugin.video.dailymotion_com/plugin.video.dailymotion_com-2.4.1.zip
-            print("In getadds6 self.url =", self.url)
-            if "plugin.video" in self.name:
-                url = self.url + "plugin.video" + url
-            if "plugin.audio" in self.name:
-                url = self.url + "plugin.audio" + url
-            if "plugin.image" in self.name:
-                url = self.url + "plugin.image" + url
-            if "plugin.picture" in self.name:
-                url = self.url + "plugin.picture" + url
-            print("Here in Getadds6 name, url =", name, url)
-            self.session.open(Addons3, self.name, url)
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Addons(Screen):
-
-    def __init__(self, session, url):
-        Screen.__init__(self, session)
-        # if config.plugins.polar.menutype.value == "icons1":
-        # self.skinName = "Downloads"
-        # else:
-        self.session = session
-        print("Addons url =", url)
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self["bild"] = startspinner()
-        self.info = " "
-        self.url = url
-        self["info"].setText(self.info)
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        xurl = self.url
-        print("In Addons xurl =", xurl)
-        getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
-
-    def gotPage(self, html):
-        # try:
-        if DEBUG == 1:
-            print("In Addons html = ", html)
-        file1 = THISPLUG + "/adlist.txt"
-        f1 = open(file1, "r+")
-        fpage = f1.read()
-        n1 = fpage.find("Frodo")
-        n2 = fpage.find("#####", (n1+10))
-        fpage2 = fpage[n1:n2]
-        self.html = html
-        self.names = []
-        self.urls = []
-        print("In Addons HOST = ", HOST)
-        regexcat = '<a href="plugin.video(.*?)">(.*?)/<'
-        match = re.compile(regexcat, re.DOTALL).findall(html)
-        print("In Addons match =", match)
-        for url, name in match:
-            if name not in fpage2:
-                continue
-            if "plugin.video" not in name:
-                continue
-            self.names.append(name)
-            self.urls.append(url)
-        Utils.showlist(self.names, self["menu"])
-        # except Exception, error:
-        # print  "[plugins]: Could not download HTTP Page\n" + str(error)
-
-    def getfeedError(self, error=""):
-        error = str(error)
-        print("Download error =", error)
-
-    def okClicked(self):
-        # if self.errcount == 1:
-        # self.close()
-        # else:
-        sel = self["menu"].getSelectionIndex()
-        name = self.names[sel]
-        url = self.urls[sel]
-        print("In Addons url = ", url)
-        self.session.open(Addons2, name, url)
-        self.close()
-
-    def allow(self):
-        # perm = config.ParentalControl.configured.value
-        # print  "perm =", perm
-        if config.ParentalControl.configured.value:
-            # ####print  "Here Ad 1"
-            # from Screens.InputBox import InputBox, PinInput
-            self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
-
-        else:
-            # ####print  "Here Ad 2"
-            self.pinEntered(True)
-        # return
-
-    def pinEntered(self, result):
-        if result:
-            self.session.open(Addons2, self.region, self.html)
-        else:
-            self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
-            self.close()
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Addons2(Screen):
-
-    def __init__(self, session, name, url):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self["bild"] = startspinner()
-        self.info = " "
-        self.name = name
-        print("In Addons2 url =", url)
-        self.url = HOST + "plugin.video" + url
-        print("In Addons2 self.url =", self.url)
-        self["info"].setText(self.info)
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        xurl = self.url
-        print("xurl 2=", xurl)
-        getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
-
-    def gotPage(self, html):
-        if DEBUG == 1:
-            print("html 2= ", html)
-        self.html = html
-        self.names = []
-        self.urls = []
-        regexcat = '<a href="plugin.video(.*?)">(.*?)</a>(.*?)<'
-        match = re.compile(regexcat, re.DOTALL).findall(html)
-        for url, name, rev in match:
-            name = name + " :" + rev
-            name = name.replace("plugin.video.", "")
-            self.names.append(name)
-            self.urls.append(url)
-        Utils.showlist(self.names, self["menu"])
-
-    def getfeedError(self, error=""):
-        error = str(error)
-        print("Download error =", error)
-
-    def okClicked(self):
-        if self.errcount == 1:
-            self.close()
-        else:
-            sel = self["menu"].getSelectionIndex()
-            name = self.names[sel]
-            url = self.urls[sel]
-            url = self.url + "plugin.video" + url
-            print("Here in Addons2 name, url =", name, url)
-            self.session.open(Addons3, name, url)
-            self.close()
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Addons3(Screen):
-
-    def __init__(self, session, name, url):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = " "
-        self["bild"] = startspinner()
-        self.name = name
-        self.url = url
-        print("In Addons3 self.name =", self.name)
-        print("In Addons3 self.url =", self.url)
-        self["info"].setText(self.info)
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onShown.append(self.openTest)
-
-    def okClicked(self):
-        pass
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        # sel = self["menu"].getSelectionIndex()
-        name = self.name.split(" : ")
-        self.plug = name[0]
-        # fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiDirect/plugins"
-        xdest = "/tmp/" + self.plug
-        xurl = self.url
-        f = Utils.getUrlresp(xurl)
-        print("f =", f)
-        fpage = f.read()
-        print("fpage 2 =", fpage)
-        f1 = open(xdest, "wb")
-        f1.write(fpage)
-        f1.close()
-        self.install()
-        """
-        fpage = Utils.getUrl(xurl)
-        print("In Addons3 fpage =", fpage)
-        f = open(xdest, 'w')
-        f.write(fpage)
-        f.close()
-        self.install()
-        """
-
-    def showError(self, error):
-        print("ERROR :", error)
-
-    # def install(self, fplug):
-    def install(self):
-        # cmd1 = "wget -O '" + dest + "' '" + self.url + "'"
-        print("In Addons3 self.plug =", self.plug)
-        if "plugin." in self.plug:
-            fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins"
-        if "script." in self.plug:
-            fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/scripts"
-        if "repository." in self.plug:
-            fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/repos"
-        cmd = "unzip -o -q '/tmp/" + self.plug + "' -d " + fdest
-        print("cmd =", cmd)
-        title = _("Installing addons %s" % (self.plug))
-        self.session.open(Console, _(title), [cmd])
-        self["info"].setText(_("Done."))
-        self.close()
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
 class Getaddons(Screen):
 
     def __init__(self, session):
@@ -5158,8 +3693,6 @@ class Getaddons(Screen):
         self.icount = 0
         self.errcount = 0
         self.onLayoutFinish.append(self.openTest)
-
-# #mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 
     def openTest(self):
         print("In Getaddons openTest")
@@ -5224,101 +3757,6 @@ class Getaddons(Screen):
         # ####print  "Here Ad 3 result =", result
         if result:
             self.session.open(GetaddonsA2, self.catname)
-            self.close()
-        else:
-            self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
-            self.close()
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
-class Getaddons2(Screen):
-
-    def __init__(self, session):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "XbmcPluginScreenF"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = (_("Please select category"))
-        self["info"].setText(self.info)
-        self["bild"] = startspinner()
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.close,
-                                           "red": self.close,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Cancel"))
-        self["key_green"] = Button(_("Select"))
-        self.icount = 0
-        self.errcount = 0
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        pic = res_plugin_path + "Download.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "DownloadL.png"
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        self.data = []
-        cats = []
-        file1 = THISPLUG + "/useradlist.txt"
-        myfile = open(file1, "r+")
-        icount = 0
-        for line in myfile.readlines():
-            if line.startswith("#####"):
-                cat = line.replace("#####", "")
-                cat = cat.replace("####", "")
-                if "fix" in cat:
-                    continue
-                cats.append(cat)
-                self.data.append(line)
-        Utils.showlist(cats, self["menu"])
-
-    def okClicked(self):
-        sel = self["menu"].getSelectionIndex()
-        if sel is None:
-            self.close()
-        else:
-            name = self.data[sel]
-            if "Adult" in name:
-                self.catname = name
-                self.allow()
-            else:
-                self.session.open(GetaddonsA2B, name)
-                self.close()
-
-    def allow(self):
-        # perm = config.ParentalControl.configured.value
-        # ####print  "perm =", perm
-        if config.ParentalControl.configured.value:
-            # print  "Here Ad 1"
-            # from Screens.InputBox import InputBox, PinInput
-            self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
-        else:
-            # ####print  "Here Ad 2"
-            self.pinEntered(True)
-        # return
-
-    def pinEntered(self, result):
-        # ####print  "Here Ad 3 result =", result
-        if result:
-            self.session.open(GetaddonsA2B, self.catname)
             self.close()
         else:
             self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
@@ -5603,13 +4041,392 @@ class GetaddonsA2(Screen):
         self["menu"].number(number)
 
 
-class GetaddonsA2B(Screen):
+class Getadds3(Screen):
 
-    def __init__(self, session, cat):
+    def __init__(self, session):
+        Screen.__init__(self, session)
+        self.session = session
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request."))
+        self["info"].setText(self.info)
+        self["bild"] = startspinner()
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        methods = []
+        self.urls = []
+        methods.append("Matrix")
+        self.urls.append("http://mirrors.kodi.tv/addons/matrix/")
+        Utils.showlist(methods, self["menu"])
+
+    def okClicked(self):
+        sel = self["menu"].getSelectionIndex()
+        url = self.urls[sel]
+        if sel is None:
+            self.close()
+        else:
+            self.session.open(Getadds5, url)
+
+    def keyLeft(self):
+        self["text"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+class GetaddonsA3(Screen):
+
+    def __init__(self, session, line):
         Screen.__init__(self, session)
         # if config.plugins.polar.menutype.value == "icons1":
             # self.skinName = "Downloads"
-        # else:
+        self.session = session
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.line = line
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self["bild"] = startspinner()
+        self.info = (_(" "))
+        self["info"].setText(self.info)
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.onShown.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        items = self.line.split("###")
+        print("In openTest items =", items)
+        name = items[0]
+        url1 = items[1]
+        # url2 = items[2]
+        fdest = THISPLUG + "/plugins/" + name
+        cmd = "mkdir -p " + fdest
+        os.system(cmd)
+        self.getfolder(name, url1, fdest)
+
+    def getfolder(self, name, url, xdest):
+        # f = urlopen(url)
+        fpage = Utils.getUrl(url)
+        # f.close()
+        print("In Repo2 getfolder name, url C=", name, url)
+        print("In Repo2 getfolder xdest=", xdest)
+        print("In Repo2 getfolder fpage =", fpage)
+        regexcat = '<li><a href="(.*?)">.*?</a><'
+        match = re.compile(regexcat, re.DOTALL).findall(fpage)
+        for url1 in match:
+            if "../" in url1:
+                continue
+            if url1.endswith("/"):
+                url2 = url + url1
+                xdest4 = xdest + "/" + url1
+                print("In Repo2 getfolder name, url D=", name, url)
+                print("In Repo2 getfolder xdest4 D=", xdest4)
+                if not os.path.exists(xdest4):
+                    cmd = "mkdir " + xdest4
+                    os.system(cmd)
+                self.foldback(name, url2, xdest4)
+            else:
+                url2 = url + url1
+                print("In Repo2 getfolder url2 =", url2)
+                fpage2 = Utils.getUrl(url2)
+                xdest3 = xdest + "/" + url1
+                f3 = open(xdest3, "w")
+                f3.write(fpage2)
+                # f2.close()
+                f3.close()
+                self.close()
+        return
+
+    def foldback(self, name, url, xdest):
+        self.getfolder(name, url, xdest)
+
+    def okClicked(self):
+        sel = self["menu"].getSelectionIndex()
+        if sel is None:
+            self.close()
+        else:
+            name = self.data[sel]
+        # if "Frodo" in name:
+        # url = "http://mirrors.kodi.tv/addons/jarvis/"
+        # global HOST
+        # HOST = url
+        # self.session.open(Addons, url)
+        # self.close()
+            if "Adult" in name:
+                self.catname = name
+                self.allow()
+            else:
+                self.session.open(GetaddonsA2, name)
+                self.close()
+
+    def allow(self):
+        # perm = config.ParentalControl.configured.value
+        # ####print  "perm =", perm
+        if config.ParentalControl.configured.value:
+            # ####print  "Here Ad 1"
+            # from Screens.InputBox import InputBox, PinInput
+            self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
+        else:
+            # ####print  "Here Ad 2"
+            self.pinEntered(True)
+        # return
+
+    def pinEntered(self, result):
+        # ####print  "Here Ad 3 result =", result
+        if result:
+            self.session.open(GetaddonsA2, self.catname)
+        else:
+            self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
+            self.close()
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+class Getadds4(Screen):
+
+    def __init__(self, session):
+        Screen.__init__(self, session)
+        self.session = session
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request.."))
+        self["info"].setText(self.info)
+        self["bild"] = startspinner()
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        self.names = []
+        self.urls = []
+        path = THISPLUG + "/repos"
+        print("In Getadds4 path", path)
+        for name in os.listdir(path):
+            if "repository." not in name:
+                continue
+            else:
+                url = path + "/" + name + "/"
+            self.names.append(name)
+            self.urls.append(url)
+        print("In Getadds4 self.urls =", self.urls)
+        Utils.showlist(self.names, self["menu"])
+
+    def okClicked(self):
+        sel = self["menu"].getSelectionIndex()
+        if sel is None:
+            self.close()
+        else:
+            # name = self.names[sel]
+            url = self.urls[sel]
+            tfile = url + "addon.xml"
+            print("In Getadds4 tfile =", tfile)
+            f = open(tfile, "r")
+            for line in f.readlines():
+                print("In Repo line =", line)
+                if "<info" in line:
+                    n1 = line.find(">", 0)
+                    n2 = line.find('<', n1)
+                    infourl = line[(n1+1):n2]
+                    print("In Repo infourl A=", infourl)
+                if "<datadir" in line:
+                    n1 = line.find(">", 0)
+                    n2 = line.find('<', n1)
+                    plugurl = line[(n1+1):n2]
+                    print("In Repo plugurl =", plugurl)
+                    if "false" in line:
+                        zipcode = "false"
+                    else:
+                        zipcode = "true"
+                    break
+                print("In Repo infourl =", infourl)
+                print("In Repo plugurl =", plugurl)
+                print("In Repo zipcode =", zipcode)
+            self.session.open(Repo2, infourl, plugurl, zipcode)
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+class Getadds5(Screen):
+
+    def __init__(self, session, url):
+        Screen.__init__(self, session)
+        self.session = session
+        print("Addons url =", url)
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self.info = " "
+        self.url = url
+        self["info"].setText(self.info)
+        self["bild"] = startspinner()
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        xurl = self.url
+        print("In Getadds5 xurl =", xurl)
+        # getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
+        html = Utils.getUrl(xurl)
+        self.gotPage(html)
+
+    def gotPage(self, html):
+        # try:
+        if DEBUG == 1:
+            print("In Getadds5 html = ", html)
+        self.html = html
+        self.names = []
+        self.urls = []
+        regexcat = '<tr><td><a href="plugin(.*?)" title="(.*?)".*?</td><td>202(.*?)<'
+        match = re.compile(regexcat, re.DOTALL).findall(html)
+        print("In Addons match =", match)
+        for url, name, rev in match:
+            if ("plugin.video" not in name) and ("plugin.audio" not in name) and ("plugin.image" not in name) and ("plugin.picture" not in name):
+                continue
+            rev = rev.replace(" ", "")
+            rev = rev.replace("\n", "")
+            rev1 = "2" + rev
+            name = name + " (" + rev1 + ")"
+            url1 = self.url + "plugin" + url
+            name = name.replace("/", "")
+            name = name.replace("()", "")
+            print("In Getadds5 name = ", name)
+            print("In Getadds5 url1 = ", url1)
+            self.names.append(name)
+            self.urls.append(url1)
+        Utils.showlist(self.names, self["menu"])
+        # except Exception, error:
+        # print  "[plugins]: Could not download HTTP Page\n" + str(error)
+
+    def getfeedError(self, error=""):
+        error = str(error)
+        print("Download error =", error)
+
+    def okClicked(self):
+        if self.errcount == 1:
+            self.close()
+        else:
+            sel = self["menu"].getSelectionIndex()
+            name = self.names[sel]
+            url = self.urls[sel]
+            print("In Getadds5 url = ", url)
+            self.session.open(Getadds6, name, url)
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+class Getadds6(Screen):
+
+    def __init__(self, session, name, url):
+        Screen.__init__(self, session)
         self.session = session
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
@@ -5622,8 +4439,11 @@ class GetaddonsA2B(Screen):
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self["bild"] = startspinner()
-        self.cat = cat
-        self.info = (_("     Please select addon to install"))
+        self.info = " "
+        self.name = name
+        print("In Getadds6 url =", url)
+        self.url = url
+        print("In Getadds6 self.url =", self.url)
         self["info"].setText(self.info)
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
@@ -5635,8 +4455,6 @@ class GetaddonsA2B(Screen):
         self["key_green"] = Button(_("Select"))
         self.icount = 0
         self.errcount = 0
-        self.names = []
-        self.urls = []
         self.onLayoutFinish.append(self.openTest)
 
     def openTest(self):
@@ -5644,166 +4462,778 @@ class GetaddonsA2B(Screen):
         if Utils.isFHD():
             pic = res_plugin_path + "DownloadL.png"
         self["pixmap1"].instance.setPixmapFromFile(pic)
-        self.data = []
-        try:
-            file1 = THISPLUG + "/useradlist.txt"
-            f1 = open(file1, "r+")
-            fpage = f1.read()
-        except:
-            fpage = " "
-        self.fpage = fpage
-        n1 = fpage.find(self.cat)
-        n2 = fpage.find("#####", (n1+10))
-        fpage2 = fpage[n1:n2]
-        lines = fpage2.splitlines()
-        nms = []
-        for line in lines:
-            if line.startswith("#####"):
-                continue
-            elif "---" in line:
-                nms.append(line)
-                self.names.append(" ")
-                self.urls.append(" ")
-            elif "###" not in line:
-                nms.append(line)
-                self.names.append(" ")
-                self.urls.append(" ")
-            else:
-                # print  "In GetaddonsA2 line =", line
-                items = line.split("###")
-                # print  "In GetaddonsA2 items =", items
-                nm = items[0]
-                nms.append(nm)
-                self.names.append(items[0])
-                self.urls.append(line)
-        Utils.showlist(nms, self["menu"])
+        xurl = self.url
+        print("xurl 2=", xurl)
+        # getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
+        html = Utils.getUrl(xurl)
+        self.gotPage(html)
+
+    def gotPage(self, html):
+        # try:
+        if DEBUG == 1:
+            print("html 2= ", html)
+        self.html = html
+        self.names = []
+        self.urls = []
+        if "plugin.video" in self.name:
+            regexcat = '<tr><td><a href="plugin.video(.*?)" title="(.*?)".*?td><td>20(.*?)<'
+            match = re.compile(regexcat, re.DOTALL).findall(html)
+            for url, name, rev in match:
+                name = name + " :" + "20" + rev
+                name = name.replace("plugin.video.", "")
+                self.names.append(name)
+                self.urls.append(url)
+        elif "plugin.audio" in self.name:
+            regexcat = '<<tr><td><a href="plugin.audio(.*?)" title="(.*?)".*?</td><td>20(.*?)<'
+            match = re.compile(regexcat, re.DOTALL).findall(html)
+            for url, name, rev in match:
+                name = name + " :" + "20" + rev
+                name = name.replace("plugin.audio.", "")
+                self.names.append(name)
+                self.urls.append(url)
+        if "plugin.image" in self.name:
+            regexcat = '<tr><td><a href="plugin.image(.*?)" title="(.*?)".*?</td><td>20(.*?)<'
+            match = re.compile(regexcat, re.DOTALL).findall(html)
+            for url, name, rev in match:
+                name = name + " :" + "20" + rev
+                name = name.replace("plugin.image.", "")
+                self.names.append(name)
+                self.urls.append(url)
+        if "plugin.picture" in self.name:
+            regexcat = '<tr><td><a href="plugin.picture(.*?)" title="(.*?)".*?</td><td>20(.*?)<'
+            match = re.compile(regexcat, re.DOTALL).findall(html)
+            for url, name, rev in match:
+                name = name + " :" + "20" + rev
+                name = name.replace("plugin.picture.", "")
+                self.names.append(name)
+                self.urls.append(url)
+        Utils.showlist(self.names, self["menu"])
+
+# except Exception, error:
+# print  "[plugins]: Could not download HTTP Page\n" + str(error)
+
+    def getfeedError(self, error=""):
+        error = str(error)
+        print("Download error =", error)
+
+    def okClicked(self):
+        if self.errcount == 1:
+            self.close()
+        else:
+            sel = self["menu"].getSelectionIndex()
+            name = self.names[sel]
+            url = self.urls[sel]
+            # http://mirrors.kodi.tv/addons/krypton/plugin.video.dailymotion_com/plugin.video.dailymotion_com-2.4.1.zip
+            print("In getadds6 self.url =", self.url)
+            if "plugin.video" in self.name:
+                url = self.url + "plugin.video" + url
+            if "plugin.audio" in self.name:
+                url = self.url + "plugin.audio" + url
+            if "plugin.image" in self.name:
+                url = self.url + "plugin.image" + url
+            if "plugin.picture" in self.name:
+                url = self.url + "plugin.picture" + url
+            print("Here in Getadds6 name, url =", name, url)
+            self.session.open(Addons3, self.name, url)
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+class Fusion(Screen):
+
+    def __init__(self, session):
+        Screen.__init__(self, session)
+        self.session = session
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self.info = (_("Please select repository type"))
+        self["info"].setText(self.info)
+        self["bild"] = startspinner()
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        self.methods = []
+        self.urls = []
+        # self.methods.append("superrepo")
+        # self.urls.append("https://cdimage.debian.org/mirror/addons.superrepo.org/v7/addons/")
+        self.methods.append("English")
+        self.urls.append("http://fusion.tvaddons.co/kodi-repos/english/")
+        self.methods.append("International")
+        self.urls.append("http://fusion.tvaddons.co/kodi-repos/international/")
+        self.methods.append("XXX-Adult")
+        self.urls.append("http://fusion.tvaddons.co/kodi-repos/xxx-adult/")
+        Utils.showlist(self.methods, self["menu"])
 
     def okClicked(self):
         sel = self["menu"].getSelectionIndex()
+        url = self.urls[sel]
+        name = self.methods[sel]
+        self.selname = name
+        self.selurl = url
+        if sel is None:
+            self.close()
+        elif "adult" in name.lower():
+            self.allow()
+        else:
+            self.session.open(Fusion2, name, url)
+
+    def allow(self):
+        # perm = config.ParentalControl.configured.value
+        # ####print  "perm =", perm
+        if config.ParentalControl.configured.value:
+            # ####print  "Here Ad 1"
+            # from Screens.InputBox import InputBox, PinInput
+            self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
+
+        else:
+            # ####print  "Here Ad 2"
+            self.pinEntered(True)
+        # return
+
+    def pinEntered(self, result):
+        # ####print  "Here Ad 3 result =", result
+        if result:
+            self.session.open(Fusion2, self.selname, self.selurl)
+        else:
+            self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
+            self.close()
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+class Fusion2(Screen):
+
+    def __init__(self, session, name, url):
+        Screen.__init__(self, session)
+        self.session = session
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self.info = (_("Please select repository type"))
+        self["info"].setText(self.info)
+        self["bild"] = startspinner()
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.name = name
+        self.url = url
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        self.names = []
+        self.urls = []
+        try:
+            fpage = Utils.getUrl(self.url)
+        except:
+            fpage = " "
+        # http://fusion.tvaddons.co/kodi-repos/english/repository.BludhavenGrayson-1.0.0.zip
+        regexcat = 'a href="(.*?)">(.*?)<'
+        match = re.compile(regexcat, re.DOTALL).findall(fpage)
+        print("In Repo2 match =", match)
+        # http://fusion.tvaddons.co/kodi-repos/english/repository.nextup-0.0.1.zip
+        for url, name in match:
+            name = name.replace("&gt", "")
+            name = name.replace("..", "")
+            name = name.replace(";", "")
+            self.names.append(name)
+            url1 = self.url + url
+            self.urls.append(url1)
+        Utils.showlist(self.names, self["menu"])
+
+    def okClicked(self):
+        sel = self["menu"].getSelectionIndex()
+        url = self.urls[sel]
         if sel is None:
             self.close()
         else:
-            line = self.urls[sel]
-            self.name = self.names[sel]
-            self.checkLine(line)
-
-    def checkLine(self, line):
-        print("In checkLine line =", line)
-        items = line.split("###")
-        print("In checkLine items =", items)
-        name = items[0]
-        url1 = items[1]
-        url2 = items[2]
-        if url2 == '':
-            xurl = url1
-            xdest = "/tmp/plug.zip"
-            downloadPage(xurl, xdest).addCallback(self.install).addErrback(self.showError)
-        elif not items[1].endswith(".zip"):  # datadirectory zip false
-            self.session.open(GetaddonsA3, line)
-            self.close()
-        else:
-            url2 = items[2]
-            n2 = url1.find(".zip", 0)
-            n3 = url1.rfind("-", 0, n2)
-            if n3 < 0:
-                n3 = url1.rfind("_", 0, n2)
-            n4 = n3 + 1
-            url0 = url1[:n4]
-            print("url0 =", url0)
-            # fpage = urlopen(url2).read()
-            xurl = url2
-            xdest = "/tmp/down.txt"
-            self.line = line
-            self.name = name
-            self.url1 = url1
-            self.url2 = url2
-            self.url0 = url0
-            # fpage = urlopen(url2).read()
-            downloadPage(xurl, xdest).addCallback(self.getdown).addErrback(self.showError)
-
-    def getdown(self, fplug):
-        fpage = open("/tmp/down.txt", "r").read()
-        print("In checkLine fpage =", fpage)
-        if self.url2.endswith(".xml"):
-            # rx = self.name + '.*?version="(.*?)"'
-            rx = 'addo.*?id="' + self.name + '".*?version="(.*?)"'
-        else:
-            rx = self.name + '-(.*?).zip'
-        print("rx =", rx)
-        match = re.compile(rx, re.DOTALL).findall(fpage)
-        print("match =", match)
-        if len(match) == 0:
-            rx = self.name + '_(.*?).zip'
-            match = re.compile(rx, re.DOTALL).findall(fpage)
-            print("match 2=", match)
-        elif len(match) == 1:
-            latest = match[0]
-        else:
-            latest = findmax(match)
-        if latest is not None:
-            xurl = self.url0 + latest + ".zip"
+            xurl = url
             print("xurl =", xurl)
             xdest = "/tmp/plug.zip"
-            downloadPage(xurl, xdest).addCallback(self.install).addErrback(self.showError)
-        else:
-            return
+            # downloadPage(xurl, xdest).addCallback(self.install).addErrback(self.showError)
+            fpage = Utils.getUrl(xurl)
+            f = open(xdest, 'w')
+            f.write(fpage)
+            f.close()
+            self.install()
 
     def showError(self, error):
         print("ERROR :", error)
 
-    def install(self, fplug):
-        if "script." in self.name:
-            fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/scripts"
-        elif "repository" in self.name:
-            fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/repos"
-        else:
-            fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins"
-        addon = THISPLUG + "/plugins/" + self.name
-        cmd1 = "rm -rf '" + addon + "'"
-        cmd2 = "unzip -o -q '/tmp/plug.zip' -d " + fdest
-        cmd = []
-        cmd.append(cmd1)
-        cmd.append(cmd2)
-        print("cmd =", cmd)
-        title = (_("Installing addon"))
-        self.session.openWithCallback(self.checkName, Console, _(title), cmd)
-        # self.close()
+    def install(self):
+        fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/repos"
+        cmd = "unzip -o -q '/tmp/plug.zip' -d " + fdest
+        title = (_("Installing repo"))
+        self.session.openWithCallback(self.doneinst, Console, _(title), [cmd])
 
-    def checkName(self):
-        if "repository" in self.name:
-            self.session.open(Getadds4)
+    def doneinst(self):
+        self.session.open(Getadds4)
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+class Repo2(Screen):
+
+    def __init__(self, session, infourl, plugurl, zipcode):
+        Screen.__init__(self, session)
+        # if config.plugins.polar.menutype.value == "icons1":
+        # self.skinName = "Downloads"
+        # else:
+        self.session = session
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self["bild"] = startspinner()
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self.info = "Please select"
+        self.infourl = infourl
+        self.plugurl = plugurl
+        self.zipcode = zipcode
+        self["info"].setText(self.info)
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        xurl = self.infourl
+        print("In Repo2 xurl =", xurl)
+        # getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
+        html = Utils.getUrl(xurl)
+        self.gotPage(html)
+
+    def gotPage(self, html):
+        # try:
+        if DEBUG == 1:
+            print("In Repo2 html = ", html)
+        self.html = html
+        self.names = []
+        self.urls = []
+        regexcat = '<add.*?id="(.*?)".*?version="(.*?)"'
+        match = re.compile(regexcat, re.DOTALL).findall(html)
+        print("In Repo2 match =", match)
+        for name, url in match:
+        # if "plugin.video" not in name:
+            # continue
+            self.names.append(name)
+            self.urls.append(url)
+        Utils.showlist(self.names, self["menu"])
+        # except Exception, error:
+        # print  "[plugins]: Could not download HTTP Page\n" + str(error)
+
+    def getfeedError(self, error=""):
+        error = str(error)
+        print("Download error =", error)
+
+    def okClicked(self):
+        if self.zipcode == "false":
+            sel = self["menu"].getSelectionIndex()
+            if sel is None:
+                self.close()
+            name = self.names[sel]
+            url1 = self.plugurl + name + "/"
+            url2 = self.infourl
+            line = name + "###" + url1 + "###" + url2 + "###"
+            print("In Repo2 line =", line)
+            #############################
+            """
+            adpath = THISPLUG + "/useradlist.txt"
+            f1 = open(adpath,"a")
+            f1.write(line)
+            f1.close()
+            """
+            #############################
+            self.session.open(GetaddonsA3, line)
         else:
-            path = THISPLUG + "/plugins"
-            for name in os.listdir(path):
-                print("name =", name)
-                if "plugin" not in name:
-                    if "__init" in name:
-                        continue
-                    elif "E2" in name:
-                        self.close()
-                    else:
-                        newname = "plugin.video." + name
-                        cmd = "mv " + path + "/" + name + " " + path + "/" + newname + " &"
-                        os.system(cmd)
-                if "-master" in name:
-                    newname = name.replace("-master", "")
-                    cmd = "mv " + path + "/" + name + " " + path + "/" + newname + " &"
-                    os.system(cmd)
-                if ("pelisalacarta" in name) or ("tvalacarta" in name):
-                    cmd = "rm '" + path + "/" + name + "/fixed2'"
-                    os.system(cmd)
+            sel = self["menu"].getSelectionIndex()
+            if sel is None:
+                self.close()
+            name = self.names[sel]
+            url = self.urls[sel]
+            if self.plugurl.endswith("/"):
+                # url = self.plugurl + name + "/" + name + "-" + url + ".zip?raw=true"
+                url = self.plugurl + name + "/" + name + "-" + url + ".zip"
+            else:
+                # url = self.plugurl + "/" + name + "/" + name + "-" + url + ".zip?raw=true"
+                url = self.plugurl + "/" + name + "/" + name + "-" + url + ".zip"
+            print("In Repo2 url B= ", url)
+            ##########################
+            url2 = self.infourl
+            line = name + "###" + url + "###" + url2 + "###\n"
+            print("In Repo2 line 2 =", line)
+            adpath = THISPLUG + "/useradlist.txt"
+            f1 = open(adpath, "a")
+            f1.write(line)
+            f1.close()
+            ##########################
+            self.session.open(Addons3, name, url)
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+class Repo3(Screen):
+
+    def __init__(self, session, url, plugurl, zipcode):
+        Screen.__init__(self, session)
+        self.session = session
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self["bild"] = startspinner()
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self.info = " "
+        print("In Repo3 url =", url)
+        self.url = plugurl + url
+        self.zipcode = zipcode
+        print("In Addons2 self.url =", self.url)
+        self["info"].setText(self.info)
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        xurl = self.url
+        print("Repo3 xurl=", xurl)
+        getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
+
+    def gotPage(self, html):
+        # try:
+        if DEBUG == 1:
+            print("Repo3 html = ", html)
+        self.html = html
+        self.names = []
+        self.urls = []
+        regexcat = '<a href="plugin.video(.*?)">(.*?)</a><'
+        match = re.compile(regexcat, re.DOTALL).findall(html)
+        for url, name in match:
+            name = name.replace("plugin.video.", "")
+            self.names.append(name)
+            self.urls.append(url)
+        Utils.showlist(self.names, self["menu"])
+        # except Exception, error:
+        # #print  "[plugins]: Could not download HTTP Page\n" + str(error)
+
+    def getfeedError(self, error=""):
+        error = str(error)
+        print("Download error =", error)
+
+    def okClicked(self):
+        if self.errcount == 1:
             self.close()
-            self.checkfix()
+        else:
+            sel = self["menu"].getSelectionIndex()
+            name = self.names[sel]
+            url = self.urls[sel]
+            url = self.url + "/plugin.video" + url
+            print("Here in Repo3 name, url =", name, url)
+            self.session.open(Addons3, name, url)
 
-    def checkfix(self):
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+# no used
+class Addons(Screen):
+
+    def __init__(self, session, url):
+        Screen.__init__(self, session)
+        # if config.plugins.polar.menutype.value == "icons1":
+        # self.skinName = "Downloads"
+        # else:
+        self.session = session
+        print("Addons url =", url)
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self["bild"] = startspinner()
+        self.info = " "
+        self.url = url
+        self["info"].setText(self.info)
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        xurl = self.url
+        print("In Addons xurl =", xurl)
+        getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
+
+    def gotPage(self, html):
+        # try:
+        if DEBUG == 1:
+            print("In Addons html = ", html)
+        file1 = THISPLUG + "/adlist.txt"
+        f1 = open(file1, "r+")
+        fpage = f1.read()
+        n1 = fpage.find("Frodo")
+        n2 = fpage.find("#####", (n1+10))
+        fpage2 = fpage[n1:n2]
+        self.html = html
+        self.names = []
+        self.urls = []
+        print("In Addons HOST = ", HOST)
+        regexcat = '<a href="plugin.video(.*?)">(.*?)/<'
+        match = re.compile(regexcat, re.DOTALL).findall(html)
+        print("In Addons match =", match)
+        for url, name in match:
+            if name not in fpage2:
+                continue
+            if "plugin.video" not in name:
+                continue
+            self.names.append(name)
+            self.urls.append(url)
+        Utils.showlist(self.names, self["menu"])
+        # except Exception, error:
+        # print  "[plugins]: Could not download HTTP Page\n" + str(error)
+
+    def getfeedError(self, error=""):
+        error = str(error)
+        print("Download error =", error)
+
+    def okClicked(self):
+        # if self.errcount == 1:
+        # self.close()
+        # else:
+        sel = self["menu"].getSelectionIndex()
+        name = self.names[sel]
+        url = self.urls[sel]
+        print("In Addons url = ", url)
+        self.session.open(Addons2, name, url)
         self.close()
 
-    def installB(self, fplug):
-        fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins"
-        cmd = "unzip -o -q '/tmp/plug.zip' -d " + fdest
-        print("In installB cmd =", cmd)
-        # title = (_("Installing addon fix"))
-        os.system(cmd)
+    def allow(self):
+        # perm = config.ParentalControl.configured.value
+        # print  "perm =", perm
+        if config.ParentalControl.configured.value:
+            # ####print  "Here Ad 1"
+            # from Screens.InputBox import InputBox, PinInput
+            self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
+
+        else:
+            # ####print  "Here Ad 2"
+            self.pinEntered(True)
+        # return
+
+    def pinEntered(self, result):
+        if result:
+            self.session.open(Addons2, self.region, self.html)
+        else:
+            self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
+            self.close()
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+# depends from Addons  # no used
+
+
+class Addons2(Screen):
+
+    def __init__(self, session, name, url):
+        Screen.__init__(self, session)
+        self.session = session
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self["bild"] = startspinner()
+        self.info = " "
+        self.name = name
+        print("In Addons2 url =", url)
+        self.url = HOST + "plugin.video" + url
+        print("In Addons2 self.url =", self.url)
+        self["info"].setText(self.info)
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        xurl = self.url
+        print("xurl 2=", xurl)
+        getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
+
+    def gotPage(self, html):
+        if DEBUG == 1:
+            print("html 2= ", html)
+        self.html = html
+        self.names = []
+        self.urls = []
+        regexcat = '<a href="plugin.video(.*?)">(.*?)</a>(.*?)<'
+        match = re.compile(regexcat, re.DOTALL).findall(html)
+        for url, name, rev in match:
+            name = name + " :" + rev
+            name = name.replace("plugin.video.", "")
+            self.names.append(name)
+            self.urls.append(url)
+        Utils.showlist(self.names, self["menu"])
+
+    def getfeedError(self, error=""):
+        error = str(error)
+        print("Download error =", error)
+
+    def okClicked(self):
+        if self.errcount == 1:
+            self.close()
+        else:
+            sel = self["menu"].getSelectionIndex()
+            name = self.names[sel]
+            url = self.urls[sel]
+            url = self.url + "plugin.video" + url
+            print("Here in Addons2 name, url =", name, url)
+            self.session.open(Addons3, name, url)
+            self.close()
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
+
+class Addons3(Screen):
+
+    def __init__(self, session, name, url):
+        Screen.__init__(self, session)
+        self.session = session
+        self.skinName = "XbmcPluginScreenF"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.list = []
+        self["menu"] = List(self.list)
+        self["menu"] = tvList([])
+        self['infoc'] = Label(_('Info'))
+        Credits = " Linuxsat-support Forum"
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self.info = " "
+        self["bild"] = startspinner()
+        self.name = name
+        self.url = url
+        print("In Addons3 self.name =", self.name)
+        print("In Addons3 self.url =", self.url)
+        self["info"].setText(self.info)
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Cancel"))
+        self["key_green"] = Button(_("Select"))
+        self.icount = 0
+        self.errcount = 0
+        self.onShown.append(self.openTest)
+
+    def okClicked(self):
+        pass
+
+    def openTest(self):
+        pic = res_plugin_path + "Download.png"
+        if Utils.isFHD():
+            pic = res_plugin_path + "DownloadL.png"
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        # sel = self["menu"].getSelectionIndex()
+        name = self.name.split(" : ")
+        self.plug = name[0]
+        # fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiDirect/plugins"
+        xdest = "/tmp/" + self.plug
+        xurl = self.url
+        f = Utils.getUrlresp(xurl)
+        print("f =", f)
+        fpage = f.read()
+        print("fpage 2 =", fpage)
+        f1 = open(xdest, "wb")
+        f1.write(fpage)
+        f1.close()
+        self.install()
+        """
+        fpage = Utils.getUrl(xurl)
+        print("In Addons3 fpage =", fpage)
+        f = open(xdest, 'w')
+        f.write(fpage)
+        f.close()
+        self.install()
+        """
+
+    def showError(self, error):
+        print("ERROR :", error)
+
+    # def install(self, fplug):
+    def install(self):
+        # cmd1 = "wget -O '" + dest + "' '" + self.url + "'"
+        print("In Addons3 self.plug =", self.plug)
+        if "plugin." in self.plug:
+            fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins"
+        if "script." in self.plug:
+            fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/scripts"
+        if "repository." in self.plug:
+            fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/repos"
+        cmd = "unzip -o -q '/tmp/" + self.plug + "' -d " + fdest
+        print("cmd =", cmd)
+        title = _("Installing addons %s" % (self.plug))
+        self.session.open(Console, _(title), [cmd])
+        self["info"].setText(_("Done."))
         self.close()
 
     def keyLeft(self):
@@ -5815,6 +5245,316 @@ class GetaddonsA2B(Screen):
     def keyNumberGlobal(self, number):
         # print  "pressed", number
         self["menu"].number(number)
+
+
+
+# class Getaddons2(Screen):
+
+    # def __init__(self, session):
+        # Screen.__init__(self, session)
+        # self.session = session
+        # self.skinName = "XbmcPluginScreenF"
+        # title = PlugDescription
+        # self["title"] = Button(title + Version)
+        # self.list = []
+        # self["menu"] = List(self.list)
+        # self["menu"] = tvList([])
+        # self['infoc'] = Label(_('Info'))
+        # Credits = " Linuxsat-support Forum"
+        # self['infoc2'] = Label('%s' % Credits)
+        # self['info'] = Label()
+        # self.info = (_("Please select category"))
+        # self["info"].setText(self.info)
+        # self["bild"] = startspinner()
+        # self["pixmap1"] = Pixmap()
+        # self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          # {"ok": self.okClicked,
+                                           # "back": self.close,
+                                           # "red": self.close,
+                                           # "green": self.okClicked}, -1)
+        # self["key_red"] = Button(_("Cancel"))
+        # self["key_green"] = Button(_("Select"))
+        # self.icount = 0
+        # self.errcount = 0
+        # self.onLayoutFinish.append(self.openTest)
+
+    # def openTest(self):
+        # pic = res_plugin_path + "Download.png"
+        # if Utils.isFHD():
+            # pic = res_plugin_path + "DownloadL.png"
+        # self["pixmap1"].instance.setPixmapFromFile(pic)
+        # self.data = []
+        # cats = []
+        # file1 = THISPLUG + "/useradlist.txt"
+        # myfile = open(file1, "r+")
+        # icount = 0
+        # for line in myfile.readlines():
+            # if line.startswith("#####"):
+                # cat = line.replace("#####", "")
+                # cat = cat.replace("####", "")
+                # if "fix" in cat:
+                    # continue
+                # cats.append(cat)
+                # self.data.append(line)
+        # Utils.showlist(cats, self["menu"])
+
+    # def okClicked(self):
+        # sel = self["menu"].getSelectionIndex()
+        # if sel is None:
+            # self.close()
+        # else:
+            # name = self.data[sel]
+            # if "Adult" in name:
+                # self.catname = name
+                # self.allow()
+            # else:
+                # self.session.open(GetaddonsA2B, name)
+                # self.close()
+
+    # def allow(self):
+        # # perm = config.ParentalControl.configured.value
+        # # ####print  "perm =", perm
+        # if config.ParentalControl.configured.value:
+            # # print  "Here Ad 1"
+            # # from Screens.InputBox import InputBox, PinInput
+            # self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
+        # else:
+            # # ####print  "Here Ad 2"
+            # self.pinEntered(True)
+        # # return
+
+    # def pinEntered(self, result):
+        # # ####print  "Here Ad 3 result =", result
+        # if result:
+            # self.session.open(GetaddonsA2B, self.catname)
+            # self.close()
+        # else:
+            # self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
+            # self.close()
+
+    # def keyLeft(self):
+        # self["menu"].left()
+
+    # def keyRight(self):
+        # self["menu"].right()
+
+    # def keyNumberGlobal(self, number):
+        # # print  "pressed", number
+        # self["menu"].number(number)
+
+
+# class GetaddonsA2B(Screen):
+
+    # def __init__(self, session, cat):
+        # Screen.__init__(self, session)
+        # # if config.plugins.polar.menutype.value == "icons1":
+            # # self.skinName = "Downloads"
+        # # else:
+        # self.session = session
+        # self.skinName = "XbmcPluginScreenF"
+        # title = PlugDescription
+        # self["title"] = Button(title + Version)
+        # self.list = []
+        # self["menu"] = List(self.list)
+        # self["menu"] = tvList([])
+        # self['infoc'] = Label(_('Info'))
+        # Credits = " Linuxsat-support Forum"
+        # self['infoc2'] = Label('%s' % Credits)
+        # self['info'] = Label()
+        # self["bild"] = startspinner()
+        # self.cat = cat
+        # self.info = (_("     Please select addon to install"))
+        # self["info"].setText(self.info)
+        # self["pixmap1"] = Pixmap()
+        # self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          # {"ok": self.okClicked,
+                                           # "back": self.close,
+                                           # "red": self.close,
+                                           # "green": self.okClicked}, -1)
+        # self["key_red"] = Button(_("Cancel"))
+        # self["key_green"] = Button(_("Select"))
+        # self.icount = 0
+        # self.errcount = 0
+        # self.names = []
+        # self.urls = []
+        # self.onLayoutFinish.append(self.openTest)
+
+    # def openTest(self):
+        # pic = res_plugin_path + "Download.png"
+        # if Utils.isFHD():
+            # pic = res_plugin_path + "DownloadL.png"
+        # self["pixmap1"].instance.setPixmapFromFile(pic)
+        # self.data = []
+        # try:
+            # file1 = THISPLUG + "/useradlist.txt"
+            # f1 = open(file1, "r+")
+            # fpage = f1.read()
+        # except:
+            # fpage = " "
+        # self.fpage = fpage
+        # n1 = fpage.find(self.cat)
+        # n2 = fpage.find("#####", (n1+10))
+        # fpage2 = fpage[n1:n2]
+        # lines = fpage2.splitlines()
+        # nms = []
+        # for line in lines:
+            # if line.startswith("#####"):
+                # continue
+            # elif "---" in line:
+                # nms.append(line)
+                # self.names.append(" ")
+                # self.urls.append(" ")
+            # elif "###" not in line:
+                # nms.append(line)
+                # self.names.append(" ")
+                # self.urls.append(" ")
+            # else:
+                # # print  "In GetaddonsA2 line =", line
+                # items = line.split("###")
+                # # print  "In GetaddonsA2 items =", items
+                # nm = items[0]
+                # nms.append(nm)
+                # self.names.append(items[0])
+                # self.urls.append(line)
+        # Utils.showlist(nms, self["menu"])
+
+    # def okClicked(self):
+        # sel = self["menu"].getSelectionIndex()
+        # if sel is None:
+            # self.close()
+        # else:
+            # line = self.urls[sel]
+            # self.name = self.names[sel]
+            # self.checkLine(line)
+
+    # def checkLine(self, line):
+        # print("In checkLine line =", line)
+        # items = line.split("###")
+        # print("In checkLine items =", items)
+        # name = items[0]
+        # url1 = items[1]
+        # url2 = items[2]
+        # if url2 == '':
+            # xurl = url1
+            # xdest = "/tmp/plug.zip"
+            # downloadPage(xurl, xdest).addCallback(self.install).addErrback(self.showError)
+        # elif not items[1].endswith(".zip"):  # datadirectory zip false
+            # self.session.open(GetaddonsA3, line)
+            # self.close()
+        # else:
+            # url2 = items[2]
+            # n2 = url1.find(".zip", 0)
+            # n3 = url1.rfind("-", 0, n2)
+            # if n3 < 0:
+                # n3 = url1.rfind("_", 0, n2)
+            # n4 = n3 + 1
+            # url0 = url1[:n4]
+            # print("url0 =", url0)
+            # # fpage = urlopen(url2).read()
+            # xurl = url2
+            # xdest = "/tmp/down.txt"
+            # self.line = line
+            # self.name = name
+            # self.url1 = url1
+            # self.url2 = url2
+            # self.url0 = url0
+            # # fpage = urlopen(url2).read()
+            # downloadPage(xurl, xdest).addCallback(self.getdown).addErrback(self.showError)
+
+    # def getdown(self, fplug):
+        # fpage = open("/tmp/down.txt", "r").read()
+        # print("In checkLine fpage =", fpage)
+        # if self.url2.endswith(".xml"):
+            # # rx = self.name + '.*?version="(.*?)"'
+            # rx = 'addo.*?id="' + self.name + '".*?version="(.*?)"'
+        # else:
+            # rx = self.name + '-(.*?).zip'
+        # print("rx =", rx)
+        # match = re.compile(rx, re.DOTALL).findall(fpage)
+        # print("match =", match)
+        # if len(match) == 0:
+            # rx = self.name + '_(.*?).zip'
+            # match = re.compile(rx, re.DOTALL).findall(fpage)
+            # print("match 2=", match)
+        # elif len(match) == 1:
+            # latest = match[0]
+        # else:
+            # latest = findmax(match)
+        # if latest is not None:
+            # xurl = self.url0 + latest + ".zip"
+            # print("xurl =", xurl)
+            # xdest = "/tmp/plug.zip"
+            # downloadPage(xurl, xdest).addCallback(self.install).addErrback(self.showError)
+        # else:
+            # return
+
+    # def showError(self, error):
+        # print("ERROR :", error)
+
+    # def install(self, fplug):
+        # if "script." in self.name:
+            # fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/scripts"
+        # elif "repository" in self.name:
+            # fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/repos"
+        # else:
+            # fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins"
+        # addon = THISPLUG + "/plugins/" + self.name
+        # cmd1 = "rm -rf '" + addon + "'"
+        # cmd2 = "unzip -o -q '/tmp/plug.zip' -d " + fdest
+        # cmd = []
+        # cmd.append(cmd1)
+        # cmd.append(cmd2)
+        # print("cmd =", cmd)
+        # title = (_("Installing addon"))
+        # self.session.openWithCallback(self.checkName, Console, _(title), cmd)
+        # # self.close()
+
+    # def checkName(self):
+        # if "repository" in self.name:
+            # self.session.open(Getadds4)
+        # else:
+            # path = THISPLUG + "/plugins"
+            # for name in os.listdir(path):
+                # print("name =", name)
+                # if "plugin" not in name:
+                    # if "__init" in name:
+                        # continue
+                    # elif "E2" in name:
+                        # self.close()
+                    # else:
+                        # newname = "plugin.video." + name
+                        # cmd = "mv " + path + "/" + name + " " + path + "/" + newname + " &"
+                        # os.system(cmd)
+                # if "-master" in name:
+                    # newname = name.replace("-master", "")
+                    # cmd = "mv " + path + "/" + name + " " + path + "/" + newname + " &"
+                    # os.system(cmd)
+                # if ("pelisalacarta" in name) or ("tvalacarta" in name):
+                    # cmd = "rm '" + path + "/" + name + "/fixed2'"
+                    # os.system(cmd)
+            # self.close()
+            # self.checkfix()
+
+    # def checkfix(self):
+        # self.close()
+
+    # def installB(self, fplug):
+        # fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins"
+        # cmd = "unzip -o -q '/tmp/plug.zip' -d " + fdest
+        # print("In installB cmd =", cmd)
+        # # title = (_("Installing addon fix"))
+        # os.system(cmd)
+        # self.close()
+
+    # def keyLeft(self):
+        # self["menu"].left()
+
+    # def keyRight(self):
+        # self["menu"].right()
+
+    # def keyNumberGlobal(self, number):
+        # # print  "pressed", number
+        # self["menu"].number(number)
 
 
 # class ShowPage(Screen):
@@ -5919,9 +5659,7 @@ class ShowPage2(Screen):
 
     def openTest(self):
         print("In showPage 2")
-        pic = res_plugin_path + "default.png"
-        if Utils.isFHD():
-            pic = res_plugin_path + "defaultL.png"
+        pic = defpic
         self["pixmap1"].instance.setPixmapFromFile(pic)
         self.data = []
         self.data = self.ftext.splitlines()
@@ -5945,60 +5683,6 @@ class ShowPage2(Screen):
         self["menu"].number(number)
 
 
-# class KodiLite1HD():
-    # skin = """
-            # <screen name="GetcatsHD" position="0,0" size="1280,720" title="KodiLite" flags="wfNoBorder" backgroundColor="transparent">
-                    # <eLabel position="40,40" zPosition="1" size="1200,640" backgroundColor="#40000000" />
-                    # <eLabel position="780,150" zPosition="2" size="400,300" backgroundColor="transparent" />
-                    # <widget source="global.CurrentTime" render="Label" position="1080,40" size="140,25" zPosition="4" font="Regular;20" halign="right" backgroundColor="black" foregroundColor="#ffffff" transparent="1" valign="center">
-                    # <convert type="ClockToText">Format:%d.%m.%Y</convert>
-                    # </widget>
-                    # <eLabel text="KodiLite 7.0" position="850,65" size="400,60" zPosition="4" font="Regular;50" backgroundColor="#40000000" foregroundColor="#389416" />
-                    # <!--widget name="pixmap" position="800,400" size="300,260" zPosition="3" backgroundColor="#000000" alphatest="on" /-->
-                    # <widget name="menu" position="100,100" size="580,395" itemHeight="40" zPosition="2" foregroundColor="#ffffff" backgroundColor="#40000000" foregroundColorSelected="#ffffff" backgroundColorSelected="#000000" scrollbarMode="showOnDemand" />
-                    # <widget name="info" position="800,460" zPosition="4" size="370,150" font="Regular;40" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="center" />
-                    # <eLabel position="150,660" zPosition="1" size="200,30" backgroundColor="#f23d21" />
-                    # <eLabel position="152,662" zPosition="1" size="196,26" backgroundColor="#000000" />
-                    # <eLabel position="350,660" zPosition="1" size="200,30" backgroundColor="#389416" />
-                    # <eLabel position="352,662" zPosition="1" size="196,26" backgroundColor="#000000" />
-                    # <eLabel position="550,660" zPosition="1" size="200,30" backgroundColor="#bab329" />
-                    # <eLabel position="552,662" zPosition="1" size="196,26" backgroundColor="#000000" />
-                    # <!--eLabel position="750,660" zPosition="1" size="200,30" backgroundColor="#0064c7" />
-                    # <eLabel position="752,662" zPosition="1" size="196,26" backgroundColor="#000000" /-->
-                    # <widget name="key_red" position="150,660" size="200,30" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
-                    # <widget name="key_green" position="350,660" size="200,30" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
-                    # <widget name="key_yellow" position="550,660" size="200,30" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
-                    # <!--widget name="key_blue" position="750,660" size="200,30" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;20" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /-->
-                    # <!--widget name="bild" position="380,550"  size="100,100" transparent="1" zPosition="2" /-->
-            # </screen>"""
-
-
-# class KodiLite1FHD():
-    # skin = """
-            # <screen name="Favorites" position="center,center" size="1920,1080" title="KodiLite" flags="wfNoBorder" backgroundColor="transparent">
-                    # <eLabel position="60,60" zPosition="1" size="1800,960" backgroundColor="#40000000" />
-                    # <eLabel position="1170,225" zPosition="2" size="600,450" backgroundColor="transparent" />
-                    # <eLabel text="KodiLite 7.0" position="1275,102" size="600,90" zPosition="4" font="Regular;75" backgroundColor="#40000000" foregroundColor="#389416" />
-                    # <!--widget name="pixmap" position="800,400" size="300,260" zPosition="3" backgroundColor="#000000" alphatest="on" /-->
-
-                        # <widget name="menu" position="150,150" size="870,720" itemHeight="60" zPosition="2" foregroundColor="#ffffff" backgroundColor="#40000000" foregroundColorSelected="#ffffff" backgroundColorSelected="#000000" scrollbarMode="showOnDemand" />
-                    # <widget name="info" position="1200,690" zPosition="4" size="555,225" font="Regular;60" foregroundColor="#0064c7" backgroundColor="#40000000" transparent="1" halign="left" valign="center" />
-                    # <eLabel position="225,990" zPosition="1" size="300,45" backgroundColor="#f23d21" />
-                    # <eLabel position="228,993" zPosition="1" size="294,39" backgroundColor="#000000" />
-                    # <eLabel position="525,990" zPosition="1" size="300,45" backgroundColor="#389416" />
-                    # <eLabel position="528,993" zPosition="1" size="294,39" backgroundColor="#000000" />
-                    # <eLabel position="825,990" zPosition="1" size="300,45" backgroundColor="#bab329" />
-                    # <eLabel position="828,993" zPosition="1" size="294,39" backgroundColor="#000000" />
-                    # <!--eLabel position="1125,990" zPosition="1" size="300,45" backgroundColor="#0064c7" />
-                    # <eLabel position="1128,993" zPosition="1" size="294,39" backgroundColor="#000000" /-->
-                    # <widget name="key_red" position="225,990" size="300,45" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;30" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
-                    # <widget name="key_green" position="525,990" size="300,45" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;30" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
-                    # <widget name="key_yellow" position="825,990" size="300,45" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;30" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" />
-                    # <!--widget name="key_blue" position="1125,990" size="300,45" valign="center" halign="center" zPosition="4"  foregroundColor="#ffffff" font="Regular;30" transparent="1" shadowColor="#25062748" shadowOffset="-2,-2" /-->
-                    # <!--widget name="pixmap" position="1413,558" size="300,300" zPosition="1" alphatest="on" /-->
-            # </screen>"""
-
-
 # class Getcats(Screen):
 
     # def __init__(self, session):
@@ -6017,13 +5701,11 @@ class ShowPage2(Screen):
         # self["bild"] = startspinner()
         # self["pixmap1"] = Pixmap()
         # self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                            # {
-                                            # "ok": self.okClicked,
-                                            # "back": self.close,
-                                            # "red": self.close,
-                                            # "green": self.okClicked,
-                                            # "yellow": self.conf,
-                                            # }, -1)
+                                             # {"ok": self.okClicked,
+                                             # "back": self.close,
+                                             # "red": self.close,
+                                             # "green": self.okClicked,
+                                             # "yellow": self.conf}, -1)
         # self["key_red"] = Button(_("Exit"))
         # self["key_green"] = Button(_("Select"))
         # self["key_yellow"] = Button(_("Config"))
@@ -6176,187 +5858,186 @@ def main(session, **kwargs):
     afile.close()
     print("In def main 6")
     # start()
-    try:
-        from Plugins.Extensions.KodiLite.Update2 import updstart2
-        updstart2()
-    except:
-        print("\nError 2 updating some scripts")
-    try:
-        from Plugins.Extensions.KodiLite.Update import updstart
-        updstart()
-    except:
-        print("\nError updating some scripts")
+    if cfg.update.value is True:
+        try:
+            from Plugins.Extensions.KodiLite.Update2 import updstart2
+            updstart2()
+        except:
+            print("\nError 2 updating some scripts")
+        try:
+            from Plugins.Extensions.KodiLite.Update import updstart
+            updstart()
+        except:
+            print("\nError updating some scripts")
     start()
     print("In def main 7")
 
 
 """
-######################################
-        fyt = THISPLUG + "/scripts/script.module.youtube.dl/control.py"
-        fyt1 = THISPLUG + "/scripts/script.module.youtube.dl"
-        if not os.path.exists(fyt):
-                cmd = "rm -rf " + fyt1
-                print("fyt cmd =", cmd)
-                system(cmd)
+    ######################################
+    fyt = THISPLUG + "/scripts/script.module.youtube.dl/control.py"
+    fyt1 = THISPLUG + "/scripts/script.module.youtube.dl"
+    if not os.path.exists(fyt):
+        cmd = "rm -rf " + fyt1
+        print("fyt cmd =", cmd)
+        system(cmd)
 
-        fyt = THISPLUG + "/scripts/script.module.urlresolver/lib/urlresolver/plugins"
-        fyt1 = THISPLUG + "/scripts/script.module.urlresolver"
-        fyt2 = THISPLUG + "/kodi.py"
+    fyt = THISPLUG + "/scripts/script.module.urlresolver/lib/urlresolver/plugins"
+    fyt1 = THISPLUG + "/scripts/script.module.urlresolver"
+    fyt2 = THISPLUG + "/kodi.py"
 
-        if not os.path.exists(fyt):
-                cmd = "rm -rf " + fyt1
-                print("fyt cmd =", cmd)
-                system(cmd)
+    if not os.path.exists(fyt):
+        cmd = "rm -rf " + fyt1
+        print("fyt cmd =", cmd)
+        system(cmd)
 
+    else:
+        cmd = "cp rf " + fyt2 + " " + fyt1 + "/lib/urlresolver/lib/"
+        system(cmd)
+
+    fyt = THISPLUG + "/scripts/script.module.future/libs"
+    fyt1 = THISPLUG + "/scripts/script.module.future/lib"
+    if os.path.exists(fyt):
+        cmd = "mv " + fyt + " " + fyt1
+        print("fyt cmd =", cmd)
+        system(cmd)
+    print("In def main 71")
+    ######################################
+    #mmmmmmmmmmmmmmmmmmmmmmmmm
+    xurl = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/kodi-news2.txt"
+    ucode = "UTF-8"
+    xurl = xurl.encode(ucode)
+    xdest = "/tmp/kodi-news.txt"
+    downloadPage(xurl, xdest).addCallback(gotNews).addErrback(showNewsError)
+
+    def showNewsError(error):
+       print("In def main 6 error =", error)
+       start()
+
+    def gotNews(txt=" "):
+        print("In def main 7")
+        global date
+        session = _session
+        indic = 0
+        date = ""
+        olddate = ""
+        if not os.path.exists("/tmp/kodi-news.txt"):
+            indic = 0
         else:
-                cmd = "cp rf " + fyt2 + " " + fyt1 + "/lib/urlresolver/lib/"
-                system(cmd)
+            myfile = file(r"/tmp/kodi-news.txt")
+            icount = 0
+            for line in myfile.readlines():
+                if icount == 0:
+                    date = line
+                    break
+                icount = icount+1
+            myfile.close()
+            myfile = file(r"/tmp/kodi-news.txt")
+            global newstext
+            newstext = myfile.read()
+            print("In gotNews newstext =", newstext)
+            myfile.close()
+            news = newstext
+            n1 = news.find("update2", 0)
+            if n1 > -1:
+                upd = news[n1:(n1+14)]
+            else:
+                upd = "None"
+            global NewUpdate
+            NewUpdate = upd
+            if fileExists("/etc/kodiupd"):
+                myfile = file(r"/etc/kodiupd")
+                icount = 0
+                for line in myfile.readlines():
+                    if icount == 0:
+                        upd1 = line
+                        break
+                    icount = icount+1
+                myfile.close()
+            else:
+                upd1 = "None"
+            n2 = upd1.find(".", 0)
+            if n2 > -1:
+                upd1 = upd1[:n2]
+            print("upd =", upd)
+            print("upd1 =", upd1)
+            if upd != "None":
+                if upd1 != upd:
+                    txt = _("New ") + upd + _(" is available. \nAfter update - gui will restart.\nUpdate Now ?")
+                    session.openWithCallback(do_upd, MessageBox, txt, type = 0)
+                else:
+                    check_news()
+            else:
+                check_news()
 
-        fyt = THISPLUG + "/scripts/script.module.future/libs"
-        fyt1 = THISPLUG + "/scripts/script.module.future/lib"
-        if os.path.exists(fyt):
-                cmd = "mv " + fyt + " " + fyt1
-                print("fyt cmd =", cmd)
-                system(cmd)
-        print("In def main 71")
-######################################
-#mmmmmmmmmmmmmmmmmmmmmmmmm
-        xurl = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/kodi-news2.txt"
-        ucode = "UTF-8"
-        xurl = xurl.encode(ucode)
-        xdest = "/tmp/kodi-news.txt"
-        downloadPage(xurl, xdest).addCallback(gotNews).addErrback(showNewsError)
-
-def showNewsError(error):
-               print("In def main 6 error =", error)
-               start()
-
-def gotNews(txt=" "):
-                       print("In def main 7")
-                       global date
-                       session = _session
-                       indic = 0
-                       date = ""
-                       olddate = ""
-                       if not os.path.exists("/tmp/kodi-news.txt"):
-                               indic = 0
-                       else:
-                               myfile = file(r"/tmp/kodi-news.txt")
-                               icount = 0
-                               for line in myfile.readlines():
-                                   if icount == 0:
-                                           date = line
-                                           break
-                                   icount = icount+1
-                               myfile.close()
-                               myfile = file(r"/tmp/kodi-news.txt")
-                               global newstext
-                               newstext = myfile.read()
-                               print("In gotNews newstext =", newstext)
-                               myfile.close()
-                               news = newstext
-                               n1 = news.find("update2", 0)
-                               if n1 > -1:
-                                      upd = news[n1:(n1+14)]
-                               else:
-                                      upd = "None"
-                               global NewUpdate
-                               NewUpdate = upd
-                               if fileExists("/etc/kodiupd"):
-                                      myfile = file(r"/etc/kodiupd")
-                                      icount = 0
-                                      for line in myfile.readlines():
-                                             if icount == 0:
-                                                    upd1 = line
-                                                    break
-                                             icount = icount+1
-                                      myfile.close()
-                               else:
-                                      upd1 = "None"
-
-                               n2 = upd1.find(".", 0)
-                               if n2 > -1:
-                                      upd1 = upd1[:n2]
-                               print("upd =", upd)
-                               print("upd1 =", upd1)
-                               if upd != "None":
-                                   if upd1 != upd:
-                                      txt = _("New ") + upd + _(" is available. \nAfter update - gui will restart.\nUpdate Now ?")
-                                      session.openWithCallback(do_upd, MessageBox, txt, type = 0)
-                                   else:
-                                      check_news()
-                               else:
-                                      check_news()
-
-def do_upd(answer):
+    def do_upd(answer):
         print("In def main 8")
         session = _session
         if answer is None:
-                check_news()
+            check_news()
         else:
-            if answer is False:
-                check_news()
+        if answer is False:
+            check_news()
+        else:
+            picfold = cfg.cachefold.value+"/xbmc/pic"
+            cmd = "rm -rf " + picfold
+            os.system(cmd)
+            global plug
+            plug = NewUpdate + ".zip"
+            if "update" in plug:
+                    f=open("/etc/kodiupd", 'w')
+                    txt = plug + "\n"
+                    f.write(txt)
+            xdest = "/tmp/" + plug
+            # cmd1 = "wget -O '" + dest + "' 'http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/Software/" + plug + "'"
+            # cmd1 = "wget -O '" + dest + "' 'http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/Software2/" + plug + "'"
+            ##############################################
+            xurl = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/Software/" + plug
+            downloadPage(xurl, xdest).addCallback(gotUpd).addErrback(showNewsError)
+
+    def gotUpd(answer):
+        ##############################################
+        session = _session
+        if ".ipk" in plug:
+            cmd2 = "opkg install --force-overwrite '/tmp/" + plug + "'"
+        elif ".deb" in plug:
+            cmd2 = "dpkg --install '/tmp/" + plug + "'"
+
+        elif ".zip" in plug:
+            cmd2 = "unzip -o -q '/tmp/" + plug + "' -d /"
+        title = _("Installing %s" % (plug))
+        session.openWithCallback(done_upd,Console, _(title),[cmd2])
+
+    def done_upd():
+        print("In def main 9")
+        from .Restart import Restart
+        session = _session
+        Restart(session)
+
+    def check_news():
+        print("In check_news")
+        session = _session
+        olddate = " "
+        if not os.path.exists("/etc/kodinodl"):
+            indic = 1
+        else:
+            myfile2 = file(r"/etc/kodinodl")
+            icount = 0
+            for line in myfile2.readlines():
+                if icount == 0:
+                    olddate = line
+                    break
+                icount = icount+1
+            if olddate != date :
+                indic = 1
             else:
-                picfold = cfg.cachefold.value+"/xbmc/pic"
-                cmd = "rm -rf " + picfold
-                os.system(cmd)
-                global plug
-                plug = NewUpdate + ".zip"
-                if "update" in plug:
-                        f=open("/etc/kodiupd", 'w')
-                        txt = plug + "\n"
-                        f.write(txt)
-                xdest = "/tmp/" + plug
-#                cmd1 = "wget -O '" + dest + "' 'http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/Software/" + plug + "'"
-##                cmd1 = "wget -O '" + dest + "' 'http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/Software2/" + plug + "'"
-##############################################
-                xurl = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/Software/" + plug
-                downloadPage(xurl, xdest).addCallback(gotUpd).addErrback(showNewsError)
-
-def gotUpd(answer):
-##############################################
-                session = _session
-                if ".ipk" in plug:
-                        cmd2 = "opkg install --force-overwrite '/tmp/" + plug + "'"
-                elif ".deb" in plug:
-                        cmd2 = "dpkg --install '/tmp/" + plug + "'"
-
-                elif ".zip" in plug:
-                        cmd2 = "unzip -o -q '/tmp/" + plug + "' -d /"
-                title = _("Installing %s" % (plug))
-                session.openWithCallback(done_upd,Console, _(title),[cmd2])
-
-def done_upd():
-                print("In def main 9")
-                from .Restart import Restart
-                session = _session
-                Restart(session)
-
-
-def check_news():
-                       print("In check_news")
-                       session = _session
-                       olddate = " "
-                       if not os.path.exists("/etc/kodinodl"):
-                              indic = 1
-                       else:
-                              myfile2 = file(r"/etc/kodinodl")
-                              icount = 0
-                              for line in myfile2.readlines():
-                                    if icount == 0:
-                                           olddate = line
-                                           break
-                                    icount = icount+1
-                              if olddate != date :
-                                    indic = 1
-                              else:
-                                    indic = 0
-                              myfile2.close()
-                       print("In check_news indic =", indic)
-                       if indic == 0:
-                             start()
-                       else:
-                             session.openWithCallback(start, ShowPage, newstext)
+                indic = 0
+            myfile2.close()
+        print("In check_news indic =", indic)
+        if indic == 0:
+            start()
+        else:
+            session.openWithCallback(start, ShowPage, newstext)
         """
 
 
