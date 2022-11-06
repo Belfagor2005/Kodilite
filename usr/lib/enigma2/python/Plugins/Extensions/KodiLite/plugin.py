@@ -24,82 +24,98 @@
 # ############## 20221030 v9.1 recoded by Lululla ######
 from __future__ import print_function
 from . import _
-from Components.ActionMap import ActionMap, NumberActionMap
+from Components.AVSwitch import AVSwitch
+from Components.ActionMap import NumberActionMap
 from Components.Button import Button
 from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components.MenuList import MenuList
 from Components.Pixmap import Pixmap, MovingPixmap
+from Components.ServiceEventTracker import ServiceEventTracker, InfoBarBase
 from Components.Sources.List import List
 from Components.Sources.StaticText import StaticText
+from Components.config import ConfigSubsection, ConfigSelection
+from Components.config import ConfigText, ConfigDirectory
 from Components.config import NoSave, ConfigYesNo
-from Components.config import config, ConfigSubsection, ConfigSelection
-from Components.config import getConfigListEntry, ConfigText, ConfigDirectory
+from Components.config import config
+from Components.config import getConfigListEntry
 from Plugins.Plugin import PluginDescriptor
+from Screens.ChoiceBox import ChoiceBox
 from Screens.Console import Console
+from Screens.InfoBar import MoviePlayer
+from Screens.InfoBarGenerics import InfoBarMenu, InfoBarSeek, InfoBarAudioSelection, \
+    InfoBarSubtitleSupport, InfoBarSummarySupport, InfoBarServiceErrorPopupSupport, InfoBarNotifications
 from Screens.InputBox import PinInput
 from Screens.MessageBox import MessageBox
 from Screens.Screen import Screen
-from Screens.ChoiceBox import ChoiceBox
 from Screens.Standby import TryQuitMainloop
 from Screens.VirtualKeyBoard import VirtualKeyBoard
-from Tools.Directories import fileExists, copyfile
 from Tools.Directories import SCOPE_PLUGINS
+from Tools.Directories import fileExists, copyfile
 from Tools.Directories import resolveFilename
 from Tools.LoadPixmap import LoadPixmap
 from enigma import eConsoleAppContainer, gPixmapPtr
 from enigma import eListboxPythonMultiContent
+from enigma import eServiceReference
 from enigma import eTimer
 from enigma import gFont
+from enigma import iPlayableService
+from keymapparser import readKeymap
+from twisted.web.client import downloadPage
 from twisted.web.client import getPage
 import os
 import re
-import time
 import sys
-from os import system
-from twisted.web.client import downloadPage
 import xml.etree.cElementTree
-from keymapparser import readKeymap
 
-# import datetime
-# from . import adnutils # import Utils its same
+global subsx
+subsx = False
+
 
 from . import Utils
+from .lib.xUtils import Getvid, Getvid2, Playoptions
+# from .lib import xUtils
+
+from .lib.SkinLoader import loadPluginSkin
+from .lib.Spinner import Spinner
+
+
 PY3 = sys.version_info.major >= 3
 
-
+# from . import adnutils # import Utils its same
+# ## no work this import event circle imports any 2
 # try:
     # from Plugins.Extensions.KodiLite.lib.xUtils import Getvid, Getvid2, Playoptions
 # except:
     # from .lib.xUtils import Getvid, Getvid2, Playoptions
 
-try:
-    from Plugins.Extensions.KodiLite.lib.xUtils import *
-except:
-    from .lib.xUtils import *
+# no work fine
+# try:
+    # from Plugins.Extensions.KodiLite.adnutils import *
+# except:
+    # from .adnutils import *
 
-try:
-    from Plugins.Extensions.KodiLite.lib.SkinLoader import loadPluginSkin
-except:
-    from .lib.SkinLoader import loadPluginSkin
+# try:
+    # from Plugins.Extensions.KodiLite.lib.SkinLoader import loadPluginSkin
+# except:
+    # from .lib.SkinLoader import loadPluginSkin
 
-
-try:
-    from Plugins.Extensions.KodiLite.lib.Spinner import Spinner
-except:
-    from .lib.Spinner import Spinner
+# try:
+    # from Plugins.Extensions.KodiLite.lib.Spinner import Spinner
+# except:
+    # from .lib.Spinner import Spinner
 
 
 if PY3:
     from http.client import HTTPConnection
-    from urllib.parse import urlparse
+    # from urllib.parse import urlparse
     unicode = str
     unichr = chr
     long = int
     PY3 = True
 else:
     from httplib import HTTPConnection
-    from urlparse import urlparse
+    # from urlparse import urlparse
 
 
 try:
@@ -110,31 +126,33 @@ except:
 
 HTTPConnection.debuglevel = 1
 PlugDescription = 'KODILITE '
-Version = 'V.9.1'
+Version = 'V.9.1r1'
+Credits = " Linuxsat-Support Forum"
 select_file = "/tmp/select.txt"
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
 res_plugin_path = THISPLUG + '/skin/images/'
+res_pic_path = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/".format('KodiLite'))
 THISADDON = ""
 HANDLE = 1
-NEWDEFPY = ""
-ARG = " "
 DEBUG = 1
+NOSS = 0
 SELECT = []
 newstext = " "
 date = " "
 NewUpdate = " "
-PICPOS = []
 dtext1 = " "
 LAST = ""
-F4MCMD = ""
 ADDONCAT = ""
 plug = ""
+NEWDEFPY = ""
+ARG = " "
+PICPOS = []
+F4MCMD = ""
 # HOST = "http://mirrors.kodi.tv/addons/jarvis/"
 # HOST = "https://github.com/hadynz/repository.arabic.xbmc-addons/tree/master/repo"
 HOST = ""
 HOST1 = "http://mirrors.kodi.tv/addons/matrix/"
 
-res_pic_path = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/".format('KodiLite'))
 
 if Utils.isFHD():
     # skin_path = res_plugin_path + 'skins/fhd/'
@@ -173,6 +191,55 @@ cfg.listcol = NoSave(ConfigSelection(default="0x000000", choices=[("0x40000000",
 cfg.mainback = NoSave(ConfigSelection(default="default", choices=[("default", _("default")), ("skin2", _("skin2"))]))
 cfg.viewdownloads = NoSave(ConfigSelection(default="disabled", choices=[("disabled", _("Not assigned")), ("help", _("Key help"))]))
 cfg.youtubequal = NoSave(ConfigSelection(default="2", choices=[("1", _("SD")), ("2", _("720p")), ("3", _("1080p"))]))
+
+
+if cfg.subtitle.getValue() is True:
+    try:
+        from Plugins.Extensions.SubsSupport import SubsSupport, SubsSupportStatus
+        subsx = True
+    except ImportError:
+        class SubsSupport(object):
+            def __init__(self, *args, **kwargs):
+                pass
+
+        class SubsSupportStatus(object):
+            def __init__(self, *args, **kwargs):
+                pass
+        NOSS = 1
+        subsx = False
+else:
+    class SubsSupport(object):
+        def __init__(self, *args, **kwargs):
+            pass
+
+    class SubsSupportStatus(object):
+        def __init__(self, *args, **kwargs):
+            pass
+    subsx = False
+
+
+def returnIMDB(text_clear):
+    if Utils.is_tmdb:
+        try:
+            from Plugins.Extensions.TMBD.plugin import TMBD
+            text = Utils.decodeHtml(text_clear)
+            _session.open(TMBD.tmdbScreen, text, 0)
+        except Exception as ex:
+            print("[XCF] Tmdb: ", str(ex))
+        return True
+    elif Utils.is_imdb:
+        try:
+            from Plugins.Extensions.IMDb.plugin import main as imdb
+            text = Utils.decodeHtml(text_clear)
+            imdb(_session, text)
+        except Exception as ex:
+            print("[XCF] imdb: ", str(ex))
+        return True
+    else:
+        text_clear = Utils.decodeHtml(text_clear)
+        _session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
+        return True
+    return
 
 
 def findmax(match=[]):
@@ -310,26 +377,6 @@ def parameters_string_to_dict(parameters):
     return paramDict
 
 
-# in utils.py
-class tvList(MenuList):
-    def __init__(self, list):
-        MenuList.__init__(self, list, False, eListboxPythonMultiContent)
-        self.l.setFont(0, gFont('Regular', 20))
-        self.l.setFont(1, gFont('Regular', 22))
-        self.l.setFont(2, gFont('Regular', 24))
-        self.l.setFont(3, gFont('Regular', 26))
-        self.l.setFont(4, gFont('Regular', 28))
-        self.l.setFont(5, gFont('Regular', 30))
-        self.l.setFont(6, gFont('Regular', 32))
-        self.l.setFont(7, gFont('Regular', 34))
-        self.l.setFont(8, gFont('Regular', 36))
-        self.l.setFont(9, gFont('Regular', 40))
-        if Utils.isFHD():
-            self.l.setItemHeight(50)
-        else:
-            self.l.setItemHeight(50)
-
-
 def getpics(names, pics, tmpfold, picfold):
     global defpic
     defpic = defpic
@@ -352,7 +399,8 @@ def getpics(names, pics, tmpfold, picfold):
         name = Utils.cleanTitle(name)
         print(name)
         # test
-        name = name.replace(' ', '-').replace("'", '').replace('&', '').replace('(', '').replace(')', '')
+        name = name.replace(' ', '-').replace("'", '').replace('&', '')
+        name = name.replace('(', '').replace(')', '')
         print(name)
         # end test
         url = pics[j]
@@ -566,184 +614,15 @@ def buildBilder():
     return Bilder
 
 
-class XbmcConfigScreen(ConfigListScreen, Screen):
-
-    def __init__(self, session, args=0):
-        self.session = session
-        self.setup_title = _("Kodilite Settings")
-        self["title"] = Button(self.setup_title)
-        Screen.__init__(self, session)
-        self.skinName = "Kodiconfig"
-        self.list = [
-                    getConfigListEntry(_("Autoupdate"), cfg.update),
-                    getConfigListEntry(_("Cache folder"), cfg.cachefold),
-                    # getConfigListEntry(_("Skin resolution-(restart e2 after change)"), cfg.skinres),
-                    getConfigListEntry(_("Enigma log (/tmp/e.log)"), cfg.elog),
-                    getConfigListEntry(_("Show thumbpic ?"), cfg.thumb),
-                    getConfigListEntry(_("Use subtitle support ?"), cfg.subtitle),
-                    getConfigListEntry(_("Wait time for lists (sec)"), cfg.wait),
-                    getConfigListEntry(_("vlc server ip"), cfg.vlcip),
-                     ]
-        ConfigListScreen.__init__(self, self.list, session=self.session, on_change=self.changedEntry)
-        # self["status"] = Label()
-        self["key_red"] = Button(_("Exit"))
-        self["key_green"] = Button(_("Save"))
-        self["HelpWindow"] = Pixmap()
-        self["HelpWindow"].hide()
-        self["VKeyIcon"] = Pixmap()
-        self["VKeyIcon"].hide()
-        self["setupActions"] = ActionMap(["SetupActions", "ColorActions", "VirtualKeyboardActions"],
-                                         {"red": self.cancel,
-                                          "green": self.save,
-                                          "cancel": self.cancel,
-                                          "showVirtualKeyboard": self.KeyText}, -2)
-        self.onChangedEntry = []
-        self.handleInputHelpers()
-
-    def changedEntry(self):
-        for x in self.onChangedEntry:
-            x()
-        # try:
-            # if isinstance(self["config"].getCurrent()[1], ConfigYesNo) or isinstance(self["config"].getCurrent()[1], ConfigSelection):
-                # self.createSetup()
-        # except:
-            # pass
-
-    def getCurrentEntry(self):
-        return self["config"].getCurrent() and self["config"].getCurrent()[0] or ""
-
-    def getCurrentValue(self):
-        return self["config"].getCurrent() and str(self["config"].getCurrent()[1].getText()) or ""
-
-    def createSummary(self):
-        from Screens.Setup import SetupSummary
-        return SetupSummary
-
-    def cancel(self):
-        for x in self["config"].list:
-            x[1].cancel()
-        self.close()
-
-    def IsOk(self):
-        sel = self["config"].getCurrent()[1]
-        # sel = self["config"].getCurrent()[0]  # self.getCurrentEntry()
-        print('sel ', sel)
-        # sel2 = self.getCurrentValue()
-        # print('sel2 ', sel2)
-        if sel and sel == cfg.cachefold:
-            self.openDirectoryBrowser(cfg.cachefold.value)
-        else:
-            self.save()
-        ConfigListScreen.keyOK(self)
-
-    def openDirectoryBrowser(self, path):
-        if os.path.exists("/usr/bin/apt-get"):
-            path = None
-        try:
-            from Screens.LocationBox import LocationBox
-            self.session.openWithCallback(
-                self.openDirectoryBrowserCB,
-                LocationBox,
-                windowTitle=_("Choose Directory:"),
-                text=_("Choose directory"),
-                currDir=str(path),
-                bookmarks=cfg.cachefold.value,
-                autoAdd=False,
-                editDir=True,
-                inhibitDirs=["/bin", "/boot", "/dev", "/home", "/lib", "/proc", "/run", "/sbin", "/sys", "/var"],
-                minFree=15)
-        except Exception as ex:
-            print("openDirectoryBrowser get failed: ", str(ex))
-        # ConfigListScreen.keyOK(self)
-
-    def openDirectoryBrowserCB(self, path):
-        if path is not None:
-            cfg.cachefold.setValue(path)
-        return
-
-    def KeyText(self):
-        from Screens.VirtualKeyBoard import VirtualKeyBoard
-        sel = self["config"].getCurrent()
-        if sel:
-            self.session.openWithCallback(self.VirtualKeyBoardCallback, VirtualKeyBoard, title=self["config"].getCurrent()[0], text=self["config"].getCurrent()[1].value)
-
-    def VirtualKeyBoardCallback(self, callback=None):
-        if callback is not None and len(callback):
-            self["config"].getCurrent()[1].value = callback
-            self["config"].invalidate(self["config"].getCurrent())
-        return
-
-    def save(self, answer=None):
-        if answer is None:
-            self.session.openWithCallback(self.save, MessageBox, _("Save Config??\nReboot system necessary!!"), MessageBox.TYPE_YESNO)
-        elif answer:
-            if self["config"].isChanged():
-                for x in self["config"].list:
-                    x[1].save()
-                self.mbox = self.session.open(MessageBox, _("Settings saved successfully !"), MessageBox.TYPE_INFO, timeout=5)
-            self.saveAll()
-            picfold = cfg.cachefold.value + "/xbmc/pic"
-            cmd = "rm -rf " + picfold
-            os.system(cmd)
-            subs = cfg.subtitle.value
-            tfile = THISPLUG + "/scripts/script.module.SubsSupport"
-            if not os.path.exists(tfile):
-                if subs is True:
-                    fdest = THISPLUG + "/scripts"
-                    dest = "/tmp/subssupport.zip"
-                    xfile = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiLite/Script-modules/kodi/script.module.SubsSupport-1.0.0.zip"
-                    cmd1 = "wget -O '" + dest + "' '" + xfile + "'"
-                    cmd2 = "unzip -o -q '/tmp/subssupport.zip' -d " + fdest
-                    cmd = []
-                    cmd.append(cmd1)
-                    cmd.append(cmd2)
-                    print("In main cmd =", cmd)
-                    title = _("Installing script subssupport %s")
-                    self.session.openWithCallback(self.subsdown, Console, _(title), cmd)
-            else:
-                pass
-            self.session.open(TryQuitMainloop, 3)
-
-    def subsdown(self):
-        pass
-
-    def handleInputHelpers(self):
-        from enigma import ePoint
-        currConfig = self["config"].getCurrent()
-        if currConfig is not None:
-            if isinstance(currConfig[1], ConfigText):
-                if "VKeyIcon" in self:
-                    try:
-                        self["VirtualKB"].setEnabled(True)
-                    except:
-                        pass
-                    try:
-                        self["virtualKeyBoardActions"].setEnabled(True)
-                    except:
-                        pass
-                    self["VKeyIcon"].show()
-
-                if "HelpWindow" in self and currConfig[1].help_window and currConfig[1].help_window.instance is not None:
-                    helpwindowpos = self["HelpWindow"].getPosition()
-                    currConfig[1].help_window.instance.move(ePoint(helpwindowpos[0], helpwindowpos[1]))
-            else:
-                if "VKeyIcon" in self:
-                    try:
-                        self["VirtualKB"].setEnabled(False)
-                    except:
-                        pass
-                    try:
-                        self["virtualKeyBoardActions"].setEnabled(False)
-                    except:
-                        pass
-                    self["VKeyIcon"].hide()
-
-
 class Rundefault(Screen):
     def __init__(self, session, name, url, nextrun, progressCallBack=None):
         Screen.__init__(self, session)
         self.name = name
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.url = url
         self.nextrun = nextrun
         self.onShown.append(self.start)
@@ -820,7 +699,7 @@ class Rundefault(Screen):
 
     def picture(self, fplug):
         pic = "/tmp/picture.png"
-        self.session.open(Splash3, pic)
+        self.session.open(Splash3, pic)  # Splash3 ???
 
     def stoprun(self):
         self.close()
@@ -847,7 +726,7 @@ class Rundefault(Screen):
         self.picfold = cfg.cachefold.value + "/xbmc/pic"
         self.tmpfold = cfg.cachefold.value + "/xbmc/tmp"
         # cmd = "rm -rf " + self.tmpfold
-        # system(cmd)
+        # os.system(cmd)
         if os.path.exists("/tmp/stopaddon"):
             self.stoprun()
             return
@@ -869,7 +748,6 @@ class Rundefault(Screen):
         arg4 = cfg.cachefold.value
         sys.argv = [arg1, arg2, arg3, arg4]
         self.plugin_id = os.path.split(THISADDON)[1]
-        # dellog()
         print("539arg3 =", arg3)
         if 'select=true' in arg3:
             f = open("/tmp/result.txt", "w")
@@ -1393,7 +1271,7 @@ class Rundefault(Screen):
             start = n2 - 1
             i = i + 1
         idx = 0
-        self.session.open(Playlist, idx, names, playlist)
+        self.session.open(Playlist, idx, names, playlist) #playlist not exist ???
 
     # def keyNumberGlobal(self, number):
         # self["text"].number(number)
@@ -1405,6 +1283,11 @@ class XbmcPluginPics(Screen):
         self.skinName = "XbmcPluginPics"
         Screen.__init__(self, session)
         title = PlugDescription
+        self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self["title"] = Button(title + Version)
         self["bild"] = startspinner()
         self.curr_run = curr_run
@@ -1488,23 +1371,34 @@ class XbmcPluginPics(Screen):
         self.close()
 
     def showIMDB(self):
-        TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
-        IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
+        # i = len(self.names)
+        # print('iiiiii= ', i)
+        # if i < 1:
+            # return
         itype = self.index
-        self.name = self.names1[itype]
-        if os.path.exists(TMDB):
-            from Plugins.Extensions.TMBD.plugin import TMBD
-            text_clear = self.name
-            text = Utils.charRemove(text_clear)
-            self.session.open(TMBD, text, False)
-        elif os.path.exists(IMDb):
-            from Plugins.Extensions.IMDb.plugin import IMDB
-            text_clear = self.name
-            text = Utils.charRemove(text_clear)
-            self.session.open(IMDB, text)
-        else:
-            text_clear = self.name
-            self.session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
+        text_clear = self.names1[itype]
+        if returnIMDB(text_clear):
+            print('show imdb/tmdb')
+
+    # def showIMDB(self):
+        # TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
+        # IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
+        # itype = self.index
+        # text_clear = self.names1[itype]
+        
+        # if os.path.exists(TMDB):
+            # from Plugins.Extensions.TMBD.plugin import TMBD
+            # text_clear = self.name
+            # text = Utils.charRemove(text_clear)
+            # self.session.open(TMBD, text, False)
+        # elif os.path.exists(IMDb):
+            # from Plugins.Extensions.IMDb.plugin import IMDB
+            # text_clear = self.name
+            # text = Utils.charRemove(text_clear)
+            # self.session.open(IMDB, text)
+        # else:
+            # text_clear = self.name
+            # self.session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
 
     def startSpinner(self):
         if self.spinner_running is False:
@@ -1773,7 +1667,6 @@ class XbmcPluginPics(Screen):
                 self.rundef.start()
             self["info"].setText("Select")
 
-# #################################
 # plugin://plugin.video.youtube/kodion/search/query/?q=adele
     def Searchtest(self, res):
         if res is None:
@@ -1828,6 +1721,12 @@ class XbmcPluginScreen(Screen):
 
     def __init__(self, session, name, names, urls, tmppics, curr_run, picindic):
         Screen.__init__(self, session)
+        self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
+        
         print("Here in XbmcPluginScreen picindic =", picindic)
         if picindic == 0:
             self.skinName = "XbmcPluginScreenF"
@@ -1839,19 +1738,17 @@ class XbmcPluginScreen(Screen):
         title = PlugDescription
         self["title"] = Button(title + Version)
         self["bild"] = startspinner()
-        self.session = session
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.curr_run = curr_run
-        txt = str(SELECT[self.curr_run])
-        # print  "In XbmcPluginScreen SELECT[self.curr_run] A=", SELECT[self.curr_run]
         self.nextrun = self.curr_run + 1
-        print("2028", txt)
+        # txt = str(SELECT[self.curr_run])
+        # print  "In XbmcPluginScreen SELECT[self.curr_run] A=", SELECT[self.curr_run]
+        # print("2028", txt)
         # self.select=txt
         self.rundef = None
         self.plug = ''
@@ -1913,7 +1810,7 @@ class XbmcPluginScreen(Screen):
         self.vidinfo = []
         self.data = []
         self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
-        system("rm /tmp/data.txt")
+        os.system("rm /tmp/data.txt")
         self.pos = 0
         self.missed = " "
         self.shlist = " "
@@ -1942,24 +1839,34 @@ class XbmcPluginScreen(Screen):
         return
 
     def showIMDB(self):
-        TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
-        IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
-        itype = self["menu"].getSelectionIndex()
-        # url = self.urls1[itype]
-        self.name = self.names1[itype]
-        if os.path.exists(TMDB):
-            from Plugins.Extensions.TMBD.plugin import TMBD
-            text_clear = self.name
-            text = Utils.charRemove(text_clear)
-            self.session.open(TMBD, text, False)
-        elif os.path.exists(IMDb):
-            from Plugins.Extensions.IMDb.plugin import IMDB
-            text_clear = self.name
-            text = Utils.charRemove(text_clear)
-            self.session.open(IMDB, text)
-        else:
-            text_clear = self.name
-            self.session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
+        # i = len(self.names)
+        # print('iiiiii= ', i)
+        # if i < 1:
+            # return
+        itype = self.index
+        text_clear = self.names1[itype]
+        if returnIMDB(text_clear):
+            print('show imdb/tmdb')
+
+    # def showIMDB(self):
+        # TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
+        # IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
+        # itype = self["menu"].getSelectionIndex()
+        # # url = self.urls1[itype]
+        # self.name = self.names1[itype]
+        # if os.path.exists(TMDB):
+            # from Plugins.Extensions.TMBD.plugin import TMBD
+            # text_clear = self.name
+            # text = Utils.charRemove(text_clear)
+            # self.session.open(TMBD, text, False)
+        # elif os.path.exists(IMDb):
+            # from Plugins.Extensions.IMDb.plugin import IMDB
+            # text_clear = self.name
+            # text = Utils.charRemove(text_clear)
+            # self.session.open(IMDB, text)
+        # else:
+            # text_clear = self.name
+            # self.session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
 
     def exit(self):
         if self.spinner_running is True:
@@ -2060,13 +1967,6 @@ class XbmcPluginScreen(Screen):
         if self.keylock:
             return
         self.pos = right(self.names1, self.tmppics1, self.pos, self["menu"], self["pixmap1"])
-
-    def cancelX(self):
-        self.keylock = False
-        afile = open("/tmp/stopaddon", "w")
-        afile.write("stop execution")
-        afile.close()
-        self.close()
 
     def keyRight(self):
         if self.keylock:
@@ -2230,15 +2130,20 @@ class Favorites(Screen):
 
     def __init__(self, session, names, urls):
         Screen.__init__(self, session)
+        
+        self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
+        
         self.skinName = "Fav"
-        # self.skinName = "Favorites"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self["info"] = Label()
@@ -2294,9 +2199,13 @@ class Start_mainmenu(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.skinName = "xbmc4A"
+        self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.session = session
         self["bild"] = startspinner()
         self.spinner_running = False
         self["label1"] = StaticText("")
@@ -2307,21 +2216,20 @@ class Start_mainmenu(Screen):
         self["label30"] = StaticText("")
         self["info"] = Label()
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         global newstext
         news = newstext
         self.cancel = False
         self.data1 = ''
         self.keylock = False
-        self.progress = (_(" "))
+        self.progress = (" ")
         # print  "In StartPlugin_mainmenu newstext =", newstext
         self["info"].setText("Addons")
         self["pixmap1"] = Pixmap()
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self.progress = (_(" "))
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
+        self.progress = (" ")
         self["key_red"] = Button(_("Delete addon"))
         self["key_green"] = Button(_("Install addon"))
         self["key_yellow"] = Button(_("Config"))
@@ -2330,24 +2238,28 @@ class Start_mainmenu(Screen):
         user_log = '/tmp/error.log'
         if fileExists(user_log):
             self["key_blue"].show()
-        system("rm /tmp/select.txt")
+        os.system("rm /tmp/select.txt")
         self["menu"].onSelectionChanged.append(self.selection_changed)
         self.onShown.append(self.selection_changed)
-        self["actions"] = NumberActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "EPGSelectActions"], {
-                                           "upRepeated": self.up,
-                                           "downRepeated": self.down,
-                                           "up": self.up,
-                                           "down": self.down,
-                                           "left": self.left,
-                                           "right": self.right,
-                                           "red": self.delete,
-                                           "green": self.addon,
-                                           "yellow": self.conf,
-                                           "blue": self.openVi,
-                                           "ok": self.okClicked,
-                                           "epg": self.showIMDB,
-                                           "info": self.showIMDB,
-                                           "cancel": self.exit}, -1)
+        self["actions"] = NumberActionMap(["OkCancelActions",
+                                           "ColorActions",
+                                           "DirectionActions",
+                                           "EPGSelectActions",
+                                           "MenuActions"], {"upRepeated": self.up,
+                                                            "downRepeated": self.down,
+                                                            "up": self.up,
+                                                            "down": self.down,
+                                                            "left": self.left,
+                                                            "right": self.right,
+                                                            "red": self.delete,
+                                                            "green": self.addon,
+                                                            "yellow": self.conf,
+                                                            "menu": self.conf,
+                                                             "blue": self.openVi,
+                                                            "ok": self.okClicked,
+                                                            "epg": self.showIMDB,
+                                                            "info": self.showIMDB,
+                                                            "cancel": self.exit}, -1)
         self.updateTimer = eTimer()
         try:
             self.updateTimer_conn = self.updateTimer.timeout.connect(self.updateStatus)
@@ -2411,7 +2323,9 @@ class Start_mainmenu(Screen):
         self.session.openWithCallback(self.listplugs, Getadds)
 
     def conf(self):
-        self.session.open(XbmcConfigScreen)
+        # self.session.open(XbmcConfigScreen)
+        from . import settings
+        self.session.openWithCallback(self.showhide, settings.XbmcConfigScreen)
 
     def selection_changed(self):
         self.keylock = False
@@ -2422,23 +2336,33 @@ class Start_mainmenu(Screen):
             pass
 
     def showIMDB(self):
-        TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
-        IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
-        self.pos = self["menu"].getSelectionIndex()
-        self.name = self.names[self.pos]
-        if os.path.exists(TMDB):
-            from Plugins.Extensions.TMBD.plugin import TMBD
-            text_clear = self.name
-            text = Utils.charRemove(text_clear)
-            self.session.open(TMBD, text, False)
-        elif os.path.exists(IMDb):
-            from Plugins.Extensions.IMDb.plugin import IMDB
-            text_clear = self.name
-            text = Utils.charRemove(text_clear)
-            self.session.open(IMDB, text)
-        else:
-            text_clear = self.name
-            self.session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
+        # i = len(self.names)
+        # print('iiiiii= ', i)
+        # if i < 1:
+            # return
+        itype = self.index
+        text_clear = self.names1[itype]
+        if returnIMDB(text_clear):
+            print('show imdb/tmdb')
+
+    # def showIMDB(self):
+        # TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
+        # IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
+        # self.pos = self["menu"].getSelectionIndex()
+        # self.name = self.names[self.pos]
+        # if os.path.exists(TMDB):
+            # from Plugins.Extensions.TMBD.plugin import TMBD
+            # text_clear = self.name
+            # text = Utils.charRemove(text_clear)
+            # self.session.open(TMBD, text, False)
+        # elif os.path.exists(IMDb):
+            # from Plugins.Extensions.IMDb.plugin import IMDB
+            # text_clear = self.name
+            # text = Utils.charRemove(text_clear)
+            # self.session.open(IMDB, text)
+        # else:
+            # text_clear = self.name
+            # self.session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
 
     def showhide(self):
         self.pos = self["menu"].getSelectionIndex()
@@ -2449,7 +2373,7 @@ class Start_mainmenu(Screen):
         version = Version
         provider = "Provider:"
         self["label30"].setText("Thank's to: ")
-        prov = 'Lululla'
+        prov = 'Lululla & Pcd'
         desc = 'Copyright (C) 2014'
         pic = defpic
 
@@ -2584,7 +2508,7 @@ class Start_mainmenu(Screen):
             elif "plugin.video.select" in name:
                 continue
             else:
-                # iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+                # iiiiiiii
                 try:
                     pic = THISPLUG + "/" + ADDONCAT + "/" + name + "/icon.png"
                     try:
@@ -2732,7 +2656,6 @@ class Start_mainmenu(Screen):
             self.url1 = url1
             self.url2 = url2
             self.url0 = url0
-            # fpage = urlopen(url2).read()
             downloadPage(xurl, xdest).addCallback(self.getdown).addErrback(self.showError)
 
     def showError(self, error):
@@ -3007,10 +2930,8 @@ class Start_mainmenu(Screen):
         fpath2 = fpath1 + "/fixed2"
         fpathf = fpath1 + "/default.py"
         f = open(fpathf, 'r')
-        # deftxtf = f.read()
         f.close()
         if fileExists(fpath2):
-        # if "import sys, xpath, xbmc" in deftxtf:
             addtxt2 = "\nf = file('/tmp/e.log', 'a')\nsys.stdout = f\n"
             fpath = fpath1 + "/default.py"
             f = open(fpath, 'r')
@@ -3062,7 +2983,6 @@ class Start_mainmenu(Screen):
                 os.system(cmdrm)
                 f1 = open('/tmp/default.txt', 'w')
                 icount = 0
-                # f = open(fpath, 'r')
                 for line in data:
                     # line = line.decode("ISO-8859-1")
                     line = line + "\n"
@@ -3097,24 +3017,24 @@ class Start_mainmenu(Screen):
         self.picfold = cfg.cachefold.value + "/xbmc/pic"
         self.tmpfold = cfg.cachefold.value + "/xbmc/tmp"
         cmd = "rm " + self.tmpfold + "/*"
-        system(cmd)
-        system("rm /tmp/data.txt")
-        system("rm /tmp/data.txt")
-        system("rm /tmp/vidinfo.txt")
-        system("rm /tmp/type.txt")
+        os.system(cmd)
+        os.system("rm /tmp/data.txt")
+        os.system("rm /tmp/data.txt")
+        os.system("rm /tmp/vidinfo.txt")
+        os.system("rm /tmp/type.txt")
         if DEBUG == 1:
             print("DEBUG =", DEBUG)
         # if DEBUG == 1:
-            print("StartPlugin_mainmenu self.arg =", self.arg)
-        cmd = "python " + self.arg
-        cmd = cmd.replace("&", "\\&")
+            # print("StartPlugin_mainmenu self.arg =", self.arg)
+        # cmd = "python " + self.arg
+        # cmd = cmd.replace("&", "\\&")
         # afile = file("/tmp/test.txt","w")
         # afile.write("going in default.py")
         # afile.write(cmd)
         # if DEBUG == 1:
             # print("going in default-py Now =", datetime.datetime.now())
-        # system(cmd)
-        fdef = 'default'  # NEWDEFPY[:-3]
+        # os.system(cmd)
+        fdef = 'default'
         arg1 = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/default.py"
         arg2 = "1"
         arg3 = ""
@@ -3126,9 +3046,8 @@ class Start_mainmenu(Screen):
         self.plugin_id = self.name
         sys.argv = [arg1, arg2, arg3, arg4]
         d = THISADDON
-
         # dellog()
-        # ##############################
+        # ########
         xpath_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/xpath.py"
         # fixed2_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/fixed2"
         default_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/default.py"
@@ -3139,17 +3058,19 @@ class Start_mainmenu(Screen):
 
         if os.path.exists("/tmp/data.txt"):
             os.remove("/tmp/data.txt")
+        # no work crash
         # timen = time.time()
         # global NTIME
         # NTIME = timen
         # timenow = timen - NTIME
         # print("In StartPlugin_mainmenu timenow", timenow)
         # print("In StartPlugin_mainmenu cmd =", cmd)
+        # ######
         self.dtext = " "
         self.lastcmd = cmd
         global LAST
         LAST = self.lastcmd
-        print("cmd = ", cmd)
+        # print("cmd = ", cmd)
         self.p = os.popen(cmd)
         self.timecount = 0
         self.updateTimer.start(self.timeint)
@@ -3283,7 +3204,7 @@ class Start_mainmenu(Screen):
                 desc = " "
                 url = self.urls2[1]
                 self.progressCallBack("Finished")
-                self.session.open(Playoptions, name, url, desc)  # playoptions defin
+                self.session.open(Playoptions, name, url, desc)  # Playoptions defin
                 self.close()
             else:
                 if DEBUG == 1:
@@ -3309,14 +3230,17 @@ class DelAdd(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = (_("Please select addon type"))
@@ -3372,14 +3296,18 @@ class DelAdd1(Screen):
     def __init__(self, session, type):
         Screen.__init__(self, session)
         self.skinName = "XbmcPluginScreenF"
+        self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.session = session
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = " "
@@ -3446,14 +3374,17 @@ class Getadds(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = (_("Please select install method"))
@@ -3523,14 +3454,17 @@ class Getadds1(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = (_("Please put zip files in folders /tmp, /media/hdd or /media/usb."))
@@ -3587,14 +3521,17 @@ class Getadds7(Screen):
     def __init__(self, session, url):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = (_("Please select"))
@@ -3669,14 +3606,17 @@ class Getaddons(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = (_("Any errors - report in www.linuxsat-support.com KodiLite thread"))
@@ -3742,8 +3682,6 @@ class Getaddons(Screen):
                 self.close()
 
     def allow(self):
-        # perm = config.ParentalControl.configured.value
-        # ###print  "perm =", perm
         if config.ParentalControl.configured.value:
             # ####print  "Here Ad 1"
             # from Screens.InputBox import InputBox, PinInput
@@ -3778,14 +3716,17 @@ class GetaddonsA2(Screen):
     def __init__(self, session, cat):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self["bild"] = startspinner()
@@ -3815,7 +3756,6 @@ class GetaddonsA2(Screen):
         self.data = []
         xn = 0
         if xn == 0:
-            # try:
             import base64
             thost = 'aHR0cDovL3BhdGJ1d2ViLmNvbQ=='
             ServerS1 = base64.b64decode(thost)
@@ -3826,8 +3766,6 @@ class GetaddonsA2(Screen):
                 url = ServerS1 + '/Newkodilite/adlist3.txt'
                 fpage = Utils.getUrl(url)
             print("In install fpage =", fpage)
-        # except:
-        # fpage = " "
         print("In install fpage 2=", fpage)
         self.fpage = fpage
         print("In GetaddonsA2 self.cat =", self.cat)
@@ -3977,7 +3915,6 @@ class GetaddonsA2(Screen):
         txt = "Installing addon " + self.name
         title = txt
         self.session.openWithCallback(self.checkName, Console, _(title), cmd)
-        # self.close()
 
     def checkName(self):
         path = THISPLUG + "/plugins"
@@ -4026,7 +3963,6 @@ class GetaddonsA2(Screen):
         fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins"
         cmd = "unzip -o -q '/tmp/plug.zip' -d " + fdest
         print("In installB cmd =", cmd)
-        # title = (_("Installing addon fix"))
         os.system(cmd)
         self.close()
 
@@ -4046,14 +3982,17 @@ class Getadds3(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request."))
@@ -4080,6 +4019,8 @@ class Getadds3(Screen):
         self.urls = []
         methods.append("Matrix")
         self.urls.append("http://mirrors.kodi.tv/addons/matrix/")
+        # methods.append("Matrix Script")
+        # self.urls.append("http://mirrors.kodi.tv/addons/matrix/")        
         Utils.showlist(methods, self["menu"])
 
     def okClicked(self):
@@ -4108,19 +4049,22 @@ class GetaddonsA3(Screen):
         # if config.plugins.polar.menutype.value == "icons1":
             # self.skinName = "Downloads"
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
         self.line = line
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self["bild"] = startspinner()
-        self.info = (_(" "))
+        self.info = (" ")
         self["info"].setText(self.info)
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
@@ -4150,9 +4094,7 @@ class GetaddonsA3(Screen):
         self.getfolder(name, url1, fdest)
 
     def getfolder(self, name, url, xdest):
-        # f = urlopen(url)
         fpage = Utils.getUrl(url)
-        # f.close()
         print("In Repo2 getfolder name, url C=", name, url)
         print("In Repo2 getfolder xdest=", xdest)
         print("In Repo2 getfolder fpage =", fpage)
@@ -4205,8 +4147,6 @@ class GetaddonsA3(Screen):
                 self.close()
 
     def allow(self):
-        # perm = config.ParentalControl.configured.value
-        # ####print  "perm =", perm
         if config.ParentalControl.configured.value:
             # ####print  "Here Ad 1"
             # from Screens.InputBox import InputBox, PinInput
@@ -4240,14 +4180,17 @@ class Getadds4(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request.."))
@@ -4289,7 +4232,6 @@ class Getadds4(Screen):
         if sel is None:
             self.close()
         else:
-            # name = self.names[sel]
             url = self.urls[sel]
             tfile = url + "addon.xml"
             print("In Getadds4 tfile =", tfile)
@@ -4332,15 +4274,18 @@ class Getadds5(Screen):
     def __init__(self, session, url):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         print("Addons url =", url)
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = " "
@@ -4371,7 +4316,6 @@ class Getadds5(Screen):
         self.gotPage(html)
 
     def gotPage(self, html):
-        # try:
         if DEBUG == 1:
             print("In Getadds5 html = ", html)
         self.html = html
@@ -4395,8 +4339,6 @@ class Getadds5(Screen):
             self.names.append(name)
             self.urls.append(url1)
         Utils.showlist(self.names, self["menu"])
-        # except Exception, error:
-        # print  "[plugins]: Could not download HTTP Page\n" + str(error)
 
     def getfeedError(self, error=""):
         error = str(error)
@@ -4428,14 +4370,17 @@ class Getadds6(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self["bild"] = startspinner()
@@ -4509,9 +4454,6 @@ class Getadds6(Screen):
                 self.urls.append(url)
         Utils.showlist(self.names, self["menu"])
 
-# except Exception, error:
-# print  "[plugins]: Could not download HTTP Page\n" + str(error)
-
     def getfeedError(self, error=""):
         error = str(error)
         print("Download error =", error)
@@ -4552,14 +4494,17 @@ class Fusion(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = (_("Please select repository type"))
@@ -4644,14 +4589,17 @@ class Fusion2(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = (_("Please select repository type"))
@@ -4743,15 +4691,18 @@ class Repo2(Screen):
         # self.skinName = "Downloads"
         # else:
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
         self["bild"] = startspinner()
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = "Please select"
@@ -4863,15 +4814,18 @@ class Repo3(Screen):
     def __init__(self, session, url, plugurl, zipcode):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
         self["bild"] = startspinner()
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = " "
@@ -4953,15 +4907,18 @@ class Addons(Screen):
         # self.skinName = "Downloads"
         # else:
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         print("Addons url =", url)
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self["bild"] = startspinner()
@@ -5032,25 +4989,25 @@ class Addons(Screen):
         self.session.open(Addons2, name, url)
         self.close()
 
-    def allow(self):
-        # perm = config.ParentalControl.configured.value
-        # print  "perm =", perm
-        if config.ParentalControl.configured.value:
-            # ####print  "Here Ad 1"
-            # from Screens.InputBox import InputBox, PinInput
-            self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
+    # def allow(self):
+        # # perm = config.ParentalControl.configured.value
+        # # print  "perm =", perm
+        # if config.ParentalControl.configured.value:
+            # # ####print  "Here Ad 1"
+            # # from Screens.InputBox import InputBox, PinInput
+            # self.session.openWithCallback(self.pinEntered, PinInput, pinList=[config.ParentalControl.setuppin.value], triesEntry=config.ParentalControl.retries.servicepin, title=_("Please enter the parental control pin code"), windowtitle=_("Enter pin code"))
 
-        else:
-            # ####print  "Here Ad 2"
-            self.pinEntered(True)
-        # return
+        # else:
+            # # ####print  "Here Ad 2"
+            # self.pinEntered(True)
+        # # return
 
-    def pinEntered(self, result):
-        if result:
-            self.session.open(Addons2, self.region, self.html)
-        else:
-            self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
-            self.close()
+    # def pinEntered(self, result):
+        # if result:
+            # self.session.open(Addons2, self.region, self.html)
+        # else:
+            # self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
+            # self.close()
 
     def keyLeft(self):
         self["menu"].left()
@@ -5064,21 +5021,22 @@ class Addons(Screen):
 
 
 # depends from Addons  # no used
-
-
 class Addons2(Screen):
 
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self["bild"] = startspinner()
@@ -5156,14 +5114,17 @@ class Addons3(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = " "
@@ -5196,7 +5157,6 @@ class Addons3(Screen):
         # sel = self["menu"].getSelectionIndex()
         name = self.name.split(" : ")
         self.plug = name[0]
-        # fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiDirect/plugins"
         xdest = "/tmp/" + self.plug
         xurl = self.url
         f = Utils.getUrlresp(xurl)
@@ -5219,7 +5179,6 @@ class Addons3(Screen):
     def showError(self, error):
         print("ERROR :", error)
 
-    # def install(self, fplug):
     def install(self):
         # cmd1 = "wget -O '" + dest + "' '" + self.url + "'"
         print("In Addons3 self.plug =", self.plug)
@@ -5247,20 +5206,82 @@ class Addons3(Screen):
         self["menu"].number(number)
 
 
+class ShowPage2(Screen):
+
+    def __init__(self, session, newstext):
+        Screen.__init__(self, session)
+        self.session = session
+        # lululla added 
+        global _session
+        _session = session
+        # end
+        self.skinName = "ShowPage"
+        title = PlugDescription
+        self["title"] = Button(title + Version)
+        self.ftext = newstext  # global
+        # self.list = []
+        # self["menu"] = List(self.list)
+        self["menu"] = Utils.tvList([])
+        self['infoc'] = Label(_('Info'))
+        self['infoc2'] = Label('%s' % Credits)
+        self['info'] = Label()
+        self.info = (" ")
+        self["info"].setText(self.info)
+        self["pixmap1"] = Pixmap()
+        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
+                                          {"ok": self.okClicked,
+                                           "back": self.cancel,
+                                           "red": self.cancel,
+                                           "green": self.okClicked}, -1)
+        self["key_red"] = Button(_("Exit"))
+        self["key_green"] = Button(_("OK"))
+        self.icount = 0
+        self.errcount = 0
+        print("In showPage 1")
+        self.onLayoutFinish.append(self.openTest)
+
+    def openTest(self):
+        print("In showPage 2")
+        pic = defpic
+        self["pixmap1"].instance.setPixmapFromFile(pic)
+        self.data = []
+        self.data = self.ftext.splitlines()
+        print("In showPage self.data =", self.data)
+        Utils.showlist(self.data, self["menu"])
+
+    def cancel(self):
+        self.close()
+
+    def okClicked(self):
+        self.close()
+
+    def keyLeft(self):
+        self["menu"].left()
+
+    def keyRight(self):
+        self["menu"].right()
+
+    def keyNumberGlobal(self, number):
+        # print  "pressed", number
+        self["menu"].number(number)
+
 
 # class Getaddons2(Screen):
 
     # def __init__(self, session):
         # Screen.__init__(self, session)
         # self.session = session
+        # # lululla added 
+        # global _session
+        # _session = session
+        # # end
         # self.skinName = "XbmcPluginScreenF"
         # title = PlugDescription
         # self["title"] = Button(title + Version)
         # self.list = []
         # self["menu"] = List(self.list)
-        # self["menu"] = tvList([])
+        # self["menu"] = Utils.tvList([])
         # self['infoc'] = Label(_('Info'))
-        # Credits = " Linuxsat-support Forum"
         # self['infoc2'] = Label('%s' % Credits)
         # self['info'] = Label()
         # self.info = (_("Please select category"))
@@ -5356,9 +5377,8 @@ class Addons3(Screen):
         # self["title"] = Button(title + Version)
         # self.list = []
         # self["menu"] = List(self.list)
-        # self["menu"] = tvList([])
+        # self["menu"] = Utils.tvList([])
         # self['infoc'] = Label(_('Info'))
-        # Credits = " Linuxsat-support Forum"
         # self['infoc2'] = Label('%s' % Credits)
         # self['info'] = Label()
         # self["bild"] = startspinner()
@@ -5570,9 +5590,8 @@ class Addons3(Screen):
         # self.ftext = newstext  # global
         # self.list = []
         # self["menu"] = List(self.list)
-        # self["menu"] = tvList([])
+        # self["menu"] = Utils.tvList([])
         # self['infoc'] = Label(_('Info'))
-        # Credits = " Linuxsat-support Forum"
         # self['infoc2'] = Label('%s' % Credits)
         # self['info'] = Label()
         # self.info = (_("Press OK if you want to see this message again."))
@@ -5626,74 +5645,16 @@ class Addons3(Screen):
         # self["menu"].number(number)
 
 
-class ShowPage2(Screen):
-
-    def __init__(self, session, newstext):
-        Screen.__init__(self, session)
-        self.session = session
-        self.skinName = "ShowPage"
-        title = PlugDescription
-        self["title"] = Button(title + Version)
-        self.ftext = newstext  # global
-        self.list = []
-        self["menu"] = List(self.list)
-        self["menu"] = tvList([])
-        self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
-        self['infoc2'] = Label('%s' % Credits)
-        self['info'] = Label()
-        self.info = (_(" "))
-        self["info"].setText(self.info)
-        self["pixmap1"] = Pixmap()
-        self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {"ok": self.okClicked,
-                                           "back": self.cancel,
-                                           "red": self.cancel,
-                                           "green": self.okClicked}, -1)
-        self["key_red"] = Button(_("Exit"))
-        self["key_green"] = Button(_("OK"))
-        self.icount = 0
-        self.errcount = 0
-        print("In showPage 1")
-        self.onLayoutFinish.append(self.openTest)
-
-    def openTest(self):
-        print("In showPage 2")
-        pic = defpic
-        self["pixmap1"].instance.setPixmapFromFile(pic)
-        self.data = []
-        self.data = self.ftext.splitlines()
-        print("In showPage self.data =", self.data)
-        Utils.showlist(self.data, self["menu"])
-
-    def cancel(self):
-        self.close()
-
-    def okClicked(self):
-        self.close()
-
-    def keyLeft(self):
-        self["menu"].left()
-
-    def keyRight(self):
-        self["menu"].right()
-
-    def keyNumberGlobal(self, number):
-        # print  "pressed", number
-        self["menu"].number(number)
-
-
 # class Getcats(Screen):
 
     # def __init__(self, session):
         # Screen.__init__(self, session)
         # self.session = session
         # self.skinName = "Getcats2"
-        # self.list = []
-        # self["menu"] = List(self.list)
-        # self["menu"] = tvList([])
+        # # self.list = []
+        # # self["menu"] = List(self.list)
+        # self["menu"] = Utils.tvList([])
         # self['infoc'] = Label(_('Info'))
-        # Credits = " Linuxsat-support Forum"
         # self['infoc2'] = Label('%s' % Credits)
         # self['info'] = Label()
         # self.info = (_("Addon Categories"))
@@ -5832,21 +5793,21 @@ def main(session, **kwargs):
         if os.path.exists("/tmp/e.log"):
             os.remove("/tmp/e.log")
     if not os.path.exists("/etc/KodiLite"):
-        system("mkdir -p /etc/KodiLite")
+        os.system("mkdir -p /etc/KodiLite")
     if not os.path.exists("/etc/KodiLite/favorites.xml"):
         cmd = "cp " + THISPLUG + "/lib/defaults/favorites.xml /etc/KodiLite/"
-        system(cmd)
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc")
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc/vid")
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc/pic")
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc/tmp")
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/")
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc/database/")
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/")
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/Database/")
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/")
-    system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/packages")
+        os.system(cmd)
     print("In def main 4")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/vid")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/pic")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/tmp")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/database/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/Database/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/packages")
 
     print("In def main 5")
     try:
@@ -5858,17 +5819,17 @@ def main(session, **kwargs):
     afile.close()
     print("In def main 6")
     # start()
-    if cfg.update.value is True:
-        try:
-            from Plugins.Extensions.KodiLite.Update2 import updstart2
-            updstart2()
-        except:
-            print("\nError 2 updating some scripts")
-        try:
-            from Plugins.Extensions.KodiLite.Update import updstart
-            updstart()
-        except:
-            print("\nError updating some scripts")
+    # if cfg.update.getValue() is True:
+    try:
+        from Plugins.Extensions.KodiLite.Update2 import updstart2
+        updstart2()
+    except:
+        print("\nError 2 updating some scripts")
+    try:
+        from Plugins.Extensions.KodiLite.Update import updstart
+        updstart()
+    except:
+        print("\nError updating some scripts")
     start()
     print("In def main 7")
 
@@ -5880,7 +5841,7 @@ def main(session, **kwargs):
     if not os.path.exists(fyt):
         cmd = "rm -rf " + fyt1
         print("fyt cmd =", cmd)
-        system(cmd)
+        os.system(cmd)
 
     fyt = THISPLUG + "/scripts/script.module.urlresolver/lib/urlresolver/plugins"
     fyt1 = THISPLUG + "/scripts/script.module.urlresolver"
@@ -5889,18 +5850,18 @@ def main(session, **kwargs):
     if not os.path.exists(fyt):
         cmd = "rm -rf " + fyt1
         print("fyt cmd =", cmd)
-        system(cmd)
+        os.system(cmd)
 
     else:
         cmd = "cp rf " + fyt2 + " " + fyt1 + "/lib/urlresolver/lib/"
-        system(cmd)
+        os.system(cmd)
 
     fyt = THISPLUG + "/scripts/script.module.future/libs"
     fyt1 = THISPLUG + "/scripts/script.module.future/lib"
     if os.path.exists(fyt):
         cmd = "mv " + fyt + " " + fyt1
         print("fyt cmd =", cmd)
-        system(cmd)
+        os.system(cmd)
     print("In def main 71")
     ######################################
     #mmmmmmmmmmmmmmmmmmmmmmmmm
@@ -6105,7 +6066,6 @@ class classJobManagerViews():
             # self.dialog.show()
             globalActionMap.actions['JobManagerView'] = self.ShowHide
             # self.ShowHide()
-
         except:
             return
 
@@ -6120,3 +6080,181 @@ class classJobManagerViews():
 
 
 pjopviews = classJobManagerViews()
+
+
+
+# class XbmcConfigScreen(ConfigListScreen, Screen):
+
+    # def __init__(self, session, args=0):
+        # self.session = session
+        # # lululla added 
+        # global _session
+        # _session = session
+        # # end
+        # self.setup_title = _("Kodilite Settings")
+        # self["title"] = Button(self.setup_title)
+        # Screen.__init__(self, session)
+        # self.skinName = "Kodiconfig"
+        # self.list = [
+                    # getConfigListEntry(_("Autoupdate"), cfg.update),
+                    # getConfigListEntry(_("Cache folder"), cfg.cachefold),
+                    # # getConfigListEntry(_("Skin resolution-(restart e2 after change)"), cfg.skinres),
+                    # getConfigListEntry(_("Enigma log (/tmp/e.log)"), cfg.elog),
+                    # getConfigListEntry(_("Show thumbpic ?"), cfg.thumb),
+                    # getConfigListEntry(_("Use subtitle support ?"), cfg.subtitle),
+                    # getConfigListEntry(_("Wait time for lists (sec)"), cfg.wait),
+                    # getConfigListEntry(_("vlc server ip"), cfg.vlcip),
+                     # ]
+        # ConfigListScreen.__init__(self, self.list, session=self.session, on_change=self.changedEntry)
+        # # self["status"] = Label()
+        # self["key_red"] = Button(_("Exit"))
+        # self["key_green"] = Button(_("Save"))
+        # self["HelpWindow"] = Pixmap()
+        # self["HelpWindow"].hide()
+        # self["VKeyIcon"] = Pixmap()
+        # self["VKeyIcon"].hide()
+        # self["setupActions"] = NumberActionMap(["SetupActions", "ColorActions", "VirtualKeyboardActions"],
+                                         # {"red": self.cancel,
+                                          # "green": self.save,
+                                          # "cancel": self.cancel,
+                                          # "showVirtualKeyboard": self.KeyText}, -2)
+        # self.onChangedEntry = []
+        # self.handleInputHelpers()
+
+    # def changedEntry(self):
+        # for x in self.onChangedEntry:
+            # x()
+        # # try:
+            # # if isinstance(self["config"].getCurrent()[1], ConfigYesNo) or isinstance(self["config"].getCurrent()[1], ConfigSelection):
+                # # self.createSetup()
+        # # except:
+            # # pass
+
+    # def getCurrentEntry(self):
+        # return self["config"].getCurrent() and self["config"].getCurrent()[0] or ""
+
+    # def getCurrentValue(self):
+        # return self["config"].getCurrent() and str(self["config"].getCurrent()[1].getText()) or ""
+
+    # def createSummary(self):
+        # from Screens.Setup import SetupSummary
+        # return SetupSummary
+
+    # def cancel(self):
+        # for x in self["config"].list:
+            # x[1].cancel()
+        # self.close()
+
+    # def IsOk(self):
+        # sel = self["config"].getCurrent()[1]
+        # # sel = self["config"].getCurrent()[0]  # self.getCurrentEntry()
+        # print('sel ', sel)
+        # # sel2 = self.getCurrentValue()
+        # # print('sel2 ', sel2)
+        # if sel and sel == cfg.cachefold:
+            # self.openDirectoryBrowser(cfg.cachefold.value)
+        # else:
+            # self.save()
+        # ConfigListScreen.keyOK(self)
+
+    # def openDirectoryBrowser(self, path):
+        # if os.path.exists("/usr/bin/apt-get"):
+            # path = None
+        # try:
+            # from Screens.LocationBox import LocationBox
+            # self.session.openWithCallback(
+                # self.openDirectoryBrowserCB,
+                # LocationBox,
+                # windowTitle=_("Choose Directory:"),
+                # text=_("Choose directory"),
+                # currDir=str(path),
+                # bookmarks=cfg.cachefold.value,
+                # autoAdd=False,
+                # editDir=True,
+                # inhibitDirs=["/bin", "/boot", "/dev", "/home", "/lib", "/proc", "/run", "/sbin", "/sys", "/var"],
+                # minFree=15)
+        # except Exception as ex:
+            # print("openDirectoryBrowser get failed: ", str(ex))
+        # # ConfigListScreen.keyOK(self)
+
+    # def openDirectoryBrowserCB(self, path):
+        # if path is not None:
+            # cfg.cachefold.setValue(path)
+        # return
+
+    # def KeyText(self):
+        # from Screens.VirtualKeyBoard import VirtualKeyBoard
+        # sel = self["config"].getCurrent()
+        # if sel:
+            # self.session.openWithCallback(self.VirtualKeyBoardCallback, VirtualKeyBoard, title=self["config"].getCurrent()[0], text=self["config"].getCurrent()[1].value)
+
+    # def VirtualKeyBoardCallback(self, callback=None):
+        # if callback is not None and len(callback):
+            # self["config"].getCurrent()[1].value = callback
+            # self["config"].invalidate(self["config"].getCurrent())
+        # return
+
+    # def save(self, answer=None):
+        # if answer is None:
+            # self.session.openWithCallback(self.save, MessageBox, _("Save Config??\nReboot system necessary!!"), MessageBox.TYPE_YESNO)
+        # elif answer:
+            # if self["config"].isChanged():
+                # for x in self["config"].list:
+                    # x[1].save()
+                # self.mbox = self.session.open(MessageBox, _("Settings saved successfully !"), MessageBox.TYPE_INFO, timeout=5)
+            # self.saveAll()
+            # picfold = cfg.cachefold.value + "/xbmc/pic"
+            # cmd = "rm -rf " + picfold
+            # os.system(cmd)
+            # subs = cfg.subtitle.value
+            # tfile = THISPLUG + "/scripts/script.module.SubsSupport"
+            # if not os.path.exists(tfile):
+                # if subs is True:
+                    # fdest = THISPLUG + "/scripts"
+                    # dest = "/tmp/subssupport.zip"
+                    # xfile = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiLite/Script-modules/kodi/script.module.SubsSupport-1.0.0.zip"
+                    # cmd1 = "wget -O '" + dest + "' '" + xfile + "'"
+                    # cmd2 = "unzip -o -q '/tmp/subssupport.zip' -d " + fdest
+                    # cmd = []
+                    # cmd.append(cmd1)
+                    # cmd.append(cmd2)
+                    # print("In main cmd =", cmd)
+                    # title = _("Installing script subssupport %s")
+                    # self.session.openWithCallback(self.subsdown, Console, _(title), cmd)
+            # else:
+                # pass
+            # self.session.open(TryQuitMainloop, 3)
+
+    # def subsdown(self):
+        # pass
+
+    # def handleInputHelpers(self):
+        # from enigma import ePoint
+        # currConfig = self["config"].getCurrent()
+        # if currConfig is not None:
+            # if isinstance(currConfig[1], ConfigText):
+                # if "VKeyIcon" in self:
+                    # try:
+                        # self["VirtualKB"].setEnabled(True)
+                    # except:
+                        # pass
+                    # try:
+                        # self["virtualKeyBoardActions"].setEnabled(True)
+                    # except:
+                        # pass
+                    # self["VKeyIcon"].show()
+
+                # if "HelpWindow" in self and currConfig[1].help_window and currConfig[1].help_window.instance is not None:
+                    # helpwindowpos = self["HelpWindow"].getPosition()
+                    # currConfig[1].help_window.instance.move(ePoint(helpwindowpos[0], helpwindowpos[1]))
+            # else:
+                # if "VKeyIcon" in self:
+                    # try:
+                        # self["VirtualKB"].setEnabled(False)
+                    # except:
+                        # pass
+                    # try:
+                        # self["virtualKeyBoardActions"].setEnabled(False)
+                    # except:
+                        # pass
+                    # self["VKeyIcon"].hide()

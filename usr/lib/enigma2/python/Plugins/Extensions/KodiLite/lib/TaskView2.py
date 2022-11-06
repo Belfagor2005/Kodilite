@@ -1,15 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from Screens.Screen import Screen
 from Components.ConfigList import ConfigListScreen
-from Components.config import ConfigSubsection, ConfigSelection, getConfigListEntry
+from Components.Pixmap import Pixmap
 from Components.SystemInfo import SystemInfo
 from Components.Task import job_manager
+from Components.config import ConfigSubsection, ConfigSelection, getConfigListEntry
 from Screens.InfoBarGenerics import InfoBarNotifications
-import Screens.Standby
+from Screens.Screen import Screen
 from Tools import Notifications
-from Components.Pixmap import Pixmap
+import Screens.Standby
 
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiDirect"
 

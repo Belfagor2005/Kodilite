@@ -40,7 +40,7 @@ from random import choice
 PY3 = False
 # PY3 = sys.version_info.major >= 3
 try:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, urljoin
     from urllib.request import urlopen, Request
     PY3 = True
     unicode = str

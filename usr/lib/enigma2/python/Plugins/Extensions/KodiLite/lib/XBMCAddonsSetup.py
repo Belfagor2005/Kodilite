@@ -15,57 +15,9 @@ from enigma import gFont
 from enigma import eTimer
 from Components.Pixmap import Pixmap
 from Components.MenuList import MenuList
-from ..plugin import cfg
-from Plugins.Extensions.KodiLite.Utils import *
+from .. import Utils
 
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
-
-
-class tvList(MenuList):
-    def __init__(self, list):
-        MenuList.__init__(self, list, False, eListboxPythonMultiContent)
-        self.l.setFont(0, gFont('Regular', 20))
-        self.l.setFont(1, gFont('Regular', 22))
-        self.l.setFont(2, gFont('Regular', 24))
-        self.l.setFont(3, gFont('Regular', 26))
-        self.l.setFont(4, gFont('Regular', 28))
-        self.l.setFont(5, gFont('Regular', 30))
-        self.l.setFont(6, gFont('Regular', 32))
-        self.l.setFont(7, gFont('Regular', 34))
-        self.l.setFont(8, gFont('Regular', 36))
-        self.l.setFont(9, gFont('Regular', 40))
-        if isFHD():
-            self.l.setItemHeight(50)
-        else:
-            self.l.setItemHeight(50)
-
-
-def rvListEntry(name, idx):
-    from Components.MultiContent import MultiContentEntryText
-    from Components.MultiContent import MultiContentEntryPixmapAlphaTest
-    from enigma import RT_HALIGN_LEFT, RT_VALIGN_CENTER
-    from enigma import loadPNG
-    from Tools.Directories import SCOPE_PLUGINS
-    from Tools.Directories import resolveFilename
-    res = [name]
-    pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/tv.png".format('KodiLite'))
-    if isFHD():
-        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
-        res.append(MultiContentEntryText(pos=(90, 0), size=(1900, 50), font=7, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
-    else:
-        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
-        res.append(MultiContentEntryText(pos=(90, 0), size=(1000, 50), font=2, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
-    return res
-
-
-def showlist(data, list):
-    idx = 0
-    plist = []
-    for line in data:
-        name = data[idx]
-        plist.append(rvListEntry(name, idx))
-        idx = idx + 1
-        list.setList(plist)
 
 
 def getproxylinks(plugin_id):
@@ -118,7 +70,7 @@ class AddonsettScreen(Screen):
     def __init__(self, session, plug):
         Screen.__init__(self, session)
         self.skinName = "StartPlugin_mainmenu"
-        self["menu"] = tvList([])
+        self["menu"] = Utils.tvList([])
         self["info"] = Label("Press ok to change value")
         title = "Start Plugin Main Setting"
         self["title"] = Button(title)
@@ -173,7 +125,7 @@ class AddonsettScreen(Screen):
                     pass
             if not id == '':
                 self.list.append((id, default, type, label, values, index))
-        self["menu"].setList(map(showlist, self.list))
+        self["menu"].setList(map(Utils.showlist, self.list))
 
     def okClicked(self):
         idx = self["menu"].getSelectionIndex()
@@ -192,7 +144,7 @@ class Addonsett2Screen(Screen):
         self.skinName = "StartPlugin_mainmenu"
         self['key_red'] = Button(_('Cancel'))
         self['key_green'] = Button(_('Save'))
-        self["menu"] = tvList([])
+        self["menu"] = Utils.tvList([])
         self["info"] = Label("Press ok to change default value")
         title = "Start Plugin Main Setting"
         self["title"] = Button(title)
@@ -204,6 +156,7 @@ class Addonsett2Screen(Screen):
                                                                 "cancel": self.exit}, -1)
         self.plug = plug
         self.addon = xbmcaddon.Addon(self.plug)
+        # self.onChangedEntry = []
         self.list = list
         self.type = list[2]
         self.setting_id = list[0]
@@ -212,8 +165,14 @@ class Addonsett2Screen(Screen):
         self["menu"].onSelectionChanged.append(self.selection_changed)
         if self.type == 'text' or self.type == 'number':
             self.timer = eTimer()
-            self.timer.callback.append(self.okClicked)
-            self.timer.start(50, 1)
+            # self.timer.callback.append(self.okClicked)
+            # self.timer.start(50, 1)
+            try:
+                self.timer_conn = self.timer.timeout.connect(self.okClicked)
+            except:
+                self.timer.callback.append(self.okClicked)
+            self.timer.start(50, True)
+        
         else:
             self.onShown.append(self.sel)
 
@@ -268,11 +227,11 @@ class Addonsett2Screen(Screen):
             print("261", default)
             self.vals.append((default, ""))
 
-            self["menu"].setList(map(showlist, self.vals))
+            self["menu"].setList(map(Utils.showlist, self.vals))
         else:
             self.vals = []
             self.vals.append((default, ""))
-        self["menu"].setList(map(showlist, self.vals))
+        self["menu"].setList(map(Utils.showlist, self.vals))
 
     def selection_changed(self):
         if self.type == 'text':
@@ -307,7 +266,7 @@ class Addonsett2Screen(Screen):
             self.vals = []
             self.vals.append((text, ""))
             self["info"].setText("Press ok to change value")
-            self["menu"].setList(map(showlist, self.vals))
+            self["menu"].setList(map(Utils.showlist, self.vals))
         else:
             self.sel()
 
@@ -339,7 +298,7 @@ class Addonsett2Screen(Screen):
         else:
             selection = str(self.vals[isel][0])
         self.settings_backup()
-        # result=self.addon.setSetting(setting_id=self.setting_id,value=selection)
+        # result = self.addon.setSetting(setting_id=self.setting_id,value=selection)
         result = self.addon.setSetting(id=self.setting_id, value=selection)
         if result is False:
             self["info"].setText("New value not saved,add manually to settings.xml")

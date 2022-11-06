@@ -4,7 +4,7 @@
 import pkgutil
 import os.path
 import xbmcaddon
-
+import os
 __addon__ = xbmcaddon.Addon(id='script.module.lambdascrapers')
 
 def sources():

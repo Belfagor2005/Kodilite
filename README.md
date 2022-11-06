@@ -4,7 +4,7 @@ by PCD
 <img src="https://github.com/Belfagor2005/Kodilite/blob/main/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugin.png">
 
 Enigma2 project
-Only Free Channels ( no Pay Tv ) 
+Only Free Channels (no Pay Tv) 
 
 live Tv ,International, Music , News , Sport , Radio , VOD.
 Repo, Script, Addon 

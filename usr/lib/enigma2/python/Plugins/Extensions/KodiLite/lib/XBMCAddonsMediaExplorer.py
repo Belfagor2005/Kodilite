@@ -83,7 +83,7 @@ class XBMCAddonsMediaExplorer(Screen):
         self["key_green"] = Label(_("Play"))
         self['key_yellow'] = Button(_("Rename "))
         self['key_blue'] = Button(_("Delete"))
-        downloadlocation = config.plugins.kodiplug.cachefold.value
+        downloadlocation = str(config.plugins.kodiplug.cachefold.value)
         self["info"] = Label(_("Download Path: ")+downloadlocation)
         self.streamMenuList = MenuList([], enableWrapAround=True, content=eListboxPythonMultiContent)
         self.streamMenuList.l.setFont(0, gFont('Regular', 20))
@@ -232,8 +232,8 @@ class XBMCAddonsMediaExplorer(Screen):
             title = self["list"].getCurrent()[0][0]
         except:
             return
-        from Utils import Playvid2
-        self.session.open(Playvid2, title, self.filename, "")
+        from xUtils import Playgo
+        self.session.open(Playgo, title, self.filename, "")
 
     def refreshlists(self, result=False):
         if result is True:

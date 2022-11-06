@@ -98,6 +98,7 @@ def kodi_version():
 #    return float(xbmcaddon.Addon('xbmc.addon').getAddonInfo('version')[:4])
     pass
 
+
 def open_settings():
     return addon.openSettings()
 
@@ -170,7 +171,8 @@ def create_item(queries, label, thumb='', fanart='', is_folder=None, is_playable
 
 
 def add_item(queries, list_item, fanart='', is_folder=None, is_playable=None, total_items=0, menu_items=None, replace_menu=False):
-    if menu_items is None: menu_items = []
+    if menu_items is None:
+        menu_items = []
     if is_folder is None:
         is_folder = False if is_playable else True
 
@@ -180,7 +182,8 @@ def add_item(queries, list_item, fanart='', is_folder=None, is_playable=None, to
         playable = 'true' if is_playable else 'false'
 
     liz_url = get_plugin_url(queries)
-    if fanart: list_item.setProperty('fanart_image', fanart)
+    if fanart:
+        list_item.setProperty('fanart_image', fanart)
     list_item.setInfo('video', {'title': list_item.getLabel()})
     list_item.setProperty('isPlayable', playable)
     list_item.addContextMenuItems(menu_items, replaceItems=replace_menu)
@@ -189,7 +192,8 @@ def add_item(queries, list_item, fanart='', is_folder=None, is_playable=None, to
 
 def parse_query(query):
     q = {'mode': 'main'}
-    if query.startswith('?'): query = query[1:]
+    if query.startswith('?'):
+        query = query[1:]
     queries = urlparse.parse_qs(query)
     for key in queries:
         if len(queries[key]) == 1:
@@ -200,8 +204,10 @@ def parse_query(query):
 
 
 def notify(header=None, msg='', duration=2000, sound=None):
-    if header is None: header = get_name()
-    if sound is None: sound = get_setting('mute_notifications') == 'false'
+    if header is None:
+        header = get_name()
+    if sound is None:
+        sound = get_setting('mute_notifications') == 'false'
     icon_path = os.path.join(get_path(), 'icon.png')
     try:
         xbmcgui.Dialog().notification(header, msg, icon_path, duration, sound)
@@ -315,7 +321,8 @@ class CountdownDialog(object):
                 pd = CustomProgressDialog.ProgressDialog()
             else:
                 pd = xbmcgui.DialogProgress()
-            if not self.line3: line3 = 'Expires in: %s seconds' % countdown
+            if not self.line3:
+                line3 = 'Expires in: %s seconds' % countdown
             pd.create(self.heading, line1, line2, line3)
             pd.update(100)
             self.pd = pd
@@ -331,8 +338,10 @@ class CountdownDialog(object):
             del self.pd
 
     def start(self, func, args=None, kwargs=None):
-        if args is None: args = []
-        if kwargs is None: kwargs = {}
+        if args is None:
+            args = []
+        if kwargs is None:
+            kwargs = {}
         result = func(*args, **kwargs)
         if result:
             return result
@@ -344,9 +353,11 @@ class CountdownDialog(object):
             while time_left > 0:
                 for _ in range(CountdownDialog.__INTERVALS):
                     sleep(interval * 1000 / CountdownDialog.__INTERVALS)
-                    if self.is_canceled(): return
+                    if self.is_canceled():
+                        return
                     time_left = expires - int(time.time() - start)
-                    if time_left < 0: time_left = 0
+                    if time_left < 0:
+                        time_left = 0
                     progress = time_left * 100 / expires
                     line3 = 'Expires in: %s seconds' % time_left if not self.line3 else ''
                     self.update(progress, line3=line3)
@@ -364,5 +375,3 @@ class CountdownDialog(object):
     def update(self, percent, line1='', line2='', line3=''):
         if self.pd is not None:
             self.pd.update(percent, line1, line2, line3)
-
-

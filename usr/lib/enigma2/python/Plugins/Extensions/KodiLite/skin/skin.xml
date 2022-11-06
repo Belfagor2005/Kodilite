@@ -295,7 +295,7 @@
 		 -->
 	</screen>
 
-	<screen name="Playvid2" position="0,825" size="1920,225" title="InfoBar" backgroundColor="transparent" flags="wfNoBorder">
+	<screen name="Playgo" position="0,825" size="1920,225" title="InfoBar" backgroundColor="transparent" flags="wfNoBorder">
 		<!-- Background -->
 		<ePixmap position="0,3" zPosition="-1" size="1920,225" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/icon/mp-infobar-bgL.png"/>
 		<ePixmap position="600,34" size="30,30" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/icon/yellow.png" alphatest="blend"/>

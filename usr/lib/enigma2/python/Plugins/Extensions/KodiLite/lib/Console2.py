@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-from enigma import eConsoleAppContainer
-from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
 from Components.ScrollLabel import ScrollLabel
+from Screens.Screen import Screen
+from enigma import eConsoleAppContainer
 
 
 class Console2(Screen):

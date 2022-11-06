@@ -1,24 +1,24 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from enigma import eListboxPythonMultiContent
-from enigma import gFont
-from enigma import RT_HALIGN_CENTER, RT_VALIGN_CENTER
-from enigma import getPrevAsciiCode
-from Screens.Screen import Screen
-from Components.Language import language
-from Screens.MessageBox import MessageBox
 from Components.ActionMap import ActionMap
-from Components.Sources.StaticText import StaticText
 from Components.Label import Label
+from Components.Language import language
 from Components.MenuList import MenuList
-from Components.MultiContent import MultiContentEntryText
 from Components.MultiContent import MultiContentEntryPixmapAlphaTest
+from Components.MultiContent import MultiContentEntryText
+from Components.Sources.StaticText import StaticText
+from Screens.ChoiceBox import ChoiceBox
+from Screens.MessageBox import MessageBox
+from Screens.Screen import Screen
 from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN
 from Tools.LoadPixmap import LoadPixmap
-from Screens.ChoiceBox import ChoiceBox
-from twisted.web.client import getPage
+from enigma import RT_HALIGN_CENTER, RT_VALIGN_CENTER
+from enigma import eListboxPythonMultiContent
+from enigma import gFont
+from enigma import getPrevAsciiCode
 from twisted.internet import reactor
+from twisted.web.client import getPage
 import os
 import sys
 
@@ -38,7 +38,7 @@ fonts = {'Body': ('Regular',
                   18,
                   22,
                   16),
- 'ChoiceList': ('Regular',
+         'ChoiceList': ('Regular',
                    20,
                    24,
                    18)}

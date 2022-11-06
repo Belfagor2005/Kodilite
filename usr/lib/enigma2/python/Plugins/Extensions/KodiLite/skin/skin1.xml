@@ -292,7 +292,7 @@
 		<widget name="pixmap10" position="1010,325" size="150,220" zPosition="3" transparent="1" alphatest="on" scale="1" />
 	</screen>
 	
-	<screen name="Playvid2" position="0,550" size="1280,150" title="InfoBar" backgroundColor="transparent" flags="wfNoBorder">
+	<screen name="Playgo" position="0,550" size="1280,150" title="InfoBar" backgroundColor="transparent" flags="wfNoBorder">
 		<!-- Background -->
 		<ePixmap position="0,2" zPosition="-1" size="1280,150" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/icon/mp-infobar-bgL.png"/>
 		

@@ -22,8 +22,6 @@ Depends on python-crypto (for secure stream)
 Modified for OpenPli enigma2 usage by athoik
 Modified for KodiDirect and IPTVworld by pcd
 """
-import urlparse
-import urllib2
 import os
 import re
 import sys
@@ -32,15 +30,26 @@ import time
 import Queue
 import operator
 
+
+if PY3:
+    from urllib.request import urlopen, Request
+    from urllib.parse import urlparse
+    from urllib.parse import urljoin
+else:
+    from urllib2 import urlopen, Request
+    from urlparse import urlparse
+    from urlparse import urljoin
+
+
 SUPPORTED_VERSION = 3
 STREAM_PFILE = ''
 
 
 def getUrl2(url, referer):
-    req = urllib2.Request(url)
+    req = Request(url)
     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
     req.add_header('Referer', referer)
-    response = urllib2.urlopen(req)
+    response = urlopen(req)
     link = response.read()
     response.close()
     return link
@@ -67,10 +76,10 @@ class hlsclient(threading.Thread):
         self.play()
 
     def download_chunks(self, downloadUrl, chunk_size=4096):
-        req = urllib2.Request(downloadUrl)
+        req = Request(downloadUrl)
         hdr = 'User-Agent=ONLINETVCLIENT_X60000_X25000_X4000MEGA_V1770'
         req.add_header('User-Agent', 'User-Agent=ONLINETVCLIENT_X60000_X25000_X4000MEGA_V1770')
-        conn = urllib2.urlopen(req)
+        conn = urlopen(req)
         while 1:
             data = conn.read(chunk_size)
             if not data:
@@ -100,10 +109,10 @@ class hlsclient(threading.Thread):
         return enc
 
     def gen_m3u(self, url, skip_comments=True):
-        req = urllib2.Request(url)
+        req = Request(url)
         if self.header != "":
             req.add_header('User-Agent', str(self.header))
-        conn = urllib2.urlopen(req)
+        conn = urlopen(req)
         enc = 'utf8'
         for line in conn:
             line = line.rstrip('\r\n').decode(enc)
@@ -316,7 +325,7 @@ class hlsclient(threading.Thread):
                 variants.append((line, variant))
                 variant = None
         if len(variants) == 1:
-            self.url = urlparse.urljoin(self.url, variants[0][0])
+            self.url = urljoin(self.url, variants[0][0])
         elif len(variants) >= 2:
             autoChoice = {}
             for i, (vurl, vattrs) in enumerate(variants):
@@ -335,7 +344,7 @@ class hlsclient(threading.Thread):
                     else:
                         pass
             choice = max(autoChoice.iteritems(), key=operator.itemgetter(1))[0]
-            self.url = urlparse.urljoin(self.url, variants[choice][0])
+            self.url = urljoin(self.url, variants[choice][0])
         queue = Queue.Queue(1024)  # 1024 blocks of 4K each ~ 4MB buffer
         self.thread = threading.Thread(target=self.player_pipe, args=(queue, videopipe))
         self.thread.start()
@@ -360,7 +369,7 @@ class hlsclient(threading.Thread):
                         return
                     seq, enc, duration, targetduration, media_url = media
                     if seq > last_seq:
-                        for chunk in self.download_chunks(urlparse.urljoin(self.url, media_url)):
+                        for chunk in self.download_chunks(urljoin(self.url, media_url)):
                             if enc:
                                 chunk = enc.decrypt(chunk)
                             queue.put(chunk, block=True)
