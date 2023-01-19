@@ -3,7 +3,7 @@
 
 # 20.09.2022
 # a common tips used from Lululla
-#
+
 import sys
 import datetime
 import os
@@ -11,14 +11,27 @@ import re
 import base64
 from random import choice
 from Components.MenuList import MenuList
-
+from Tools.Directories import resolveFilename
 # from sys import version_info
 # pythonFull = float(str(sys.version_info.major) + "." + str(sys.version_info.minor))
 # pythonVer = sys.version_info.major
 # PY3 = version_info[0] == 3
 
+PY2 = False
+PY3 = False
+PY34 = False
+PY39 = False
+print("sys.version_info =", sys.version_info)
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+PY34 = sys.version_info[0:2] >= (3, 4)
+PY39 = sys.version_info[0:2] >= (3, 9)
 
-PY3 = sys.version_info.major >= 3
+f1 = open("/tmp/py.txt", "a")
+msg = "Utils PY3 = " + str(PY3) + " Utils PY2 = " + str(PY2)
+f1.write(msg)
+f1.close()
+
 if PY3:
     # Python 3
     PY3 = True
@@ -69,7 +82,8 @@ class tvList(MenuList):
         else:
             self.l.setItemHeight(50)
 
-def rvListEntry(name, idx):
+
+def klEntry(name, idx):
     from Components.MultiContent import MultiContentEntryText
     from Components.MultiContent import MultiContentEntryPixmapAlphaTest
     from enigma import RT_HALIGN_LEFT, RT_VALIGN_CENTER
@@ -78,15 +92,19 @@ def rvListEntry(name, idx):
     from Tools.Directories import resolveFilename
     res = [name]
     if 'radio' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/radio.png".format('KodiLite'))
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/radio.png".format('KodiLite'))
     elif 'webcam' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/webcam.png".format('KodiLite'))
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/webcam.png".format('KodiLite'))
     elif 'music' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/music.png".format('KodiLite'))
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/music.png".format('KodiLite'))
     elif 'sport' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/sport.png".format('KodiLite'))
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/sport.png".format('KodiLite'))
+    elif 'adult' in name.lower():
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/xxx.png".format('KodiLite'))
+    elif 'exit' in name.lower():
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/exit.png".format('KodiLite'))        
     else:
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/tv.png".format('KodiLite'))
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/tv.png".format('KodiLite'))
     if isFHD():
         res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
         res.append(MultiContentEntryText(pos=(90, 0), size=(1900, 50), font=7, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
@@ -95,15 +113,16 @@ def rvListEntry(name, idx):
         res.append(MultiContentEntryText(pos=(90, 0), size=(1000, 50), font=2, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
     return res
 
+
 def showlist(data, list):
     idx = 0
     plist = []
     for line in data:
         name = data[idx]
-        plist.append(rvListEntry(name, idx))
+        plist.append(klEntry(name, idx))
         idx = idx + 1
         list.setList(plist)
-        
+
 
 if sys.version_info >= (2, 7, 9):
     try:
@@ -147,7 +166,47 @@ def DreamOS():
         DreamOS = True
         return DreamOS
 
+def getEnigmaVersionString():
+    try:
+        from enigma import getEnigmaVersionString
+        return getEnigmaVersionString()
+    except:
+        return "N/A"
 
+def getImageVersionString():
+    try:
+        from Tools.Directories import resolveFilename, SCOPE_SYSETC
+        file = open(resolveFilename(SCOPE_SYSETC, 'image-version'), 'r')
+        lines = file.readlines()
+        for x in lines:
+            splitted = x.split('=')
+            if splitted[0] == "version":
+                #     YYYY MM DD hh mm
+                #0120 2005 11 29 01 16
+                #0123 4567 89 01 23 45
+                version = splitted[1]
+                image_type = version[0] # 0 = release, 1 = experimental
+                major = version[1]
+                minor = version[2]
+                revision = version[3]
+                year = version[4:8]
+                month = version[8:10]
+                day = version[10:12]
+                date = '-'.join((year, month, day))
+                if image_type == '0':
+                    image_type = "Release"
+                else:
+                    image_type = "Experimental"
+                version = '.'.join((major, minor, revision))
+                if version != '0.0.0':
+                    return ' '.join((image_type, version, date))
+                else:
+                    return ' '.join((image_type, date))
+        file.close()
+    except IOError:
+        pass
+
+    return "unavailable"
 def mySkin():
     from Components.config import config
     currentSkin = config.skin.primary_skin.value.replace('/skin.xml', '')
@@ -161,6 +220,85 @@ else:
     MediaPlayerInstalled = False
 
 
+def getFreeMemory():
+    mem_free=None
+    mem_total=None
+    try:
+        with open('/proc/meminfo', 'r') as f:
+            for line in f.readlines():
+                if line.find('MemFree') != -1:
+                    parts = line.strip().split()
+                    mem_free = float(parts[1])
+                elif line.find('MemTotal') != -1:
+                    parts = line.strip().split()
+                    mem_total = float(parts[1])
+            f.close()
+    except:
+        pass
+    return (mem_free,mem_total)
+
+
+def sizeToString(nbytes):
+    suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+    size="0 B"
+    if nbytes > 0:
+        i = 0
+        while nbytes >= 1024 and i < len(suffixes)-1:
+            nbytes /= 1024.
+            i += 1
+        f = ('%.2f' % nbytes).rstrip('0').rstrip('.').replace(".",",")
+        size = '%s %s' % (f, suffixes[i])
+    return size  
+
+
+def convert_size(size_bytes):
+    import math
+    if size_bytes == 0:
+        return "0B"
+    size_name = ("B", "KB", "MB", "GB", "TB")
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s = round(size_bytes // p, 2)
+    return "%s %s" % (s, size_name[i])
+
+
+def getMountPoint(path):
+    pathname= os.path.realpath(path)
+    parent_device=os.stat(pathname).st_dev
+    path_device= os.stat(pathname).st_dev
+    mount_point=""
+    while parent_device == path_device:
+        mount_point=pathname
+        pathname= os.path.dirname(pathname)
+        if pathname == mount_point:
+            break
+        parent_device= os.stat(pathname).st_dev
+    return mount_point
+
+def getMointedDevice(pathname):
+    md=None
+    try:
+        with open("/proc/mounts", "r") as f:
+            for line in f:
+                fields= line.rstrip('\n').split()
+                if fields[1] == pathname:
+                    md=fields[0]
+                    break
+            f.close()
+    except:
+        pass
+    return md
+
+def getFreeSpace(path):
+    try:
+        moin_point=getMountPoint(path)
+        device=getMointedDevice(moin_point)
+        print(moin_point+"|"+device)
+        stat= os.statvfs(device)  # @UndefinedVariable
+        print(stat)
+        return sizeToString(stat.f_bfree*stat.f_bsize)
+    except:
+        return "N/A"
 def listDir(what):
     f = None
     try:
@@ -224,7 +362,6 @@ def badcar(name):
                  "480p", "4K", "720p", "ANIMAZIONE",  "AVVENTURA", "BIOGRAFICO",  "BDRip",  "BluRay",  "CINEMA", "COMMEDIA", "DOCUMENTARIO", "DRAMMATICO", "FANTASCIENZA", "FANTASY", "HDCAM", "HDTC", "HDTS", "LD", "MARVEL", "MD", "NEW_AUDIO",
                  "R3", "R6", "SD", "SENTIMENTALE", "TC", "TELECINE", "TELESYNC", "THRILLER", "Uncensored", "V2", "WEBDL", "WEBRip", "WEB", "WESTERN", "-", "_", ".", "+", "[", "]"
                  ]
-
     for j in range(1900, 2025):
         bad_chars.append(str(j))
     for i in bad_chars:
@@ -404,14 +541,16 @@ def testWebConnection(host="www.google.com", port=80, timeout=3):
         return False
 
 
-def checkStr(text, encoding="utf8"):
-    if PY3 is False:
-        if isinstance(text, unicode):
-            return text.encode(encoding)
-        else:
-            return text
+def checkStr(text, encoding='utf8'):
+    if PY3:
+        if isinstance(text, type(bytes())):
+            text = text.decode('utf-8')    
     else:
-        return text
+        if isinstance(text, unicode):
+            text = text.encode(encoding)
+        # else:
+            # return text
+    return text
 
 
 # def checkStr(txt):
@@ -473,7 +612,7 @@ def b64encoder(source):
 
 def b64decoder(s):
     """Add missing padding to string and return the decoded base64 string."""
-    # import base64
+    import base64
     s = str(s).strip()
     try:
         # return base64.b64decode(s)
@@ -517,6 +656,7 @@ def __createdir(list):
         dir += '/' + line
         if not os.path.exists(dir):
             try:
+                from os import mkdir
                 os.mkdir(dir)
             except:
                 print('Mkdir Failed', dir)
@@ -667,14 +807,32 @@ def ConverDateBack(data):
     return year + month + day
 
 
+def isPythonFolder():
+    import os
+    path = ('/usr/lib/')
+    for name in os.listdir(path):
+        fullname = path + name
+        if not os.path.isfile(fullname) and 'python' in fullname:
+            print(fullname)
+            import sys
+            print("sys.version_info =", sys.version_info)
+            pythonvr = fullname
+            print('pythonvr is ', pythonvr)
+            x = ('%s/site-packages/streamlink' % pythonvr)
+            print(x)
+            # /usr/lib/python3.9/site-packages/streamlink
+    return x
+
+
+def isStreamlinkAvailable():
+    pythonvr = isPythonFolder()
+    return pythonvr
+
+    
 def isExtEplayer3Available():
     from enigma import eEnv
     return os.path.isfile(eEnv.resolve('$bindir/exteplayer3'))
 
-
-def isStreamlinkAvailable():
-    from enigma import eEnv
-    return os.path.isdir(eEnv.resolve('/usr/lib/python2.7/site-packages/streamlink'))
 
 # def Controlexteplayer():
     # exteplayer = False
@@ -723,7 +881,7 @@ def AdultUrl(url):
         import urllib2
     req = urllib2.Request(url)
     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14')
-    r = urlopen(req, None, 15)
+    r = urllib2.urlopen(req, None, 15)
     link = r.read()
     r.close()
     tlink = link
@@ -736,11 +894,11 @@ def AdultUrl(url):
 
 
 std_headers = {
-        'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.6) Gecko/20100627 Firefox/3.6.6',
-        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-us,en;q=0.5',
-}
+               'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.6) Gecko/20100627 Firefox/3.6.6',
+               'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+               'Accept-Language': 'en-us,en;q=0.5',
+               }
 
 
 ListAgent = [
@@ -807,25 +965,74 @@ def RequestAgent():
     return RandomAgent
 
 
-def ReadUrl2(url):
-    import sys
+def ReadUrl2(url, referer):
     if sys.version_info.major == 3:
         import urllib.request as urllib2
     elif sys.version_info.major == 2:
         import urllib2
-    req = urllib2.Request(url)
-    req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14')
-    r = urllib2.urlopen(req, None, 15)
-    link = r.read()
-    r.close()
-    content = link
-    if str(type(content)).find('bytes') != -1:
-        try:
-            content = content.decode("utf-8")
-        except Exception as e:
-            print('error: ', str(e))
-    return content
 
+    try:
+        import ssl
+        CONTEXT = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+    except:
+        CONTEXT = None
+
+    TIMEOUT_URL = 15
+    print(_('ReadUrl1:\n  url = %s') % url)
+    try:
+
+        req = urllib2.Request(url)
+        req.add_header('User-Agent', RequestAgent())
+        req.add_header('Referer', referer)
+        # req = urllib2.Request(url)
+        # req.add_header('User-Agent', RequestAgent())
+             
+                  
+                                              
+        try:
+            r = urllib2.urlopen(req, None, TIMEOUT_URL, context=CONTEXT)
+        except Exception as e:
+            r = urllib2.urlopen(req, None, TIMEOUT_URL)
+            print('CreateLog Codifica ReadUrl: %s.' % str(e))
+        link = r.read()
+        r.close()
+
+        dec = 'Null'
+        dcod = 0
+        tlink = link
+        if str(type(link)).find('bytes') != -1:
+            try:
+                tlink = link.decode('utf-8')
+                dec = 'utf-8'
+            except Exception as e:
+                dcod = 1
+                print('ReadUrl2 - Error: ', str(e))
+            if dcod == 1:
+                dcod = 0
+                try:
+                    tlink = link.decode('cp437')
+                    dec = 'cp437'
+                except Exception as e:
+                    dcod = 1
+                    print('ReadUrl3 - Error:', str(e))
+            if dcod == 1:
+                dcod = 0
+                try:
+                    tlink = link.decode('iso-8859-1')
+                    dec = 'iso-8859-1'
+                except Exception as e:
+                    dcod = 1
+                    print('CreateLog Codific ReadUrl: ', str(e))
+            link = tlink
+
+        elif str(type(link)).find('str') != -1:
+            dec = 'str'
+
+        print('CreateLog Codifica ReadUrl: %s.' % dec)
+    except Exception as e:
+        print('ReadUrl5 - Error: ', str(e))
+        link = None
+    return link
 
 def ReadUrl(url):
     if sys.version_info.major == 3:
@@ -891,8 +1098,14 @@ def ReadUrl(url):
 
 
 if PY3:
+    import sys
+    if sys.version_info.major == 3:
+        import urllib.request as urllib2
+    elif sys.version_info.major == 2:
+        import urllib2
+
     def getUrl(url):
-        req = Request(url)
+        req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         try:
             response = urlopen(req)
@@ -908,7 +1121,7 @@ if PY3:
             return link
 
     def getUrl2(url, referer):
-        req = Request(url)
+        req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         req.add_header('Referer', referer)
         try:
@@ -925,7 +1138,7 @@ if PY3:
             return link
 
     def getUrlresp(url):
-        req = Request(url)
+        req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         try:
             response = urlopen(req)
@@ -936,8 +1149,14 @@ if PY3:
             response = urlopen(req, context=gcontext)
             return response
 else:
+    import sys
+    if sys.version_info.major == 3:
+        import urllib.request as urllib2
+    elif sys.version_info.major == 2:
+        import urllib2
+
     def getUrl(url):
-        req = Request(url)
+        req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         try:
             response = urlopen(req)
@@ -953,7 +1172,7 @@ else:
             return link
 
     def getUrl2(url, referer):
-        req = Request(url)
+        req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         req.add_header('Referer', referer)
         try:
@@ -970,7 +1189,7 @@ else:
             return link
 
     def getUrlresp(url):
-        req = Request(url)
+        req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         try:
             response = urlopen(req)
@@ -1285,14 +1504,16 @@ def charRemove(text):
 
 
 def clean_html(html):
-    """Clean an HTML snippet into a readable string"""
+    '''Clean an HTML snippet into a readable string'''
     import xml.sax.saxutils as saxutils
-    # saxutils.unescape("Suzy &amp; John")
-    if type(html) == type(u''):
+    # saxutils.unescape('Suzy &amp; John')
+    # if type(html) == type(u''):
+    if isinstance(html, u''):
         strType = 'unicode'
-    elif type(html) == type(''):
+    # elif type(html) == type(''):
+    elif isinstance(html, ''):
         strType = 'utf-8'
-        html = html.decode("utf-8", 'ignore')
+        html = html.decode('utf-8', 'ignore')
     # Newline vs <br />
     html = html.replace('\n', ' ')
     html = re.sub(r'\s*<\s*br\s*/?\s*>\s*', '\n', html)
@@ -1302,10 +1523,23 @@ def clean_html(html):
     # Replace html entities
     html = saxutils.unescape(html)  # and for py3 ?
     if strType == 'utf-8':
-        html = html.encode("utf-8")
+        html = html.encode('utf-8')
     return html.strip()
 
 
+def get_title(title):
+    import re
+    if title is None:
+        return
+    # try:
+        # title = title.encode('utf-8')
+    # except:
+        # pass
+    title = re.sub('&#(\d+);', '', title)
+    title = re.sub('(&#[0-9]+)([^;^0-9]+)', '\\1;\\2', title)
+    title = title.replace('&quot;', '\"').replace('&amp;', '&')
+    title = re.sub('\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|(:|;|-|–|"|,|\'|\_|\.|\?)|\s', '', title).lower()
+    return title
 def addstreamboq(bouquetname=None):
     boqfile = "/etc/enigma2/bouquets.tv"
     if not os.path.exists(boqfile):

@@ -73,6 +73,7 @@ subsx = False
 
 
 from . import Utils
+from . import html_conv
 from .lib.xUtils import Getvid, Getvid2, Playoptions
 # from .lib import xUtils
 
@@ -109,19 +110,22 @@ PY3 = sys.version_info.major >= 3
 if PY3:
     from http.client import HTTPConnection
     # from urllib.parse import urlparse
-    unicode = str
-    unichr = chr
-    long = int
+    # unicode = str
+    # unichr = chr
+    # long = int
     PY3 = True
 else:
     from httplib import HTTPConnection
     # from urlparse import urlparse
 
 
+# from PIL.Image import core as image
 try:
     from PIL import Image
 except:
     import Image
+finally:
+    from PIL.Image import core as image    
 
 
 HTTPConnection.debuglevel = 1
@@ -222,7 +226,7 @@ def returnIMDB(text_clear):
     if Utils.is_tmdb:
         try:
             from Plugins.Extensions.TMBD.plugin import TMBD
-            text = Utils.decodeHtml(text_clear)
+            text = html_conv.html_unescape(text_clear)
             _session.open(TMBD.tmdbScreen, text, 0)
         except Exception as ex:
             print("[XCF] Tmdb: ", str(ex))
@@ -230,13 +234,13 @@ def returnIMDB(text_clear):
     elif Utils.is_imdb:
         try:
             from Plugins.Extensions.IMDb.plugin import main as imdb
-            text = Utils.decodeHtml(text_clear)
+            text = html_conv.html_unescape(text_clear)
             imdb(_session, text)
         except Exception as ex:
             print("[XCF] imdb: ", str(ex))
         return True
     else:
-        text_clear = Utils.decodeHtml(text_clear)
+        text_clear = html_conv.html_unescape(text_clear)
         _session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
         return True
     return
@@ -5778,62 +5782,6 @@ class ShowPage2(Screen):
         # self["menu"].number(number)
 
 
-_session = ""
-plug = ""
-
-
-def main(session, **kwargs):
-    global _session
-    _session = session
-    log = cfg.elog.value
-    if log is True:
-        logf = open('/tmp/e.log', 'w')
-        sys.stdout = logf
-    else:
-        if os.path.exists("/tmp/e.log"):
-            os.remove("/tmp/e.log")
-    if not os.path.exists("/etc/KodiLite"):
-        os.system("mkdir -p /etc/KodiLite")
-    if not os.path.exists("/etc/KodiLite/favorites.xml"):
-        cmd = "cp " + THISPLUG + "/lib/defaults/favorites.xml /etc/KodiLite/"
-        os.system(cmd)
-    print("In def main 4")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/vid")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/pic")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/tmp")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/database/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/Database/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/packages")
-
-    print("In def main 5")
-    try:
-        cachefolder = cfg.cachefold.value
-    except:
-        cachefolder = "/media/hdd"
-    afile = open("/etc/xbmc.txt", 'w')
-    afile.write(cachefolder)
-    afile.close()
-    print("In def main 6")
-    # start()
-    # if cfg.update.getValue() is True:
-    try:
-        from Plugins.Extensions.KodiLite.Update2 import updstart2
-        updstart2()
-    except:
-        print("\nError 2 updating some scripts")
-    try:
-        from Plugins.Extensions.KodiLite.Update import updstart
-        updstart()
-    except:
-        print("\nError updating some scripts")
-    start()
-    print("In def main 7")
-
-
 """
     ######################################
     fyt = THISPLUG + "/scripts/script.module.youtube.dl/control.py"
@@ -6000,6 +5948,64 @@ def main(session, **kwargs):
         else:
             session.openWithCallback(start, ShowPage, newstext)
         """
+        
+        
+
+_session = ""
+plug = ""
+
+
+def main(session, **kwargs):
+    global _session
+    _session = session
+    log = cfg.elog.value
+    if log is True:
+        logf = open('/tmp/e.log', 'w')
+        sys.stdout = logf
+    else:
+        if os.path.exists("/tmp/e.log"):
+            os.remove("/tmp/e.log")
+    if not os.path.exists("/etc/KodiLite"):
+        os.system("mkdir -p /etc/KodiLite")
+    if not os.path.exists("/etc/KodiLite/favorites.xml"):
+        cmd = "cp " + THISPLUG + "/lib/defaults/favorites.xml /etc/KodiLite/"
+        os.system(cmd)
+    print("In def main 4")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/vid")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/pic")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/tmp")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/database/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/Database/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/")
+    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/packages")
+
+    print("In def main 5")
+    try:
+        cachefolder = cfg.cachefold.value
+    except:
+        cachefolder = "/media/hdd"
+    afile = open("/etc/xbmc.txt", 'w')
+    afile.write(cachefolder)
+    afile.close()
+    print("In def main 6")
+    # start()
+    # if cfg.update.getValue() is True:
+    try:
+        from Plugins.Extensions.KodiLite.Update2 import updstart2
+        updstart2()
+    except:
+        print("\nError 2 updating some scripts")
+    try:
+        from Plugins.Extensions.KodiLite.Update import updstart
+        updstart()
+    except:
+        print("\nError updating some scripts")
+    start()
+    print("In def main 7")
+
 
 
 def start():
