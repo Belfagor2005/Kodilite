@@ -3,16 +3,17 @@
 
 # 15.01.2023
 # a common tips used from Lululla
-#
+
 import sys
 import datetime
 import os
 import re
 import base64
 from random import choice
-
+from Components.MenuList import MenuList
+from Tools.Directories import resolveFilename
 # from sys import version_info
-# pythonFull = float(str(sys.version_info.major) + '.' + str(sys.version_info.minor))
+# pythonFull = float(str(sys.version_info.major) + "." + str(sys.version_info.minor))
 pythonVer = sys.version_info.major
 # PY3 = version_info[0] == 3
 
@@ -26,8 +27,11 @@ PY3 = sys.version_info[0] == 3
 PY34 = sys.version_info[0:2] >= (3, 4)
 PY39 = sys.version_info[0:2] >= (3, 9)
 
+f1 = open("/tmp/py.txt", "a")
+msg = "Utils PY3 = " + str(PY3) + " Utils PY2 = " + str(PY2)
+f1.write(msg)
+f1.close()
 
-# PY3 = sys.version_info.major >= 3
 if PY3:
     # Python 3
     PY3 = True
@@ -35,6 +39,7 @@ if PY3:
     unichr = chr
     long = int
     xrange = range
+    from http.client import HTTPConnection
     from urllib.parse import quote
     from urllib.request import urlopen
     from urllib.request import Request
@@ -48,9 +53,75 @@ else:
     # unicode = unicode
     # basestring = basestring
     from urllib import quote
+    from httplib import HTTPConnection
     from urllib2 import urlopen
     from urllib2 import Request
     from urllib2 import HTTPError, URLError
+
+
+HTTPConnection.debuglevel = 1
+
+
+class tvList(MenuList):
+    def __init__(self, list):
+        from enigma import eListboxPythonMultiContent
+        from enigma import gFont
+        MenuList.__init__(self, list, False, eListboxPythonMultiContent)
+        self.l.setFont(0, gFont('Regular', 20))
+        self.l.setFont(1, gFont('Regular', 22))
+        self.l.setFont(2, gFont('Regular', 24))
+        self.l.setFont(3, gFont('Regular', 26))
+        self.l.setFont(4, gFont('Regular', 28))
+        self.l.setFont(5, gFont('Regular', 30))
+        self.l.setFont(6, gFont('Regular', 32))
+        self.l.setFont(7, gFont('Regular', 34))
+        self.l.setFont(8, gFont('Regular', 36))
+        self.l.setFont(9, gFont('Regular', 40))
+        if isFHD():
+            self.l.setItemHeight(50)
+        else:
+            self.l.setItemHeight(50)
+
+
+def klEntry(name, idx):
+    from Components.MultiContent import MultiContentEntryText
+    from Components.MultiContent import MultiContentEntryPixmapAlphaTest
+    from enigma import RT_HALIGN_LEFT, RT_VALIGN_CENTER
+    from enigma import loadPNG
+    from Tools.Directories import SCOPE_PLUGINS
+    from Tools.Directories import resolveFilename
+    res = [name]
+    if 'radio' in name.lower():
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/radio.png".format('KodiLite'))
+    elif 'webcam' in name.lower():
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/webcam.png".format('KodiLite'))
+    elif 'music' in name.lower():
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/music.png".format('KodiLite'))
+    elif 'sport' in name.lower():
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/sport.png".format('KodiLite'))
+    elif 'adult' in name.lower():
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/xxx.png".format('KodiLite'))
+    elif 'exit' in name.lower():
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/exit.png".format('KodiLite'))
+    else:
+        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/tv.png".format('KodiLite'))
+    if isFHD():
+        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
+        res.append(MultiContentEntryText(pos=(90, 0), size=(1900, 50), font=7, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
+    else:
+        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
+        res.append(MultiContentEntryText(pos=(90, 0), size=(1000, 50), font=2, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
+    return res
+
+
+def showlist(data, list):
+    idx = 0
+    plist = []
+    for line in data:
+        name = data[idx]
+        plist.append(klEntry(name, idx))
+        idx = idx + 1
+        list.setList(plist)
 
 
 if sys.version_info >= (2, 7, 9):
@@ -86,8 +157,6 @@ def checkGZIP(url):
     except Exception as e:
         print(e)
         return None
-
-
 def ssl_urlopen(url):
     if sslContext:
         return urlopen(url, context=sslContext)
@@ -163,7 +232,6 @@ def getImageVersionString():
         pass
 
     return "unavailable"
-
 def mySkin():
     from Components.config import config
     currentSkin = config.skin.primary_skin.value.replace('/skin.xml', '')
@@ -205,7 +273,8 @@ def sizeToString(nbytes):
             i += 1
         f = ('%.2f' % nbytes).rstrip('0').rstrip('.').replace(".", ",")
         size = '%s %s' % (f, suffixes[i])
-    return size  
+    return size
+
 
 
 def convert_size(size_bytes):
@@ -245,6 +314,7 @@ def getMointedDevice(pathname):
     except:
         pass
     return md
+
 
 def getFreeSpace(path):
     try:
@@ -300,13 +370,13 @@ def downloadFile(url, target):
         response.close()
         return True
     except HTTPError:
-        print('Http error')
+        print("Http error")
         return False
     except URLError:
-        print('Url error')
+        print("Url error")
         return False
     except socket.timeout:
-        print('sochet error')
+        print("sochet error")
         return False
 
 
@@ -316,7 +386,7 @@ def downloadFilest(url, target):
         req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
         # context=ssl._create_unverified_context()
         response = ssl_urlopen(req)
-        with open(target, 'w') as output:
+        with open(target, 'wb') as output:
             if PY3:
                 output.write(response.read().decode('utf-8'))
             else:
@@ -356,8 +426,7 @@ global CountConnOk
 CountConnOk = 0
 
 
-# opt=5 custom server and port.
-def zCheckInternet(opt=1, server=None, port=None):
+def zCheckInternet(opt=1, server=None, port=None):  # opt=5 custom server and port.
     global CountConnOk
     sock = False
     checklist = [("8.8.44.4", 53), ("8.8.88.8", 53), ("www.lululla.altervista.org/", 80), ("www.linuxsat-support.com", 443), ("www.google.com", 443)]
@@ -392,7 +461,7 @@ def checkInternet():
     try:
         import socket
         socket.setdefaulttimeout(0.5)
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(('8.8.8.8', 53))
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(("8.8.8.8", 53))
         return True
     except:
         return False
@@ -416,7 +485,7 @@ def check(url):
         return False
 
 
-def testWebConnection(host='www.google.com', port=80, timeout=3):
+def testWebConnection(host="www.google.com", port=80, timeout=3):
     import socket
     try:
         socket.setdefaulttimeout(timeout)
@@ -484,13 +553,16 @@ def checkRedirect(url):
     http.mount("http://", adapter)
     http.mount("https://", adapter)
     try:
+
         x = http.get(url, headers=hdr, timeout=15, verify=False, stream=True)
+
         return str(x.url)
     except Exception as e:
         print(e)
+
         return str(url)
-            
-            
+
+
 def freespace():
     try:
         diskSpace = os.statvfs('/')
@@ -513,7 +585,7 @@ def b64encoder(source):
 
 
 def b64decoder(s):
-    '''Add missing padding to string and return the decoded base64 string.'''
+    """Add missing padding to string and return the decoded base64 string."""
     import base64
     s = str(s).strip()
     try:
@@ -528,7 +600,7 @@ def b64decoder(s):
     except TypeError:
         padding = len(s) % 4
         if padding == 1:
-            print('Invalid base64 string: {}'.format(s))
+            print("Invalid base64 string: {}".format(s))
             return ''
         elif padding == 2:
             s += b'=='
@@ -542,7 +614,6 @@ def b64decoder(s):
         return outp
 
 
-
 def __createdir(list):
     dir = ''
     for line in list[1:].split('/'):
@@ -550,7 +621,7 @@ def __createdir(list):
         if not os.path.exists(dir):
             try:
                 from os import mkdir
-                mkdir(dir)
+                os.mkdir(dir)
             except:
                 print('Mkdir Failed', dir)
 
@@ -909,6 +980,9 @@ def ReadUrl2(url, referer):
         req.add_header('Referer', referer)
         # req = urllib2.Request(url)
         # req.add_header('User-Agent', RequestAgent())
+
+
+
         try:
             r = urllib2.urlopen(req, None, TIMEOUT_URL, context=CONTEXT)
         except Exception as e:
@@ -1174,25 +1248,32 @@ def decodeHtml(text):
     text = text.replace('&auml;', 'ä')
     text = text.replace('\u00e4', 'ä')
     text = text.replace('&#228;', 'ä')
+
     text = text.replace('&Auml;', 'Ä')
     text = text.replace('\u00c4', 'Ä')
     text = text.replace('&#196;', 'Ä')
+
     text = text.replace('&ouml;', 'ö')
     text = text.replace('\u00f6', 'ö')
     text = text.replace('&#246;', 'ö')
+
     text = text.replace('&ouml;', 'Ö')
     text = text.replace('&Ouml;', 'Ö')
     text = text.replace('\u00d6', 'Ö')
     text = text.replace('&#214;', 'Ö')
+
     text = text.replace('&uuml;', 'ü')
     text = text.replace('\u00fc', 'ü')
     text = text.replace('&#252;', 'ü')
+
     text = text.replace('&Uuml;', 'Ü')
     text = text.replace('\u00dc', 'Ü')
     text = text.replace('&#220;', 'Ü')
+
     text = text.replace('&szlig;', 'ß')
     text = text.replace('\u00df', 'ß')
     text = text.replace('&#223;', 'ß')
+
     text = text.replace('&amp;', '&')
     text = text.replace('&quot;', '\"')
     text = text.replace('&gt;', '>')

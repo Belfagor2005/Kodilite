@@ -125,7 +125,7 @@ try:
 except:
     import Image
 finally:
-    from PIL.Image import core as image    
+    from PIL.Image import core as image
 
 
 HTTPConnection.debuglevel = 1
@@ -444,59 +444,39 @@ def getpics(names, pics, tmpfold, picfold):
                         url = url[:n3]
                         referer = url[n2:]
                         p = Utils.getUrl2(url, referer)
-                        # -----------------
-                        # f1 = open(tpicf, "wb")
-                        # f1.write(p)
-                        # f1.close()
                         with open(tpicf, 'wb') as f1:
                             f1.write(p)
                     else:
-                        print("Going in urlopen url =", url)
-                        p = Utils.ReadUrl2(url)
-                        # p = p.decode('utf-8', 'ignore')
-                        with open(tpicf, 'wb') as f1:
-                            f1.write(p)
-                        # f1 = open(tpicf, "wb")
-                        # f1.write(p)
-                        # f1.close()
-                except:
-                    cmd = "cp " + defpic + " " + tpicf
-                    os.system(cmd)
+                        poster = Utils.checkRedirect(url)
+                        if poster:
+                            try:
+                                open(tpicf, 'wb').write(requests.get(poster, stream=True, allow_redirects=True).content)
+                                print('=============11111111=================\n')
+                            except:
+                                savePoster(tpicf, poster)
+                                print('===========2222222222=================\n')
 
-        if not fileExists(tpicf):
-            cmd = "cp " + defpic + " " + tpicf
-            # print("In getpics not fileExists(tpicf) cmd=", cmd)
-            os.system(cmd)
-        if Utils.isFHD():
-            nw = 220
-        else:
-            nw = 150
-        if os.path.exists(tpicf):
-            try:
-                im = Image.open(tpicf)  # .convert('RGBA')
-                # imode = im.mode
-                # if im.mode == "JPEG":
-                    # im.save(tpicf)
-                    # # in most case, resulting jpg file is resized small one
-                # if imode.mode in ["RGBA", "P"]:
-                    # imode = imode.convert("RGB")
-                    # rgb_im.save(tpicf)
-                # if imode != "P":
-                    # im = im.convert("P")
-                # if im.mode != "P":
-                    # im = im.convert("P")
-                w = im.size[0]
-                d = im.size[1]
-                r = float(d)/float(w)
-                d1 = r * nw
-                if w != nw:
-                    x = int(nw)
-                    y = int(d1)
-                    im = im.resize((x, y), Image.ANTIALIAS)
-                im.save(tpicf, quality=100, optimize=True)
-                # im.save(tpicf, 'PNG')
-                # im.save(tpicf, 'JPG')
-                # # im.save(tpicf)
+                        if Utils.isFHD():
+                            nw = 220
+                        else:
+                            nw = 147
+                        if os.path.exists(tpicf):
+                            try:
+                                im = Image.open(tpicf)  # .convert('RGBA')
+                                w = im.size[0]
+                                d = im.size[1]
+                                r = float(d) / float(w)
+                                d1 = r * nw
+                                if w != nw:
+                                    x = int(nw)
+                                    y = int(d1)
+                                    im = im.resize((x, y), Image.ANTIALIAS)
+                                im.save(tpicf, quality=100, optimize=True)
+
+                            except Exception as e:
+                                print("******* picon resize failed *******")
+                                print(e)
+
             except Exception as e:
                 print("******* picon resize failed *******")
                 print(e)
@@ -510,6 +490,12 @@ def getpics(names, pics, tmpfold, picfold):
     # print("In getpics final cmd1=", cmd1)
     os.system(cmd1)
     return pix
+
+
+def savePoster(dwn_poster, url_poster):
+    with open(dwn_poster, 'wb') as f:
+        f.write(requests.get(url_poster, stream=True, allow_redirects=True).content)
+        f.close()
 
 
 def up(names, tmppics, pos, menu, pixmap):
@@ -623,7 +609,7 @@ class Rundefault(Screen):
         Screen.__init__(self, session)
         self.name = name
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -1288,7 +1274,7 @@ class XbmcPluginPics(Screen):
         Screen.__init__(self, session)
         title = PlugDescription
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -1389,7 +1375,7 @@ class XbmcPluginPics(Screen):
         # IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
         # itype = self.index
         # text_clear = self.names1[itype]
-        
+
         # if os.path.exists(TMDB):
             # from Plugins.Extensions.TMBD.plugin import TMBD
             # text_clear = self.name
@@ -1726,11 +1712,11 @@ class XbmcPluginScreen(Screen):
     def __init__(self, session, name, names, urls, tmppics, curr_run, picindic):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
-        
+
         print("Here in XbmcPluginScreen picindic =", picindic)
         if picindic == 0:
             self.skinName = "XbmcPluginScreenF"
@@ -2134,13 +2120,13 @@ class Favorites(Screen):
 
     def __init__(self, session, names, urls):
         Screen.__init__(self, session)
-        
+
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
-        
+
         self.skinName = "Fav"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -2204,7 +2190,7 @@ class Start_mainmenu(Screen):
         Screen.__init__(self, session)
         self.skinName = "xbmc4A"
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -3234,7 +3220,7 @@ class DelAdd(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -3301,7 +3287,7 @@ class DelAdd1(Screen):
         Screen.__init__(self, session)
         self.skinName = "XbmcPluginScreenF"
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -3378,7 +3364,7 @@ class Getadds(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -3458,7 +3444,7 @@ class Getadds1(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -3525,7 +3511,7 @@ class Getadds7(Screen):
     def __init__(self, session, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -3610,7 +3596,7 @@ class Getaddons(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -3720,7 +3706,7 @@ class GetaddonsA2(Screen):
     def __init__(self, session, cat):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -3986,7 +3972,7 @@ class Getadds3(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -4024,7 +4010,7 @@ class Getadds3(Screen):
         methods.append("Matrix")
         self.urls.append("http://mirrors.kodi.tv/addons/matrix/")
         # methods.append("Matrix Script")
-        # self.urls.append("http://mirrors.kodi.tv/addons/matrix/")        
+        # self.urls.append("http://mirrors.kodi.tv/addons/matrix/")
         Utils.showlist(methods, self["menu"])
 
     def okClicked(self):
@@ -4053,7 +4039,7 @@ class GetaddonsA3(Screen):
         # if config.plugins.polar.menutype.value == "icons1":
             # self.skinName = "Downloads"
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -4184,7 +4170,7 @@ class Getadds4(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -4278,7 +4264,7 @@ class Getadds5(Screen):
     def __init__(self, session, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -4374,7 +4360,7 @@ class Getadds6(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -4498,7 +4484,7 @@ class Fusion(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -4593,7 +4579,7 @@ class Fusion2(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -4695,7 +4681,7 @@ class Repo2(Screen):
         # self.skinName = "Downloads"
         # else:
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -4818,7 +4804,7 @@ class Repo3(Screen):
     def __init__(self, session, url, plugurl, zipcode):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -4911,7 +4897,7 @@ class Addons(Screen):
         # self.skinName = "Downloads"
         # else:
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -5030,7 +5016,7 @@ class Addons2(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -5118,7 +5104,7 @@ class Addons3(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -5215,7 +5201,7 @@ class ShowPage2(Screen):
     def __init__(self, session, newstext):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added 
+        # lululla added
         global _session
         _session = session
         # end
@@ -5275,7 +5261,7 @@ class ShowPage2(Screen):
     # def __init__(self, session):
         # Screen.__init__(self, session)
         # self.session = session
-        # # lululla added 
+        # # lululla added
         # global _session
         # _session = session
         # # end
@@ -5948,8 +5934,8 @@ class ShowPage2(Screen):
         else:
             session.openWithCallback(start, ShowPage, newstext)
         """
-        
-        
+
+
 
 _session = ""
 plug = ""
@@ -6093,7 +6079,7 @@ pjopviews = classJobManagerViews()
 
     # def __init__(self, session, args=0):
         # self.session = session
-        # # lululla added 
+        # # lululla added
         # global _session
         # _session = session
         # # end
