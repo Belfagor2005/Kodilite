@@ -22,6 +22,7 @@
 """
 # ############## 20220730 v9.0 py3 ######
 # ############## 20221030 v9.1 recoded by Lululla ######
+# ############## 20230128 v9.1 updates getpics - trhead - minor fix by Lululla ######
 from __future__ import print_function
 from . import _
 from Components.AVSwitch import AVSwitch
@@ -130,7 +131,7 @@ finally:
 
 HTTPConnection.debuglevel = 1
 PlugDescription = 'KODILITE '
-Version = 'V.9.1r1'
+Version = 'V.9.1r2'
 Credits = " Linuxsat-Support Forum"
 select_file = "/tmp/select.txt"
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
@@ -244,6 +245,31 @@ def returnIMDB(text_clear):
         _session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
         return True
     return
+
+
+from requests import get, exceptions
+from requests.exceptions import HTTPError
+from twisted.internet.reactor import callInThread
+
+def threadGetPage(url=None, file=None, key=None, success=None, fail=None, *args, **kwargs):
+    print('[FILMXY][threadGetPage] url, file, key, args, kwargs', url, "   ", file, "   ", key, "   ", args, "   ", kwargs)
+    try:
+        # from requests import get, exceptions
+        # from requests.exceptions import HTTPError
+        # from twisted.internet.reactor import callInThread
+        response = get(url)
+        response.raise_for_status()
+        if file is None:
+            success(response.content)
+        elif key is not None:
+            success(response.content, file, key)
+        else:
+            success(response.content, file)
+    except HTTPError as httperror:
+        print('[FILMXY][threadGetPage] Http error: ', httperror)
+        fail(error)  # E0602 undefined name 'error'
+    except exceptions.RequestException as error:
+        print(error)
 
 
 def findmax(match=[]):
@@ -385,7 +411,7 @@ def getpics(names, pics, tmpfold, picfold):
     global defpic
     defpic = defpic
     pix = []
-    if cfg.thumb.value == "False":
+    if config.plugins.tvspro.thumb.value == "False":
         npic = len(pics)
         i = 0
         while i < npic:
@@ -400,18 +426,13 @@ def getpics(names, pics, tmpfold, picfold):
         name = names[j]
         if name is None or name == '':
             name = "Video"
-        name = Utils.cleanTitle(name)
+        name = Utils.cleanName(name)
+        name = name.replace(' ', '-').replace("'", '').replace('&', '').replace('(', '').replace(')', '')
         print(name)
-        # test
-        name = name.replace(' ', '-').replace("'", '').replace('&', '')
-        name = name.replace('(', '').replace(')', '')
-        print(name)
-        # end test
         url = pics[j]
-        if url is None:
-            url = ""
         url = url.replace(" ", "%20").replace("ExQ", "=").replace("AxNxD", "&")
-        # print("In getpics url =", url)
+        # if PY3:
+            # url = url.encode()
         ext = str(os.path.splitext(url)[-1])
         picf = picfold + "/" + name + ext
         tpicf = tmpfold + "/" + name + ext
@@ -450,11 +471,21 @@ def getpics(names, pics, tmpfold, picfold):
                         poster = Utils.checkRedirect(url)
                         if poster:
                             try:
-                                open(tpicf, 'wb').write(requests.get(poster, stream=True, allow_redirects=True).content)
-                                print('=============11111111=================\n')
-                            except:
-                                savePoster(tpicf, poster)
-                                print('===========2222222222=================\n')
+                                try:
+                                    if PY3:
+                                        poster = poster.encode()
+                                    callInThread(threadGetPage, url=poster, file=tpicf, success=downloadPic, fail=downloadError)
+                                    print('===========2222222222=================\n')
+                                except Exception as ex:
+                                    print("Error: Exception")
+                                    print(str(ex))
+                                    open(tpicf, 'wb').write(requests.get(poster, stream=True, allow_redirects=True).content)
+                                    print('=============11111111=================\n')
+                            except Exception as ex:
+                                print("Error: Exception 2")
+                                print(str(ex))
+                                # savePoster(tpicf, poster)
+
 
                         if Utils.isFHD():
                             nw = 220
@@ -470,26 +501,46 @@ def getpics(names, pics, tmpfold, picfold):
                                 if w != nw:
                                     x = int(nw)
                                     y = int(d1)
-                                    im = im.resize((x, y), Image.ANTIALIAS)
+                                    im = im.resize((x, y), Image.ANTIALIAS) 
                                 im.save(tpicf, quality=100, optimize=True)
-
+                            
                             except Exception as e:
                                 print("******* picon resize failed *******")
                                 print(e)
+                except:
+                    cmd = "cp " + defpic + " " + tpicf
+                    os.system(cmd)
 
-            except Exception as e:
-                print("******* picon resize failed *******")
-                print(e)
+        if not fileExists(tpicf):
+            cmd = "cp " + defpic + " " + tpicf
+            os.system(cmd)
+
         else:
             print("******* make picon failed *******")
             tpicf = defpic
+
         pix.append(j)
         pix[j] = picf
         j = j+1
     cmd1 = "cp " + tmpfold + "/* " + picfold + " && rm " + tmpfold + "/* &"
-    # print("In getpics final cmd1=", cmd1)
     os.system(cmd1)
     return pix
+
+
+def downloadPic(output, poster):
+    try:
+        if output is not None:
+            f = open(poster, 'wb')
+            f.write(output)
+            f.close()
+    except Exception as e:
+        print('error ', str(e))
+    return
+
+
+def downloadError(output):
+    print('output error ', output)
+    pass
 
 
 def savePoster(dwn_poster, url_poster):

@@ -1,8 +1,12 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import os
 import re
+from . import Utils
 # from Plugins.Extensions.KodiLite.adnutils import *
-from Plugins.Extensions.KodiLite.Utils import *
 # ###########20220115#########################
+
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
 LATEST = " "
 pass  # print("Starting Update2-py")
@@ -17,7 +21,7 @@ def updstart2():
     # dest = "/tmp/urlresolver.zip"
     # xfile = "https://github.com/tvaddonsco/tva-resolvers-repo/raw/master/zips/script.module.urlresolver/script.module.urlresolver-" + newvers + ".zip"
     # pass  # print("upd_done xfile =", xfile)
-    f = getUrlresp(url2)
+    f = Utils.getUrlresp(url2)
     pass  # print("f =", f)
     p = f.read()
     f1 = open(xdest, "wb")
@@ -36,17 +40,14 @@ def getdown(fplug):
     n3 = txt.find('</a>', (n2+4))
     latest = txt[(n2+2):n3]
     pass  # print( "checkvers latest =", latest)
-
     global LATEST
     LATEST = latest
-
     tfile = THISPLUG + "/scripts/script.module.ytdl/lib/youtube_dl/version.py"
     f = open(tfile, "r")
     txt = f.read()
     pass  # print("In upd_done1 txt = ", txt)
     n1 = txt.find('__version__ = ', 0)
     n2 = txt.find("'", (n1+18))
-
     version = txt[(n1+15):n2]
     f.close()
     pass  # print("In upd_done1 version youtube.dl= ", version)
@@ -62,7 +63,7 @@ def getdown(fplug):
         # dest = "/tmp/urlresolver.zip"
         # xfile = "https://github.com/tvaddonsco/tva-resolvers-repo/raw/master/zips/script.module.urlresolver/script.module.urlresolver-" + newvers + ".zip"
         # pass  # print("upd_done xfile =", xfile)
-        f = getUrlresp(xfile)
+        f = Utils.getUrlresp(xfile)
         pass  # print("f =", f)
         p = f.read()
         f1 = open(dest, "wb")
@@ -193,7 +194,7 @@ def checkvers3(name):
     # url2 = "https://github.com/tvaddonsco/tva-resolvers-repo/tree/master/leia/script.module.urlresolver/"
     # url2 = "https://mirror.xbmc-kodi.cz/addons/matrix/script.module.resolveurl/"
     url2 = "https://raw.githubusercontent.com/Gujal00/smrzips/master/addons.xml"  # repository.gujal-2.0.0.zip
-    fpage = getUrl(url2)
+    fpage = Utils.getUrl(url2)
     pass  # print("In checkvers3 fpage =", fpage)
     rx = 'addon id="script.module.resolveurl".*?version="(.*?)"'
     pass  # print( "checkvers3 rx =", rx)
@@ -211,7 +212,7 @@ def checkvers4(name):
     try:
         # url2 = "https://github.com/tvaddonsco/tva-resolvers-repo/tree/master/leia/script.module.urlresolver/"
         url2 = "https://github.com/host505/repository.host505/tree/master/script.module.oathscrapers/"
-        fpage = getUrl(url2)
+        fpage = Utils.getUrl(url2)
         pass  # print("In checkvers3 fpage =", fpage)
         rx = name + '-(.*?).zip'
         pass  # print( "checkvers4 rx =", rx)
@@ -250,7 +251,7 @@ def upd_done():
             dest = "/tmp/resolveurl.zip"
             xfile = "https://raw.githubusercontent.com/Gujal00/smrzips/master/zips/script.module.resolveurl/script.module.resolveurl-" + newvers + ".zip"
             pass  # print("upd_done xfile =", xfile)
-            f = getUrlresp(xfile)
+            f = Utils.getUrlresp(xfile)
             pass  # print("f =", f)
             p = f.read()
             f1 = open(dest, "wb")
@@ -386,4 +387,3 @@ def uresolv2(fplug):
 
 def upd_done2():
     pass
-

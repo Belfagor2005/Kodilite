@@ -1,12 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from twisted.web.client import downloadPage
 import os
 import re
-# from Plugins.Extensions.KodiLite.adnutils import *
-from Plugins.Extensions.KodiLite.Utils import *
-from twisted.web.client import downloadPage
 import sys
+from . import Utils
+
 PY3 = sys.version_info.major >= 3
 if PY3:
     # Python 3
@@ -22,6 +22,7 @@ else:
 
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
 latest = " "
+
 # print "Starting Update-py"
 # fontpath = THISPLUG
 # addFont('%s/font_default.otf' % fontpath, 'TSmediaFont', 100, 1)
@@ -255,12 +256,12 @@ def upd_done6(fplug):
 
 def upd_done():
     print("In upd_done")
-    dest = "/tmp/updates3.zip"
-    xfile = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/Fix/updates3.zip"
+    dest = "/tmp/updates5.zip"
+    xfile = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/Fix/updates5.zip"
     print("upd_done xfile =", xfile)
     # downloadPage(xfile, dest).addCallback(upd_last).addErrback(showError6)
     # downloadPage(xfile, dest).addCallback(upd_last)
-    f = getUrlresp(xfile)
+    f = Utils.getUrlresp(xfile)
     print("f =", f)
     p = f.read()
     f1 = open(dest, "wb")
@@ -277,7 +278,7 @@ def showError6(error):
 
 def upd_last(fplug):
     fdest = "/usr"
-    cmd = "unzip -o -q '/tmp/updates3.zip' -d " + fdest
+    cmd = "unzip -o -q '/tmp/updates5.zip' -d " + fdest
     print("cmd A =", cmd)
     os.system(cmd)
     # upd_last2()
