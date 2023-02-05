@@ -95,7 +95,7 @@ else:
 
 HTTPConnection.debuglevel = 1
 PlugDescription = 'KODILITE '
-Version = 'V.9.1r2'
+Version = 'V.9.1r3'
 Credits = " Linuxsat-Support Forum"
 select_file = "/tmp/select.txt"
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
