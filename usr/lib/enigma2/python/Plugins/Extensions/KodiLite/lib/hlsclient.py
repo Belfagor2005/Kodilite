@@ -45,7 +45,7 @@ try:
     PY3 = True
     unicode = str
     unichr = chr
-    long = int    
+    long = int
 except ImportError:
     from urlparse import urlparse, urljoin
     from urllib2 import urlopen, Request
@@ -425,7 +425,7 @@ class hlsclient(threading.Thread):
                             iv = attribs['IV'][2:].zfill(32).decode('hex')
                             assert len(iv) == 16, '[hlsclient::handle_basic_m3u] EXT-X-KEY: IV attribute has bad length'
                         else:
-                            iv = '\0'*8 + struct.pack('>Q', seq)
+                            iv = '\0' * 8 + struct.pack('>Q', seq)
                         enc = AES.new(key, AES.MODE_CBC, iv)
                     else:
                         assert False, '[hlsclient::handle_basic_m3u] EXT-X-KEY: METHOD=%s unknown' % attribs['METHOD']
@@ -490,7 +490,7 @@ class hlsclient(threading.Thread):
                 variants.append((line, variant))
                 variant = None
         if len(variants) == 1:
-            self.url = urlparse.urljoin(self.url, variants[0][0])
+            self.url = urljoin(self.url, variants[0][0])
         elif len(variants) >= 2:
             pass  # print '[hlsclient::play] More than one variant of the stream was provided.'
             autoChoice = {}
@@ -513,7 +513,7 @@ class hlsclient(threading.Thread):
                     else:
                         pass
             choice = max(autoChoice.iteritems(), key=operator.itemgetter(1))[0]
-            self.url = urlparse.urljoin(self.url, variants[choice][0])
+            self.url = urljoin(self.url, variants[choice][0])
 
         queue = Queue.Queue(1024)  # 1024 blocks of 4K each ~ 4MB buffer
         self.thread = threading.Thread(target=self.player_pipe, args=(queue, videopipe))
@@ -540,7 +540,7 @@ class hlsclient(threading.Thread):
                         return
                     seq, enc, duration, targetduration, media_url = media
                     if seq > last_seq:
-                        for chunk in self.download_chunks(urlparse.urljoin(self.url, media_url)):
+                        for chunk in self.download_chunks(urljoin(self.url, media_url)):
                             if enc:
                                 chunk = enc.decrypt(chunk)
                             queue.put(chunk, block=True)

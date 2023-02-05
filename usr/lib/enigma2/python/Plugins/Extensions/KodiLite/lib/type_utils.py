@@ -1,4 +1,5 @@
-from os import system
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 # Components
 from Components.config import config
@@ -8,30 +9,27 @@ from Components.MenuList import MenuList
 from Components.AVSwitch import AVSwitch
 from Components.Pixmap import Pixmap
 from Components.Sources.StaticText import StaticText
-
 # Screens
 from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
 from Screens.HelpMenu import HelpableScreen
 from Screens.InfoBar import MoviePlayer as Movie_Audio_Player
-
+import skin
 # Tools
 from Tools.Directories import fileExists, fileReadLines
-
-# Various
-from .InputBox import InputBoxWide
-from enigma import eTimer, ePicLoad, getDesktop, gFont, eSize
-
 from Tools.TextBoundary import getTextBoundarySize
-import skin
-
-##################################
+# Various
+from enigma import eTimer
+from enigma import ePicLoad
+from enigma import getDesktop
+from enigma import gFont
+from enigma import eSize
+from .InputBox import InputBoxWide
+from os import system
 
 pname = _("File Commander - Addon Mediaplayer")
 pdesc = _("play/show Files")
 pversion = "1.0-r0"
-
-# ### play with movieplayer ###
 
 
 class MoviePlayer(Movie_Audio_Player):
@@ -92,16 +90,17 @@ class vEditor(Screen, HelpableScreen):
 		self.file_name = file
 		self.list = []
 		self["filedata"] = MenuList(self.list)
-		self["actions"] = HelpableActionMap(self, ["WizardActions", "ColorActions", "DirectionActions"], {
-			"ok": (self.editLine, _("Edit current line")),
-			"green": (self.editLine, _("Edit current line")),
-			"back": (self.exitEditor, _("Exit editor and write changes (if any)")),
-			"red": (self.exitEditor, _("Exit editor and write changes (if any)")),
-			"yellow": (self.del_Line, _("Delete current line")),
-			"blue": (self.ins_Line, _("Insert line before current line")),
-			"chplus": (self.posStart, _("Go to start of file")),
-			"chminus": (self.posEnd, _("Go to end of file")),
-		}, -1)
+		self["actions"] = HelpableActionMap(self, ["WizardActions",
+                                                   "ColorActions",
+                                                   "DirectionActions"], {"ok": (self.editLine, _("Edit current line")),
+                                                                         "green": (self.editLine, _("Edit current line")),
+                                                                         "back": (self.exitEditor, _("Exit editor and write changes (if any)")),
+                                                                         "red": (self.exitEditor, _("Exit editor and write changes (if any)")),
+                                                                         "yellow": (self.del_Line, _("Delete current line")),
+                                                                         "blue": (self.ins_Line, _("Insert line before current line")),
+                                                                         "chplus": (self.posStart, _("Go to start of file")),
+                                                                         "chminus": (self.posEnd, _("Go to end of file")),
+                                                                         }, -1)
 		self["list_head"] = Label(self.file_name)
 		self["key_red"] = Label(_("Exit"))
 		self["key_green"] = Label(_("Edit"))

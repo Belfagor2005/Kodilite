@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 """
     This file is part of Plugin KodiLite pcd@xtrend-alliance.com
     Copyright (C) 2014
@@ -20,10 +21,13 @@
 
 
 """
-# ############## 20220730 v9.0 py3 ######
-# ############## 20221030 v9.1 recoded by Lululla ######
-# ############## 20230128 v9.1 updates getpics - trhead - minor fix by Lululla ######
-from __future__ import print_function
+'''
+20220730 v9.0 py3
+20221030 v9.1 recoded by Lululla
+20230128 v9.1r2 updates getpics - trhead - minor fix by Lululla
+20230205 v9.1r3 recoded getpics - spinner removed - minor fix by Lululla
+'''
+
 from . import _
 from Components.AVSwitch import AVSwitch
 from Components.ActionMap import NumberActionMap
@@ -40,6 +44,7 @@ from Components.config import ConfigText, ConfigDirectory
 from Components.config import NoSave, ConfigYesNo
 from Components.config import config
 from Components.config import getConfigListEntry
+from PIL import Image, ImageChops
 from Plugins.Plugin import PluginDescriptor
 from Screens.ChoiceBox import ChoiceBox
 from Screens.Console import Console
@@ -76,11 +81,7 @@ subsx = False
 from . import Utils
 from . import html_conv
 from .lib.xUtils import Getvid, Getvid2, Playoptions
-# from .lib import xUtils
-
 from .lib.SkinLoader import loadPluginSkin
-from .lib.Spinner import Spinner
-
 
 PY3 = sys.version_info.major >= 3
 
@@ -91,14 +92,6 @@ if PY3:
 else:
     from httplib import HTTPConnection
 
-# from PIL.Image import core as image
-try:
-    from PIL import Image
-except:
-    import Image
-finally:
-    from PIL.Image import core as image
-
 
 HTTPConnection.debuglevel = 1
 PlugDescription = 'KODILITE '
@@ -106,8 +99,8 @@ Version = 'V.9.1r2'
 Credits = " Linuxsat-Support Forum"
 select_file = "/tmp/select.txt"
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
-res_plugin_path = THISPLUG + '/skin/images/'
-res_pic_path = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/".format('KodiLite'))
+res_plugin_path = os.path.join(THISPLUG, 'skin/images/')
+res_pic_path = os.path.join(THISPLUG, 'res/')
 THISADDON = ""
 HANDLE = 1
 DEBUG = 1
@@ -131,16 +124,14 @@ HOST1 = "http://mirrors.kodi.tv/addons/matrix/"
 
 
 if Utils.isFHD():
-    # skin_path = res_plugin_path + 'skins/fhd/'
-    defpic = res_plugin_path + "defaultL.png"
-    dblank = res_plugin_path + "blankL.png"
-    exitz = res_plugin_path + "ExitL.png"
+    defpic = os.path.join(res_plugin_path, 'defaultL.png')
+    dblank = os.path.join(res_plugin_path, 'blankL.png')
+    exitz = os.path.join(res_plugin_path, 'ExitL.png')
 
 else:
-    # skin_path = res_plugin_path + 'skins/hd/'
-    defpic = res_plugin_path + "default.png"
-    dblank = res_plugin_path + "blank.png"
-    exitz = res_plugin_path + "Exit.png"
+    defpic = os.path.join(res_plugin_path, 'default.png')
+    dblank = os.path.join(res_plugin_path, 'blank.png')
+    exitz = os.path.join(res_plugin_path, 'Exit.png')
 
 
 config.plugins.kodiplug = ConfigSubsection()
@@ -218,12 +209,14 @@ def returnIMDB(text_clear):
     return
 
 
+import requests
 from requests import get, exceptions
 from requests.exceptions import HTTPError
 from twisted.internet.reactor import callInThread
 
+
 def threadGetPage(url=None, file=None, key=None, success=None, fail=None, *args, **kwargs):
-    print('[FILMXY][threadGetPage] url, file, key, args, kwargs', url, "   ", file, "   ", key, "   ", args, "   ", kwargs)
+    print('[kodilite][threadGetPage] url, file, key, args, kwargs', url, "   ", file, "   ", key, "   ", args, "   ", kwargs)
     try:
         # from requests import get, exceptions
         # from requests.exceptions import HTTPError
@@ -237,7 +230,7 @@ def threadGetPage(url=None, file=None, key=None, success=None, fail=None, *args,
         else:
             success(response.content, file)
     except HTTPError as httperror:
-        print('[FILMXY][threadGetPage] Http error: ', httperror)
+        print('[kodilite][threadGetPage] Http error: ', httperror)
         fail(error)  # E0602 undefined name 'error'
     except exceptions.RequestException as error:
         print(error)
@@ -264,7 +257,7 @@ def findmax(match=[]):
         if a == Amax:
             imax = i1
             break
-        i1 = i1+1
+        i1 += 1
     print("In findnax imax A=", imax)
     maxitem = str(Amax)
     if lx > 1:
@@ -283,7 +276,7 @@ def findmax(match=[]):
             if b == Bmax:
                 imax = i2
                 break
-            i2 = i2+1
+            i2 += 1
         maxitem = str(Amax) + "." + str(Bmax)
         print("In findnax imax B=", imax)
         if lx > 2:
@@ -302,7 +295,7 @@ def findmax(match=[]):
                 if c == Cmax:
                     imax = i3
                     break
-                i3 = i3+1
+                i3 += 1
             maxitem = str(Amax) + "." + str(Bmax) + "." + str(Cmax)
         if lx > 3:
             for item in match:
@@ -320,7 +313,7 @@ def findmax(match=[]):
             if d == Dmax:
                 imax = i4
                 break
-            i4 = i4+1
+            i4 += 1
 
         maxitem = str(Amax) + "." + str(Bmax) + "." + str(Cmax) + "." + str(Dmax)
         # print  "In findnax imax C=", imax
@@ -377,47 +370,49 @@ def parameters_string_to_dict(parameters):
             paramDict[paramSplits[0]] = paramSplits[1]
     return paramDict
 
+
 def getpics(names, pics, tmpfold, picfold):
     global defpic
     defpic = defpic
     pix = []
-    if config.plugins.tvspro.thumb.value == "False":
+
+    if cfg.thumb.value == "False":
         npic = len(pics)
         i = 0
         while i < npic:
             pix.append(defpic)
-            i = i+1
+            i += 1
         return pix
+
     cmd = "rm " + tmpfold + "/*"
     os.system(cmd)
+
     npic = len(pics)
     j = 0
+
     while j < npic:
         name = names[j]
         if name is None or name == '':
             name = "Video"
-        name = Utils.cleanName(name)
-        name = name.replace(' ', '-').replace("'", '').replace('&', '').replace('(', '').replace(')', '')
-        print(name)
         url = pics[j]
-        url = url.replace(" ", "%20").replace("ExQ", "=").replace("AxNxD", "&")
-        # if PY3:
-            # url = url.encode()
         ext = str(os.path.splitext(url)[-1])
-        picf = picfold + "/" + name + ext
-        tpicf = tmpfold + "/" + name + ext
-        if fileExists(picf):
-            if ('Stagione') in str(name):
+        picf = os.path.join(picfold, str(name + ext))
+        tpicf = os.path.join(tmpfold, str(name + ext))
+
+        if os.path.exists(picf):
+            if ('stagione') in str(name.lower()):
                 cmd = "rm " + picf
                 os.system(cmd)
             cmd = "cp " + picf + " " + tmpfold
             print("In getpics fileExists(picf) cmd =", cmd)
             os.system(cmd)
-        if fileExists(tpicf):
-            if ('Stagione') in str(name):
-                cmd = "rm " + tpicf
-                os.system(cmd)
-        if not fileExists(picf):
+
+        # test remove this
+        # if os.path.exists(tpicf):
+            # cmd = "rm " + tpicf
+            # os.system(cmd)
+
+        if not os.path.exists(picf):
             if THISPLUG in url:
                 try:
                     cmd = "cp " + url + " " + tpicf
@@ -428,55 +423,43 @@ def getpics(names, pics, tmpfold, picfold):
             else:
                 # now download image
                 try:
-                    if "|" in url:
-                        n3 = url.find("|", 0)
-                        n1 = url.find("Referer", n3)
-                        n2 = url.find("=", n1)
-                        url = url[:n3]
-                        referer = url[n2:]
-                        p = Utils.getUrl2(url, referer)
-                        with open(tpicf, 'wb') as f1:
-                            f1.write(p)
-                    else:
-                        poster = Utils.checkRedirect(url)
-                        if poster:
+                    url = url.replace(" ", "%20").replace("ExQ", "=").replace("AxNxD", "&")
+                    poster = Utils.checkRedirect(url)
+                    if poster:
+
+                        if "|" in url:
+                            n3 = url.find("|", 0)
+                            n1 = url.find("Referer", n3)
+                            n2 = url.find("=", n1)
+                            url = url[:n3]
+                            referer = url[n2:]
+                            p = Utils.getUrl2(url, referer)
+                            with open(tpicf, 'wb') as f1:
+                                f1.write(p)
+                        else:
                             try:
+                                # print("Going in urlopen url =", url)
+                                # p = Utils.gettUrl(url)
+                                # with open(tpicf, 'wb') as f1:
+                                    # f1.write(p)
                                 try:
+                                    with open(tpicf, 'wb') as f:
+                                        f.write(requests.get(url, stream=True, allow_redirects=True).content)
+                                    print('=============11111111=================\n')
+                                except Exception as e:
+                                    print("Error: Exception")
+                                    print('===========2222222222=================\n')
                                     if PY3:
                                         poster = poster.encode()
                                     callInThread(threadGetPage, url=poster, file=tpicf, success=downloadPic, fail=downloadError)
-                                    print('===========2222222222=================\n')
-                                except Exception as ex:
-                                    print("Error: Exception")
-                                    print(str(ex))
-                                    open(tpicf, 'wb').write(requests.get(poster, stream=True, allow_redirects=True).content)
-                                    print('=============11111111=================\n')
-                            except Exception as ex:
-                                print("Error: Exception 2")
-                                print(str(ex))
-                                # savePoster(tpicf, poster)
-
-
-                        if Utils.isFHD():
-                            nw = 220
-                        else:
-                            nw = 147
-                        if os.path.exists(tpicf):
-                            try:
-                                im = Image.open(tpicf)  # .convert('RGBA')
-                                w = im.size[0]
-                                d = im.size[1]
-                                r = float(d) / float(w)
-                                d1 = r * nw
-                                if w != nw:
-                                    x = int(nw)
-                                    y = int(d1)
-                                    im = im.resize((x, y), Image.ANTIALIAS) 
-                                im.save(tpicf, quality=100, optimize=True)
-                            
+                                '''
+                                print(str(e))
+                                open(tpicf, 'wb').write(requests.get(poster, stream=True, allow_redirects=True).content)
+                                '''
                             except Exception as e:
-                                print("******* picon resize failed *******")
-                                print(e)
+                                print("Error: Exception 2")
+                                print(str(e))
+
                 except:
                     cmd = "cp " + defpic + " " + tpicf
                     os.system(cmd)
@@ -485,14 +468,77 @@ def getpics(names, pics, tmpfold, picfold):
             cmd = "cp " + defpic + " " + tpicf
             os.system(cmd)
 
+        if os.path.exists(tpicf):
+            try:
+                size = [150, 220]
+                if Utils.isFHD():
+                    size = [220, 330]
+
+                file_name, file_extension = os.path.splitext(tpicf)
+                try:
+                    im = Image.open(tpicf).convert("RGBA")
+
+                    # shrink if larger
+                    try:
+                        im.thumbnail(size, Image.Resampling.LANCZOS)
+                    except:
+                        im.thumbnail(size, Image.ANTIALIAS)
+                    imagew, imageh = im.size
+
+                    # enlarge if smaller
+                    try:
+                        if imagew < size[0]:
+                            ratio = size[0] / imagew
+
+                            try:
+                                im = im.resize((int(imagew * ratio), int(imageh * ratio)), Image.Resampling.LANCZOS)
+                            except:
+                                im = im.resize((int(imagew * ratio), int(imageh * ratio)), Image.ANTIALIAS)
+
+                            imagew, imageh = im.size
+                    except Exception as e:
+                        print(e)
+
+                    # crop and center image
+                    bg = Image.new("RGBA", size, (255, 255, 255, 0))
+
+                    im_alpha = im.convert("RGBA").split()[-1]
+                    bgwidth, bgheight = bg.size
+                    bg_alpha = bg.convert("RGBA").split()[-1]
+                    temp = Image.new("L", (bgwidth, bgheight), 0)
+                    temp.paste(im_alpha, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)), im_alpha)
+                    bg_alpha = ImageChops.screen(bg_alpha, temp)
+                    bg.paste(im, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)))
+                    im = bg
+
+                    im.save(file_name + ".png", "PNG")
+
+                except Exception as e:
+                    print(e)
+                    im = Image.open(tpicf)
+
+                    try:
+                        im.thumbnail(size, Image.Resampling.LANCZOS)
+                    except:
+                        im.thumbnail(size, Image.ANTIALIAS)
+
+                    im.save(tpicf)
+
+            except Exception as e:
+                print("******* picon resize failed *******")
+                print(e)
         else:
             print("******* make picon failed *******")
             tpicf = defpic
 
         pix.append(j)
         pix[j] = picf
-        j = j+1
-    cmd1 = "cp " + tmpfold + "/* " + picfold + " && rm " + tmpfold + "/* &"
+        j += 1
+
+    cmd1 = "cp " + tmpfold + "/* " + picfold
+    os.system(cmd1)
+
+    cmd1 = "rm " + tmpfold + "/* &"
     os.system(cmd1)
     return pix
 
@@ -601,30 +647,6 @@ def update_xbmc_text(addon_id):  # #mfaraj to update the file from xbmc client t
     afile.close()
 
 
-def startspinner():
-    cursel = THISPLUG + "/skin/spinner"
-    Bilder = []
-    if cursel:
-        for i in range(30):
-            if (os.path.isfile("%s/wait%d.png" % (cursel, i + 1))):
-                Bilder.append("%s/wait%d.png" % (cursel, i + 1))
-    else:
-        Bilder = []
-    return Spinner(Bilder)
-
-
-def buildBilder():
-    cursel = THISPLUG + "/skin/spinner"
-    Bilder = []
-    if cursel:
-        for i in range(30):
-            if (os.path.isfile("%s/wait%d.png" % (cursel, i + 1))):
-                Bilder.append("%s/wait%d.png" % (cursel, i + 1))
-    else:
-        Bilder = []
-    return Bilder
-
-
 class Rundefault(Screen):
     def __init__(self, session, name, url, nextrun, progressCallBack=None):
         Screen.__init__(self, session)
@@ -730,8 +752,6 @@ class Rundefault(Screen):
             if self.progressCallBack is not None:
                 self.progress = self.progress + "..."
                 self.progressCallBack(self.progress)
-        # if self.progress_callback is not None:
-           # self.progress_callback('Please wait..")
 
     def stream(self):
         self.picfold = cfg.cachefold.value + "/xbmc/pic"
@@ -776,7 +796,7 @@ class Rundefault(Screen):
             for line in myfile.readlines():
                 sysarg = line
                 sysarg = sysarg.replace("\n", "")
-                icount = icount+1
+                icount += 1
                 if icount > 0:
                     break
             print("sysarg =", sysarg)
@@ -809,7 +829,7 @@ class Rundefault(Screen):
         for line in myfile.readlines():
             sysarg = line
             sysarg = sysarg.replace("\n", "")
-            icount = icount+1
+            icount += 1
             if icount > 0:
                 break
         print("sysarg =", sysarg)
@@ -899,51 +919,6 @@ class Rundefault(Screen):
             self.progressCallBack((_("Error! Try another item OR exit and submit log /tmp/e.log and /tmp/error.log")))
             return
 
-        """
-        if not path.exists("/tmp/data.txt"):
-            try:
-             self.lastcmd = self.lastcmd + " > /tmp/e1.log 2>&1"
-             os.system(self.lastcmd)
-             jointext("/tmp/e.log", "/tmp/e1.log")
-             self.error=(_("Error! Submit log /tmp/e.log. For more info use button 'Tips' in first screen"))
-             self.progressCallBack((_("Error! Submit log /tmp/e.log. For more info use button 'Tips' in first screen")))
-             return
-            except:
-             return
-        else:
-             timen = time.time()
-             timen = time.time()
-             global NTIME
-             NTIME = timen
-             timenow = timen - NTIME
-             print  "In Rundefault 2 timenow", timenow
-             print   "In Rundefault action 4"
-             self.progressCallBack(_("Finished"))
-             if not path.exists("/tmp/vidinfo.txt"):
-                   pass
-             else:
-                   myfile = file(r"/tmp/vidinfo.txt")
-                   icount = 0
-                   vinfo = myfile.read()
-                   myfile.close()
-                   self.vidinfo = vinfo.split("ITEM")
-
-             myfile = open(r"/tmp/data.txt")
-             icount = 0
-             self.error='Finished'
-             for line in myfile.readlines():
-                    print   "In rundef line =", line
-                    n1 = line.find("name=", 0)
-                    n2 = line.find("&name=", (n1+3))
-#                        print   "In rundef n1, n2 =", n1, n2
-                    if n2 > -1:
-                         line = line[n2:]
-                    datain = line[:-1]
-                    self.data.append(icount)
-                    self.data[icount] = datain
-                    icount = icount+1
-             myfile.close()
-        """
         n1 = 0
         if n1 == 0:
             inum = len(self.data)
@@ -977,18 +952,9 @@ class Rundefault(Screen):
                         print("Rundefault url=", url)
                 except:
                     pass
-                """
-                try:
-                    pic = params.get("thumbnailImage")
-                    if (pic == "DefaultFolder.png"):
-                        pic = res_plugin_path + "default.png"
-                except:
-                    pic = res_plugin_path + "default.png"
-                """
+
                 thumbnailImage = params.get("thumbnailImage")
-                print("Rundefault thumbnailImage=", thumbnailImage)
                 iconImage = params.get("iconImage")
-                print("Rundefault iconImage=", iconImage)
                 try:
                     if thumbnailImage.startswith("http"):
                         pic = thumbnailImage
@@ -1007,13 +973,12 @@ class Rundefault(Screen):
                 self.names.append(name)
                 self.urls.append(url)
                 self.pics.append(pic)
-                i = i+1
+                i += 1
 
             if DEBUG == 1:
                 print("Rundefault self.names=", self.names)
                 print("Rundefault self.urls=", self.urls)
                 print("Rundefault self.pics=", self.pics)
-                # print  "Here in Rundefault tmppics =", tmppics
         picindic = 0
         ipc = 4
         plen = len(self.pics)
@@ -1027,7 +992,7 @@ class Rundefault(Screen):
                 if ("default.png" not in self.pics[ipc]) and ("defaultL.png" not in self.pics[ipc]):
                     print("Here in Rundefault default not in self.pics[ipc]")
                     picindic = 1
-                ipc = ipc+1
+                ipc += 1
 
         if 'showtext' in self.urls[1]:
             f = open("/tmp/show.txt", "r")
@@ -1124,7 +1089,8 @@ class Rundefault(Screen):
                 self.names[inm] = self.names[inm].replace("#", "-")
                 self.names[inm] = self.names[inm].replace("|", "-")
                 self.names[inm] = self.names[inm].replace("*", "")
-                inm = inm+1
+                self.names[inm] = Utils.cleanName(self.names[inm])
+                inm += 1
             ipic = 2
             npic = len(self.pics)
             cpic = self.pics[1]
@@ -1134,7 +1100,7 @@ class Rundefault(Screen):
                 pic = self.pics[ipic]
                 if pic == cpic:
                     self.pics[ipic] = defpic
-                ipic = ipic + 1
+                ipic += 1
             print("self.pics B=", self.pics)
             print("In rundefault picindic =", picindic)
             if cfg.thumb.value == "True":
@@ -1148,63 +1114,6 @@ class Rundefault(Screen):
             else:
                 self.tmppics = getpics(self.names, self.pics, self.tmpfold, self.picfold)
                 self.session.open(XbmcPluginScreen, self.name, self.names, self.urls, self.tmppics, self.nextrun, picindic)
-            """
-            else:
-
-                timen = time.time()
-                global NTIME
-                NTIME = timen
-                timenow = timen - NTIME
-                print   "Before getpics2 timen =", timen
-                namelist = ""
-                piclist = ""
-                self.tmppics = []
-                inm = 0
-                for name in self.names:
-                        if name is None:
-                              self.names[inm] = "Video"
-                        self.names[inm] = self.names[inm].replace(":", "-")
-                        self.names[inm] = self.names[inm].replace("&", "-")
-                        self.names[inm] = self.names[inm].replace("'", "-")
-                        self.names[inm] = self.names[inm].replace("?", "-")
-                        self.names[inm] = self.names[inm].replace("/", "-")
-                        self.names[inm] = self.names[inm].replace("#", "-")
-                        self.names[inm] = self.names[inm].replace("|", "-")
-                        inm = inm+1
-                for name in self.names:
-                        namelist = namelist + "#####" + name
-                        name1 = "/media/hdd/xbmc/pic/" + name + ".png"
-                        self.tmppics.append(name1)
-                for pic in self.pics:
-                        if pic is None:
-                              pic = res_plugin_path + "default.png"
-                        piclist = piclist + "#####" + pic
-                tfold = self.tmpfold
-                pfold = self.picfold
-                namelist = namelist[5:]
-
-                print   "Before getpics2 namelist =", namelist
-                piclist = piclist[5:]
-                piclist = piclist.replace("'", "$$$$")
-                print   "Before getpics2 piclist =", piclist
-                cmd = "python " + THISPLUG + "/Getpics.py '" + namelist + "' '" + piclist + "' '" + tfold + "' '" + pfold + "' &"
-                print   "Before getpics2 cmd =", cmd
-                os.system(cmd)
-
-                # self.tmppics = getpics2(self.names, self.pics, self.tmpfold, self.picfold)
-                # timen = time.time()
-                print   "After getpics2 timen =", timen
-                # self.tmppics = getpics(self.names, self.pics, self.tmpfold, self.picfold)
-                # timen = time.time()
-                # global NTIME
-                # NTIME = timen
-                # timenow = timen - NTIME
-                print   "After getpics timen =", timen
-                #if int(self.nextrun) == 2:
-                self.progressCallBack("")
-                self.session.open(XbmcPluginPics,self.name,self.names, self.urls, self.tmppics,self.nextrun)
-                print   "Here in rundef end"
-            """
 
     def playstack(self, urlFull):
         if DEBUG == 1:
@@ -1228,19 +1137,13 @@ class Rundefault(Screen):
                 if n3 < 0:
                     break
             url1 = url1[0:(n3 + 4)]
-            # print   "url1 B=", url1
             name = "Video" + str(i)
             playlist.append(url1)
             names.append(name)
-            # print   "n1, n2, n3 =", n1, n2, n3
-            # print   "playlist[i] =", playlist[i]
             start = n2 - 1
-            i = i + 1
+            i += 1
         idx = 0
-        self.session.open(Playlist, idx, names, playlist) #playlist not exist ???
-
-    # def keyNumberGlobal(self, number):
-        # self["text"].number(number)
+        self.session.open(Playlist, idx, names, playlist)  # playlist not exist ???
 
 
 class XbmcPluginPics(Screen):
@@ -1255,33 +1158,34 @@ class XbmcPluginPics(Screen):
         _session = session
         # end
         self["title"] = Button(title + Version)
-        self["bild"] = startspinner()
+        # self["bild"] = startspinner()
         self.curr_run = curr_run
         self.nextrun = self.curr_run+1
         self.pos = []
-        self.pos = []
+
         if Utils.isFHD():
-            self.pos.append([30, 24])
-            self.pos.append([396, 24])
-            self.pos.append([764, 24])
-            self.pos.append([1134, 24])
-            self.pos.append([1504, 24])
-            self.pos.append([30, 468])
-            self.pos.append([396, 468])
-            self.pos.append([764, 468])
-            self.pos.append([1134, 468])
-            self.pos.append([1504, 468])
+            self.pos.append([122, 42])
+            self.pos.append([478, 42])
+            self.pos.append([834, 42])
+            self.pos.append([1190, 42])
+            self.pos.append([1546, 42])
+            self.pos.append([122, 522])
+            self.pos.append([478, 522])
+            self.pos.append([834, 522])
+            self.pos.append([1190, 522])
+            self.pos.append([1546, 522])
         else:
-            self.pos.append([26, 15])
-            self.pos.append([272, 15])
-            self.pos.append([516, 15])
-            self.pos.append([756, 15])
-            self.pos.append([996, 15])
-            self.pos.append([26, 315])
-            self.pos.append([272, 315])
-            self.pos.append([516, 315])
-            self.pos.append([756, 315])
-            self.pos.append([996, 315])
+            self.pos.append([81, 28])
+            self.pos.append([319, 28])
+            self.pos.append([556, 28])
+            self.pos.append([793, 28])
+            self.pos.append([1031, 28])
+            self.pos.append([81, 348])
+            self.pos.append([319, 348])
+            self.pos.append([556, 348])
+            self.pos.append([793, 348])
+            self.pos.append([1031, 348])
+
         print(" self.pos =", self.pos)
         list = []
         self.name = name
@@ -1299,7 +1203,7 @@ class XbmcPluginPics(Screen):
         self.rundef = None
         self.plug = ''
         self.keylock = False
-        self.spinner_running = False
+        # self.spinner_running = False
         print("self.mlist =", self.mlist)
         list = names
         self["menu"] = List(list)
@@ -1309,10 +1213,11 @@ class XbmcPluginPics(Screen):
         print("self.pics = ", self.pics)
         self["frame"] = MovingPixmap()
         i = 0
-        while i < 10:
-            self["label" + str(i+1)] = StaticText()
-            self["pixmap" + str(i+1)] = Pixmap()
-            i = i+1
+        while i < 20:
+            self["label" + str(i + 1)] = StaticText()
+            self["pixmap" + str(i + 1)] = Pixmap()
+            i += 1
+
         i = 0
         self["actions"] = NumberActionMap(["OkCancelActions", "MenuActions", "DirectionActions", "NumberActions"],
                                           {"ok": self.okClicked,
@@ -1342,35 +1247,21 @@ class XbmcPluginPics(Screen):
         if returnIMDB(text_clear):
             print('show imdb/tmdb')
 
-    def startSpinner(self):
-        if self.spinner_running is False:
-            Bilder = buildBilder()
-            self["bild"].start(Bilder)
-            self.spinner_running = True
-        return
-
-    def stopSpinner(self):
-        if self.spinner_running is True:
-            self["bild"].stop()
-            self.spinner_running = False
-            self['bild'].instance.setPixmap(gPixmapPtr())
-        return
-
     def exit(self):
-        if self.spinner_running is True:
-            self.stopSpinner()
-            self.keylock = False
-            afile = open("/tmp/stopaddon", "w")
-            afile.write("stop execution")
-            afile.close()
-            self.progressCallBack("Finished")
-            try:
-                self.rundef.stoprun()
-            except:
-                pass
-        else:
-            self.stopSpinner()
-            self.close()
+        # if self.spinner_running is True:
+        # self.stopSpinner()
+        self.keylock = False
+        afile = open("/tmp/stopaddon", "w")
+        afile.write("stop execution")
+        afile.close()
+        self.progressCallBack("Finished")
+        try:
+            self.rundef.stoprun()
+        except:
+            pass
+        # else:
+            # self.stopSpinner()
+        self.close()
 
     def progressCallBack(self, progress):
         try:
@@ -1378,12 +1269,10 @@ class XbmcPluginPics(Screen):
                 if progress.startswith("Error"):
                     self.keylock = False
                     self["info"].setText(progress)
-                    self.stopSpinner()
                     return
                 if progress == "Finished":
                     self.keylock = False
                     self.selection_changed()
-                    self.stopSpinner()
                     return
             self["info"].setText(progress)
         except:
@@ -1396,24 +1285,32 @@ class XbmcPluginPics(Screen):
         except:
             pass
 
-    def paintFrame(self):
-        print("In paintFrame self.index, self.minentry, self.maxentry =", self.index, self.minentry, self.maxentry)
-        print("In paintFrame self.ipage = ", self.ipage)
+    def info(self):
+        itype = self.index
+        self.inf = self.infos[itype]
+        self.inf = ''
         try:
-            ifr = self.index - (10*(self.ipage-1))
-            print("ifr =", ifr)
+            self.inf = self.infos[itype]
+        except:
+            pass
+        if self.inf:
+            try:
+                self["info"].setText(self.inf)
+            except:
+                self["info"].setText('')
+        print("In GridMain infos =", self.inf)
+
+    def paintFrame(self):
+        # print("In paintFrame self.index, self.minentry, self.maxentry =", self.index, self.minentry, self.maxentry)
+        # print("In paintFrame self.ipage = ", self.ipage)
+        try:
+            ifr = self.index - (10 * (self.ipage - 1))
+            # print("ifr =", ifr)
             ipos = self.pos[ifr]
-            print("ipos =", ipos)
-            inf = self.index
-            if inf:
-                try:
-                    self["info"].setText(self.infos[inf])
-                    print('infos: ', inf)
-                except:
-                    self["info"].setText('')
-                    print('except info')
+            # print("ipos =", ipos)
             self["frame"].moveTo(ipos[0], ipos[1], 1)
             self["frame"].startMoving()
+            self.info()
         except Exception as e:
             print('error  in paintframe: ', str(e))
 
@@ -1434,7 +1331,7 @@ class XbmcPluginPics(Screen):
             while i1 < 10:
                 self["label" + str(i1+1)].setText(" ")
                 self["pixmap" + str(i1+1)].instance.setPixmapFromFile(blpic)
-                i1 = i1+1
+                i1 += 1
         print("len(self.pics), self.minentry, self.maxentry =", len(self.pics), self.minentry, self.maxentry)
         self.npics = len(self.pics)
         i = 0
@@ -1459,7 +1356,7 @@ class XbmcPluginPics(Screen):
                 self["pixmap" + str(i+1)].instance.setPixmapFromFile(pic)  # ok
             except:
                 self["pixmap" + str(i+1)].instance.setPixmapFromFile(picd)
-            i = i+1
+            i += 1
         self.index = self.minentry
         print("self.minentry, self.index =", self.minentry, self.index)
         self.paintFrame()
@@ -1503,10 +1400,10 @@ class XbmcPluginPics(Screen):
             self.paintFrame()
 
     def key_down(self):
-        print("keydown self.index, self.maxentry = ", self.index, self.maxentry)
+        # print("keydown self.index, self.maxentry = ", self.index, self.maxentry)
         self.index = self.index + 5
-        print("keydown self.index, self.maxentry 2= ", self.index, self.maxentry)
-        print("keydown self.ipage = ", self.ipage)
+        # print("keydown self.index, self.maxentry 2= ", self.index, self.maxentry)
+        # print("keydown self.ipage = ", self.ipage)
         if self.index > (self.maxentry):
             if self.ipage < self.npage:
                 self.ipage = self.ipage + 1
@@ -1516,14 +1413,13 @@ class XbmcPluginPics(Screen):
                 self.ipage = 1
                 self.openTest()
             else:
-                print("keydown self.index, self.maxentry 3= ", self.index, self.maxentry)
+                # print("keydown self.index, self.maxentry 3= ", self.index, self.maxentry)
                 self.index = 0
             self.paintFrame()
         else:
             self.paintFrame()
 
     def okClicked(self):
-        # self["bild"] = startspinner()
         if self.keylock:
             return
         if DEBUG == 1:
@@ -1534,13 +1430,10 @@ class XbmcPluginPics(Screen):
         self.name = name
         global SELECT
         # SELECT.append(self.name)
-        print("screen number" + str(self.curr_run)+"okClicked SELECT[0]=", SELECT[0])
+        # print("screen number" + str(self.curr_run)+"okClicked SELECT[0]=", SELECT[0])
         # SELECT[self.curr_run] = SELECT[self.curr_run-1] + " -> " + self.name
         SELECT.append(SELECT[self.curr_run] + " -> " + self.name)
         self.next_select = SELECT[self.curr_run]
-        print("In XbmcPluginScreen self.curr_run =", self.curr_run)
-        print("In XbmcPluginScreen SELECT[self.curr_run] =", SELECT[self.curr_run])
-        print("In XbmcPluginScreen SELECT =", SELECT)
         self.url = url
         print("In XbmcPluginScreen self.name =", self.name)
         if ('search' in self.name.lower()) or ('insert' in self.name.lower()):
@@ -1556,7 +1449,7 @@ class XbmcPluginPics(Screen):
                 fileslist[icount] = (_(line[:-1]), line)
                 if icount > 0:
                     ebuf.append(fileslist[icount])
-                icount = icount + 1
+                icount += 1
             self.session.openWithCallback(self.Searchtest, ChoiceBox, title="Please Select", list=ebuf)
 
         else:
@@ -1577,7 +1470,6 @@ class XbmcPluginPics(Screen):
                     self.session.open(AddonsettScreen, self.plug)
                     return
             elif itype == 2 and self.name == "Favorites":
-                # elif itype == 1 and self.name == "Favorites":
                 favorites_xml = "/etc/KodiLite/favorites.xml"
                 import os
                 if not os.path.exists(favorites_xml):
@@ -1603,11 +1495,9 @@ class XbmcPluginPics(Screen):
                 return
             else:
                 self["info"].setText("Please wait ...")
-                # self.keylock=True
-                self.startSpinner()
                 self.rundef = Rundefault(self.session, name, url, self.nextrun, self.progressCallBack)
                 self.rundef.start()
-            self["info"].setText("Select")
+        self["info"].setText("Select")
 
 # plugin://plugin.video.youtube/kodion/search/query/?q=adele
     def Searchtest(self, res):
@@ -1631,10 +1521,6 @@ class XbmcPluginPics(Screen):
             print("In XbmcPluginScreen self.url 2=", self.url)
             print("In XbmcPluginScreen search_txt 1=", search_txt)
             n1 = self.url.find("?", 0)
-            # if "plugin.video.youtube" in THISADDON:
-            # self.url = self.url[:(n1+1)] + "plugin://plugin.video.youtube/kodion/search/query/?q=" + search_txt
-            # else:
-            # print  "In XbmcPluginScreen search_txt 2=", search_txt
             file = open("/tmp/xbmc_search.txt", 'w')
             file.write(search_txt)
             file.close()
@@ -1664,11 +1550,8 @@ class XbmcPluginScreen(Screen):
     def __init__(self, session, name, names, urls, tmppics, curr_run, picindic):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
-
         print("Here in XbmcPluginScreen picindic =", picindic)
         if picindic == 0:
             self.skinName = "XbmcPluginScreenF"
@@ -1679,8 +1562,6 @@ class XbmcPluginScreen(Screen):
                 self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self["bild"] = startspinner()
-
         self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
@@ -1690,8 +1571,6 @@ class XbmcPluginScreen(Screen):
         self.rundef = None
         self.plug = ''
         self.keylock = False
-        self.spinner_running = False
-        print("name =", name)
         name1 = name.replace("plugin.video.", "")
         name1 = name1.replace("plugin.audio.", "")
         name1 = name1.replace("plugin.image.", "")
@@ -1729,7 +1608,6 @@ class XbmcPluginScreen(Screen):
             print("screen number" + str(self.curr_run) + "self.names1 =", self.names1)
             print("screen number" + str(self.curr_run) + "self.urls1 =", self.urls1)
             print("screen number" + str(self.curr_run) + "self.tmppics1 =", self.tmppics1)
-        # screen number4self.urls1 = [' ', '/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/" + ADDONCAT + "/plugin.video.IPTVupdater/default.py?plugin://plugin.video.IPTVupdater/?url=+&name=Information&showtext=true&mode=3']
         if "showtext=true" in self.urls1[1]:
             """
             f = open("/tmp/show.txt", "r")
@@ -1758,23 +1636,6 @@ class XbmcPluginScreen(Screen):
     def cancel(self):
         self.close()
 
-    def startSpinner(self):
-        if self.spinner_running is False:
-            # self["bild"] = startspinner()
-            Bilder = buildBilder()
-            self["bild"].start(Bilder)
-            self.spinner_running = True
-            return
-
-    def stopSpinner(self):
-        if self.spinner_running is True:
-            self["bild"].stop()
-            self.spinner_running = False
-            self['bild'].instance.setPixmap(gPixmapPtr())
-            # self["bild"].instance=None
-            # self["bild"]=None
-        return
-
     def showIMDB(self):
         itype = self.index
         text_clear = self.names1[itype]
@@ -1782,20 +1643,20 @@ class XbmcPluginScreen(Screen):
             print('show imdb/tmdb')
 
     def exit(self):
-        if self.spinner_running is True:
-            self.stopSpinner()
-            self.keylock = False
-            afile = open("/tmp/stopaddon", "w")
-            afile.write("stop execution")
-            afile.close()
-            self.progressCallBack("Finished")
-            try:
-                self.rundef.stoprun()
-            except:
-                pass
-        else:
-            self.stopSpinner()
-            self.close()
+        # if self.spinner_running is True:
+        # self.stopSpinner()
+        self.keylock = False
+        afile = open("/tmp/stopaddon", "w")
+        afile.write("stop execution")
+        afile.close()
+        self.progressCallBack("Finished")
+        try:
+            self.rundef.stoprun()
+        except:
+            pass
+        # else:
+            # self.stopSpinner()
+        self.close()
 
     def progressCallBack(self, progress):
         try:
@@ -1803,12 +1664,10 @@ class XbmcPluginScreen(Screen):
                 if progress.startswith("Error"):
                     self.keylock = False
                     self["info"].setText(progress)
-                    self.stopSpinner()
                     return
                 if progress == "Finished":
                     self.keylock = False
                     self.selection_changed()
-                    self.stopSpinner()
                     return
             self["info"].setText(progress)
         except:
@@ -1857,7 +1716,6 @@ class XbmcPluginScreen(Screen):
             self["pixmap1"].instance.setPixmapFromFile(picthumb)
         # print   "In XbmcPluginScreen self.names1 =", self.names1
         Utils.showlist(self.names1, self["menu"])
-        # self.selection_changed()
 
     def up(self):
         if self.keylock:
@@ -1980,11 +1838,11 @@ class XbmcPluginScreen(Screen):
             else:
                 self["info"].setText("Please wait..")
                 self.keylock = True
-                self.startSpinner()
+                # self.startSpinner()
                 # dellog()
                 self.rundef = Rundefault(self.session, name, url, self.nextrun, self.progressCallBack)
                 self.rundef.start()
-            self["info"].setText("Please Select")
+        self["info"].setText("Please Select")
 
 #    plugin://plugin.video.youtube/kodion/search/query/?q=adele
     def Searchtest(self, res):
@@ -2037,13 +1895,9 @@ class Favorites(Screen):
 
     def __init__(self, session, names, urls):
         Screen.__init__(self, session)
-
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
-
         self.skinName = "Fav"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -2090,7 +1944,6 @@ class Favorites(Screen):
         idx = self["menu"].getSelectionIndex()
         name = self.names[idx]
         root = tree.getroot()
-        i = 0
         for addon in root.iter('addon'):
             for media in addon.iter('media'):
                 title = media.get('title')
@@ -2105,14 +1958,11 @@ class Start_mainmenu(Screen):
         Screen.__init__(self, session)
         self.skinName = "xbmc4A"
         self.session = session
-        # lululla added
         global _session
         _session = session
         # end
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self["bild"] = startspinner()
-        self.spinner_running = False
         self["label1"] = StaticText("")
         self["label2"] = StaticText("")
         self["label3"] = StaticText("")
@@ -2158,7 +2008,7 @@ class Start_mainmenu(Screen):
                                                             "green": self.addon,
                                                             "yellow": self.conf,
                                                             "menu": self.conf,
-                                                             "blue": self.openVi,
+                                                            "blue": self.openVi,
                                                             "ok": self.okClicked,
                                                             "epg": self.showIMDB,
                                                             "info": self.showIMDB,
@@ -2379,7 +2229,7 @@ class Start_mainmenu(Screen):
                 self.names.append(name)
                 self.shortnms.append(name)
                 self.urls.append(i)
-                i = i+1
+                i += 1
 
             if "__init__" in name:
                 continue
@@ -2388,13 +2238,8 @@ class Start_mainmenu(Screen):
             elif "plugin.video.select" in name:
                 continue
             else:
-                # iiiiiiii
                 try:
                     pic = THISPLUG + "/" + ADDONCAT + "/" + name + "/icon.png"
-                    try:
-                        import Image
-                    except:
-                        from PIL import Image
                     im = Image.open(pic)
                     if Utils.isFHD():
                         x = 200
@@ -2423,7 +2268,7 @@ class Start_mainmenu(Screen):
                 print("In listplugs name1 =", name1)
                 self.shortnms.append(name1)
                 self.urls.append(i)
-                i = i+1
+                i += 1
         self.num = i
         print("Here in listplugs going in Utils.showlist self.shortnms =", self.shortnms)
         Utils.showlist(self.shortnms, self["menu"])
@@ -2477,20 +2322,14 @@ class Start_mainmenu(Screen):
         except:
             fpage = " "
 
-        # tfile2 = THISPLUG + "/adlist.txt"
-        # f2 = open(tfile2, "r")
-        # fpage = f2.read()
         lines = fpage.splitlines()
-        # f2.close()
         nlist = 0
         for line in lines:
-            # log("\nIn checkUpd line ="+ line)
-            # log("\nIn checkUpd self.name B="+ self.name)
+
             if line.startswith("#####"):
                 continue
             elif "###" not in line:
                 continue
-            # elif (not self.name in line) and (not "pelisalacarta" in line) and (not "tvalacarta" in line):
             elif self.name not in line:
                 continue
             else:
@@ -2498,7 +2337,7 @@ class Start_mainmenu(Screen):
                 print("In checkUpd line B=", line)
                 print("In checkUpd self.name c=", self.name)
                 items = line.split("###")
-                n = len(items)
+                # n = len(items)
                 print("In checkUpd items =", items)
                 # name = items[0]
                 # url1 = items[1]
@@ -2590,7 +2429,6 @@ class Start_mainmenu(Screen):
         cmd = cmd1 + " && " + cmd2 + " && " + cmd3
         print("cmd =", cmd)
         title = _("Installing ") + self.name
-        # self.session.open(Console, _(title),[cmd])
         print("self.session 1=", self.session)
         self.session.openWithCallback(self.checkName, Console, _(title), [cmd])
 
@@ -2878,7 +2716,7 @@ class Start_mainmenu(Screen):
             os.system(cmd1)
 
     def findmod(self):
-        xfile = THISADDON + "/addon.xml"
+        xfile = os.path.join(THISADDON, 'addon.xml')
         print("In plugin-py findmod xfile =", xfile)
         f = open(xfile, "r")
         ftext = f.read()
@@ -2937,7 +2775,7 @@ class Start_mainmenu(Screen):
     def updateStatus(self):
         ncount = cfg.wait.value
         # nct = int(ncount)/4
-        self.timecount = self.timecount + 1
+        self.timecount += 1
         print("In StartPlugin_mainmenu updateStatus self.timecount =", self.timecount)
         self.dtext = self.p.read()
         print("In StartPlugin_mainmenu updateStatus self.dtext =", self.dtext)
@@ -3030,7 +2868,7 @@ class Start_mainmenu(Screen):
                 self.names2.append(name)
                 self.urls2.append(url)
                 self.pics2.append(pic)
-                i = i+1
+                i += 1
             if (len(self.names2) == 2) and (self.urls2[1] is None) and (THISPLUG not in self.names2[1]):
                 if ("rtmp" in self.names2[1]):
                     if "live" in name:
@@ -3089,10 +2927,8 @@ class DelAdd(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -3102,7 +2938,7 @@ class DelAdd(Screen):
         self['info'] = Label()
         self.info = (_("Please select addon type"))
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
+        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -3154,10 +2990,8 @@ class DelAdd1(Screen):
         Screen.__init__(self, session)
         self.skinName = "XbmcPluginScreenF"
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         title = PlugDescription
         self["title"] = Button(title + Version)
         self["menu"] = Utils.tvList([])
@@ -3166,7 +3000,7 @@ class DelAdd1(Screen):
         self['info'] = Label()
         self.info = " "
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
+        # self["bild"] = startspinner()
         self.type = type
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
@@ -3228,10 +3062,8 @@ class Getadds(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -3241,7 +3073,7 @@ class Getadds(Screen):
         self['info'] = Label()
         self.info = (_("Please select install method"))
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
+        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -3306,10 +3138,8 @@ class Getadds1(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -3319,7 +3149,6 @@ class Getadds1(Screen):
         self['info'] = Label()
         self.info = (_("Please put zip files in folders /tmp, /media/hdd or /media/usb."))
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -3371,10 +3200,8 @@ class Getadds7(Screen):
     def __init__(self, session, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -3384,7 +3211,6 @@ class Getadds7(Screen):
         self['info'] = Label()
         self.info = (_("Please select"))
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -3454,10 +3280,8 @@ class Getaddons(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -3467,7 +3291,6 @@ class Getaddons(Screen):
         self['info'] = Label()
         self.info = (_("Any errors - report in www.linuxsat-support.com KodiLite thread"))
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -3562,10 +3385,8 @@ class GetaddonsA2(Screen):
     def __init__(self, session, cat):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -3573,7 +3394,6 @@ class GetaddonsA2(Screen):
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
-        self["bild"] = startspinner()
         self.cat = cat
         self.info = (_("     Please select addon to install"))
         self["info"].setText(self.info)
@@ -3826,10 +3646,8 @@ class Getadds3(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -3839,7 +3657,7 @@ class Getadds3(Screen):
         self['info'] = Label()
         self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request."))
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
+        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -3888,13 +3706,9 @@ class GetaddonsA3(Screen):
 
     def __init__(self, session, line):
         Screen.__init__(self, session)
-        # if config.plugins.polar.menutype.value == "icons1":
-            # self.skinName = "Downloads"
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -3903,7 +3717,6 @@ class GetaddonsA3(Screen):
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
-        self["bild"] = startspinner()
         self.info = (" ")
         self["info"].setText(self.info)
         self["pixmap1"] = Pixmap()
@@ -4014,10 +3827,8 @@ class Getadds4(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -4027,7 +3838,7 @@ class Getadds4(Screen):
         self['info'] = Label()
         self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request.."))
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
+        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -4106,10 +3917,8 @@ class Getadds5(Screen):
     def __init__(self, session, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         print("Addons url =", url)
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
@@ -4121,7 +3930,6 @@ class Getadds5(Screen):
         self.info = " "
         self.url = url
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -4200,10 +4008,8 @@ class Getadds6(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -4211,7 +4017,6 @@ class Getadds6(Screen):
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
-        self["bild"] = startspinner()
         self.info = " "
         self.name = name
         print("In Getadds6 url =", url)
@@ -4322,10 +4127,8 @@ class Fusion(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -4336,7 +4139,7 @@ class Fusion(Screen):
         self['info'] = Label()
         self.info = (_("Please select repository type"))
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
+        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -4416,10 +4219,8 @@ class Fusion2(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -4429,7 +4230,6 @@ class Fusion2(Screen):
         self['info'] = Label()
         self.info = (_("Please select repository type"))
         self["info"].setText(self.info)
-        self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -4512,18 +4312,12 @@ class Repo2(Screen):
 
     def __init__(self, session, infourl, plugurl, zipcode):
         Screen.__init__(self, session)
-        # if config.plugins.polar.menutype.value == "icons1":
-        # self.skinName = "Downloads"
-        # else:
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self["bild"] = startspinner()
         self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
@@ -4556,7 +4350,6 @@ class Repo2(Screen):
         self.gotPage(html)
 
     def gotPage(self, html):
-        # try:
         if DEBUG == 1:
             print("In Repo2 html = ", html)
         self.html = html
@@ -4566,8 +4359,6 @@ class Repo2(Screen):
         match = re.compile(regexcat, re.DOTALL).findall(html)
         print("In Repo2 match =", match)
         for name, url in match:
-        # if "plugin.video" not in name:
-            # continue
             self.names.append(name)
             self.urls.append(url)
         Utils.showlist(self.names, self["menu"])
@@ -4588,14 +4379,12 @@ class Repo2(Screen):
             url2 = self.infourl
             line = name + "###" + url1 + "###" + url2 + "###"
             print("In Repo2 line =", line)
-            #############################
             """
             adpath = THISPLUG + "/useradlist.txt"
             f1 = open(adpath,"a")
             f1.write(line)
             f1.close()
             """
-            #############################
             self.session.open(GetaddonsA3, line)
         else:
             sel = self["menu"].getSelectionIndex()
@@ -4610,7 +4399,6 @@ class Repo2(Screen):
                 # url = self.plugurl + "/" + name + "/" + name + "-" + url + ".zip?raw=true"
                 url = self.plugurl + "/" + name + "/" + name + "-" + url + ".zip"
             print("In Repo2 url B= ", url)
-            ##########################
             url2 = self.infourl
             line = name + "###" + url + "###" + url2 + "###\n"
             print("In Repo2 line 2 =", line)
@@ -4618,7 +4406,6 @@ class Repo2(Screen):
             f1 = open(adpath, "a")
             f1.write(line)
             f1.close()
-            ##########################
             self.session.open(Addons3, name, url)
 
     def keyLeft(self):
@@ -4637,15 +4424,11 @@ class Repo3(Screen):
     def __init__(self, session, url, plugurl, zipcode):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self["bild"] = startspinner()
-
         self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
@@ -4678,7 +4461,6 @@ class Repo3(Screen):
         getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
 
     def gotPage(self, html):
-        # try:
         if DEBUG == 1:
             print("Repo3 html = ", html)
         self.html = html
@@ -4691,8 +4473,6 @@ class Repo3(Screen):
             self.names.append(name)
             self.urls.append(url)
         Utils.showlist(self.names, self["menu"])
-        # except Exception, error:
-        # #print  "[plugins]: Could not download HTTP Page\n" + str(error)
 
     def getfeedError(self, error=""):
         error = str(error)
@@ -4716,7 +4496,6 @@ class Repo3(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -4726,10 +4505,8 @@ class Addons(Screen):
     def __init__(self, session, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         print("Addons url =", url)
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
@@ -4738,7 +4515,6 @@ class Addons(Screen):
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
-        self["bild"] = startspinner()
         self.info = " "
         self.url = url
         self["info"].setText(self.info)
@@ -4764,7 +4540,6 @@ class Addons(Screen):
         getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
 
     def gotPage(self, html):
-        # try:
         if DEBUG == 1:
             print("In Addons html = ", html)
         file1 = THISPLUG + "/adlist.txt"
@@ -4788,17 +4563,12 @@ class Addons(Screen):
             self.names.append(name)
             self.urls.append(url)
         Utils.showlist(self.names, self["menu"])
-        # except Exception, error:
-        # print  "[plugins]: Could not download HTTP Page\n" + str(error)
 
     def getfeedError(self, error=""):
         error = str(error)
         print("Download error =", error)
 
     def okClicked(self):
-        # if self.errcount == 1:
-        # self.close()
-        # else:
         sel = self["menu"].getSelectionIndex()
         name = self.names[sel]
         url = self.urls[sel]
@@ -4813,7 +4583,6 @@ class Addons(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -4823,10 +4592,8 @@ class Addons2(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -4834,7 +4601,6 @@ class Addons2(Screen):
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
-        self["bild"] = startspinner()
         self.info = " "
         self.name = name
         print("In Addons2 url =", url)
@@ -4900,7 +4666,6 @@ class Addons2(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -4909,10 +4674,8 @@ class Addons3(Screen):
     def __init__(self, session, name, url):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "XbmcPluginScreenF"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -4921,7 +4684,6 @@ class Addons3(Screen):
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self.info = " "
-        self["bild"] = startspinner()
         self.name = name
         self.url = url
         print("In Addons3 self.name =", self.name)
@@ -4947,7 +4709,6 @@ class Addons3(Screen):
         if Utils.isFHD():
             pic = res_plugin_path + "DownloadL.png"
         self["pixmap1"].instance.setPixmapFromFile(pic)
-        # sel = self["menu"].getSelectionIndex()
         name = self.name.split(" : ")
         self.plug = name[0]
         xdest = "/tmp/" + self.plug
@@ -4960,20 +4721,11 @@ class Addons3(Screen):
         f1.write(fpage)
         f1.close()
         self.install()
-        """
-        fpage = Utils.getUrl(xurl)
-        print("In Addons3 fpage =", fpage)
-        f = open(xdest, 'w')
-        f.write(fpage)
-        f.close()
-        self.install()
-        """
 
     def showError(self, error):
         print("ERROR :", error)
 
     def install(self):
-        # cmd1 = "wget -O '" + dest + "' '" + self.url + "'"
         print("In Addons3 self.plug =", self.plug)
         if "plugin." in self.plug:
             fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins"
@@ -4995,7 +4747,6 @@ class Addons3(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -5004,10 +4755,8 @@ class ShowPage2(Screen):
     def __init__(self, session, newstext):
         Screen.__init__(self, session)
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.skinName = "ShowPage"
         title = PlugDescription
         self["title"] = Button(title + Version)
@@ -5053,8 +4802,8 @@ class ShowPage2(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
+
 
 '''
 # class Getaddons2(Screen):
@@ -5076,7 +4825,6 @@ class ShowPage2(Screen):
         # self['info'] = Label()
         # self.info = (_("Please select category"))
         # self["info"].setText(self.info)
-        # self["bild"] = startspinner()
         # self["pixmap1"] = Pixmap()
         # self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           # {"ok": self.okClicked,
@@ -5170,7 +4918,6 @@ class ShowPage2(Screen):
         # self['infoc'] = Label(_('Info'))
         # self['infoc2'] = Label('%s' % Credits)
         # self['info'] = Label()
-        # self["bild"] = startspinner()
         # self.cat = cat
         # self.info = (_("     Please select addon to install"))
         # self["info"].setText(self.info)
@@ -5447,7 +5194,6 @@ class ShowPage2(Screen):
         # self['info'] = Label()
         # self.info = (_("Addon Categories"))
         # self["info"].setText(self.info)
-        # self["bild"] = startspinner()
         # self["pixmap1"] = Pixmap()
         # self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                              # {"ok": self.okClicked,
@@ -5623,7 +5369,7 @@ class ShowPage2(Screen):
                 if icount == 0:
                     date = line
                     break
-                icount = icount+1
+                icount += 1
             myfile.close()
             myfile = file(r"/tmp/kodi-news.txt")
             global newstext
@@ -5645,7 +5391,7 @@ class ShowPage2(Screen):
                     if icount == 0:
                         upd1 = line
                         break
-                    icount = icount+1
+                    icount += 1
                 myfile.close()
             else:
                 upd1 = "None"
@@ -5720,7 +5466,7 @@ class ShowPage2(Screen):
                 if icount == 0:
                     olddate = line
                     break
-                icount = icount+1
+                icount += 1
             if olddate != date :
                 indic = 1
             else:
@@ -5732,7 +5478,6 @@ class ShowPage2(Screen):
         else:
             session.openWithCallback(start, ShowPage, newstext)
         """
-
 
 
 _session = ""
@@ -5750,21 +5495,60 @@ def main(session, **kwargs):
         if os.path.exists("/tmp/e.log"):
             os.remove("/tmp/e.log")
     if not os.path.exists("/etc/KodiLite"):
-        os.system("mkdir -p /etc/KodiLite")
+        try:
+            os.mkdir(os.path.join('/etc', "KodiLite"))
+        except:
+            pass
+        # os.system("mkdir -p /etc/KodiLite")
     if not os.path.exists("/etc/KodiLite/favorites.xml"):
         cmd = "cp " + THISPLUG + "/lib/defaults/favorites.xml /etc/KodiLite/"
         os.system(cmd)
     print("In def main 4")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/vid")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/pic")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/tmp")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/database/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/userdata/Database/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/")
-    os.system("mkdir -p " + cfg.cachefold.value + "/xbmc/home/addons/packages")
+
+    try:
+        os.mkdir(os.path.join(str(cfg.cachefold.value), "xbmc"))
+    except:
+        pass
+
+    try:
+        os.mkdir(os.path.join(str(cfg.cachefold.value), "xbmc/vid"))
+    except:
+        pass
+
+    try:
+        os.mkdir(os.path.join(str(cfg.cachefold.value), "xbmc/pic"))
+    except:
+        pass
+
+    try:
+        os.mkdir(os.path.join(str(cfg.cachefold.value), "xbmc/home"))
+    except:
+        pass
+
+    try:
+        os.mkdir(os.path.join(str(cfg.cachefold.value), "xbmc/database"))
+    except:
+        pass
+
+    try:
+        os.mkdir(os.path.join(str(cfg.cachefold.value), "xbmc/userdata"))
+    except:
+        pass
+
+    try:
+        os.mkdir(os.path.join(str(cfg.cachefold.value), "xbmc/userdata/Database"))
+    except:
+        pass
+
+    try:
+        os.mkdir(os.path.join(str(cfg.cachefold.value), "xbmc/home/addons"))
+    except:
+        pass
+
+    try:
+        os.mkdir(os.path.join(str(cfg.cachefold.value), "xbmc/home/addons/packages"))
+    except:
+        pass
 
     print("In def main 5")
     try:
@@ -5793,7 +5577,7 @@ def main(session, **kwargs):
 
 def start():
     print("Going into StartPlugin_mainmenu")
-    gpath = THISPLUG + "/greet"
+    gpath = os.path.join(THISPLUG, 'greet')
     if os.path.exists(gpath):
         cmd = "rm -rf " + gpath
         os.system(cmd)
@@ -5869,182 +5653,3 @@ class classJobManagerViews():
 
 
 pjopviews = classJobManagerViews()
-
-'''
-
-# class XbmcConfigScreen(ConfigListScreen, Screen):
-
-    # def __init__(self, session, args=0):
-        # self.session = session
-        # # lululla added
-        # global _session
-        # _session = session
-        # # end
-        # self.setup_title = _("Kodilite Settings")
-        # self["title"] = Button(self.setup_title)
-        # Screen.__init__(self, session)
-        # self.skinName = "Kodiconfig"
-        # self.list = [
-                    # getConfigListEntry(_("Autoupdate"), cfg.update),
-                    # getConfigListEntry(_("Cache folder"), cfg.cachefold),
-                    # # getConfigListEntry(_("Skin resolution-(restart e2 after change)"), cfg.skinres),
-                    # getConfigListEntry(_("Enigma log (/tmp/e.log)"), cfg.elog),
-                    # getConfigListEntry(_("Show thumbpic ?"), cfg.thumb),
-                    # getConfigListEntry(_("Use subtitle support ?"), cfg.subtitle),
-                    # getConfigListEntry(_("Wait time for lists (sec)"), cfg.wait),
-                    # getConfigListEntry(_("vlc server ip"), cfg.vlcip),
-                     # ]
-        # ConfigListScreen.__init__(self, self.list, session=self.session, on_change=self.changedEntry)
-        # # self["status"] = Label()
-        # self["key_red"] = Button(_("Exit"))
-        # self["key_green"] = Button(_("Save"))
-        # self["HelpWindow"] = Pixmap()
-        # self["HelpWindow"].hide()
-        # self["VKeyIcon"] = Pixmap()
-        # self["VKeyIcon"].hide()
-        # self["setupActions"] = NumberActionMap(["SetupActions", "ColorActions", "VirtualKeyboardActions"],
-                                         # {"red": self.cancel,
-                                          # "green": self.save,
-                                          # "cancel": self.cancel,
-                                          # "showVirtualKeyboard": self.KeyText}, -2)
-        # self.onChangedEntry = []
-        # self.handleInputHelpers()
-
-    # def changedEntry(self):
-        # for x in self.onChangedEntry:
-            # x()
-        # # try:
-            # # if isinstance(self["config"].getCurrent()[1], ConfigYesNo) or isinstance(self["config"].getCurrent()[1], ConfigSelection):
-                # # self.createSetup()
-        # # except:
-            # # pass
-
-    # def getCurrentEntry(self):
-        # return self["config"].getCurrent() and self["config"].getCurrent()[0] or ""
-
-    # def getCurrentValue(self):
-        # return self["config"].getCurrent() and str(self["config"].getCurrent()[1].getText()) or ""
-
-    # def createSummary(self):
-        # from Screens.Setup import SetupSummary
-        # return SetupSummary
-
-    # def cancel(self):
-        # for x in self["config"].list:
-            # x[1].cancel()
-        # self.close()
-
-    # def IsOk(self):
-        # sel = self["config"].getCurrent()[1]
-        # # sel = self["config"].getCurrent()[0]  # self.getCurrentEntry()
-        # print('sel ', sel)
-        # # sel2 = self.getCurrentValue()
-        # # print('sel2 ', sel2)
-        # if sel and sel == cfg.cachefold:
-            # self.openDirectoryBrowser(cfg.cachefold.value)
-        # else:
-            # self.save()
-        # ConfigListScreen.keyOK(self)
-
-    # def openDirectoryBrowser(self, path):
-        # if os.path.exists("/usr/bin/apt-get"):
-            # path = None
-        # try:
-            # from Screens.LocationBox import LocationBox
-            # self.session.openWithCallback(
-                # self.openDirectoryBrowserCB,
-                # LocationBox,
-                # windowTitle=_("Choose Directory:"),
-                # text=_("Choose directory"),
-                # currDir=str(path),
-                # bookmarks=cfg.cachefold.value,
-                # autoAdd=False,
-                # editDir=True,
-                # inhibitDirs=["/bin", "/boot", "/dev", "/home", "/lib", "/proc", "/run", "/sbin", "/sys", "/var"],
-                # minFree=15)
-        # except Exception as ex:
-            # print("openDirectoryBrowser get failed: ", str(ex))
-        # # ConfigListScreen.keyOK(self)
-
-    # def openDirectoryBrowserCB(self, path):
-        # if path is not None:
-            # cfg.cachefold.setValue(path)
-        # return
-
-    # def KeyText(self):
-        # from Screens.VirtualKeyBoard import VirtualKeyBoard
-        # sel = self["config"].getCurrent()
-        # if sel:
-            # self.session.openWithCallback(self.VirtualKeyBoardCallback, VirtualKeyBoard, title=self["config"].getCurrent()[0], text=self["config"].getCurrent()[1].value)
-
-    # def VirtualKeyBoardCallback(self, callback=None):
-        # if callback is not None and len(callback):
-            # self["config"].getCurrent()[1].value = callback
-            # self["config"].invalidate(self["config"].getCurrent())
-        # return
-
-    # def save(self, answer=None):
-        # if answer is None:
-            # self.session.openWithCallback(self.save, MessageBox, _("Save Config??\nReboot system necessary!!"), MessageBox.TYPE_YESNO)
-        # elif answer:
-            # if self["config"].isChanged():
-                # for x in self["config"].list:
-                    # x[1].save()
-                # self.mbox = self.session.open(MessageBox, _("Settings saved successfully !"), MessageBox.TYPE_INFO, timeout=5)
-            # self.saveAll()
-            # picfold = cfg.cachefold.value + "/xbmc/pic"
-            # cmd = "rm -rf " + picfold
-            # os.system(cmd)
-            # subs = cfg.subtitle.value
-            # tfile = THISPLUG + "/scripts/script.module.SubsSupport"
-            # if not os.path.exists(tfile):
-                # if subs is True:
-                    # fdest = THISPLUG + "/scripts"
-                    # dest = "/tmp/subssupport.zip"
-                    # xfile = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiLite/Script-modules/kodi/script.module.SubsSupport-1.0.0.zip"
-                    # cmd1 = "wget -O '" + dest + "' '" + xfile + "'"
-                    # cmd2 = "unzip -o -q '/tmp/subssupport.zip' -d " + fdest
-                    # cmd = []
-                    # cmd.append(cmd1)
-                    # cmd.append(cmd2)
-                    # print("In main cmd =", cmd)
-                    # title = _("Installing script subssupport %s")
-                    # self.session.openWithCallback(self.subsdown, Console, _(title), cmd)
-            # else:
-                # pass
-            # self.session.open(TryQuitMainloop, 3)
-
-    # def subsdown(self):
-        # pass
-
-    # def handleInputHelpers(self):
-        # from enigma import ePoint
-        # currConfig = self["config"].getCurrent()
-        # if currConfig is not None:
-            # if isinstance(currConfig[1], ConfigText):
-                # if "VKeyIcon" in self:
-                    # try:
-                        # self["VirtualKB"].setEnabled(True)
-                    # except:
-                        # pass
-                    # try:
-                        # self["virtualKeyBoardActions"].setEnabled(True)
-                    # except:
-                        # pass
-                    # self["VKeyIcon"].show()
-
-                # if "HelpWindow" in self and currConfig[1].help_window and currConfig[1].help_window.instance is not None:
-                    # helpwindowpos = self["HelpWindow"].getPosition()
-                    # currConfig[1].help_window.instance.move(ePoint(helpwindowpos[0], helpwindowpos[1]))
-            # else:
-                # if "VKeyIcon" in self:
-                    # try:
-                        # self["VirtualKB"].setEnabled(False)
-                    # except:
-                        # pass
-                    # try:
-                        # self["virtualKeyBoardActions"].setEnabled(False)
-                    # except:
-                        # pass
-                    # self["VKeyIcon"].hide()
-'''

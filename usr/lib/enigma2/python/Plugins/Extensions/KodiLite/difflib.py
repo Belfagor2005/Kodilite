@@ -4,6 +4,8 @@
 import heapq
 from collections import namedtuple as _namedtuple
 from functools import reduce
+import re
+
 Match = _namedtuple('Match', 'a b size')
 
 __all__ = ['get_close_matches',
@@ -17,7 +19,7 @@ __all__ = ['get_close_matches',
            'unified_diff',
            'HtmlDiff',
            'Match']
- 
+
 
 def _calculate_ratio(matches, length):
     if length:
@@ -185,10 +187,10 @@ class SequenceMatcher():
                 i, j = ai + size, bj + size
                 if size:
                     answer.append(('equal',
-                                    ai,
-                                    i,
-                                    bj,
-                                    j))
+                                   ai,
+                                   i,
+                                   bj,
+                                   j))
 
             return answer
 
@@ -287,7 +289,7 @@ def _count_leading(line, ch):
 
 class Differ():
 
-    def __init__(self, linejunk = None, charjunk = None):
+    def __init__(self, linejunk=None, charjunk=None):
         self.linejunk = linejunk
         self.charjunk = charjunk
 
@@ -406,10 +408,7 @@ class Differ():
             yield '? %s%s\n' % ('\t' * common, btags)
 
 
-import re
-
-
-def IS_LINE_JUNK(line, pat = re.compile('\\s*#?\\s*$').match):
+def IS_LINE_JUNK(line, pat=re.compile('\\s*#?\\s*$').match):
     return pat(line) is not None
 
 
@@ -849,11 +848,9 @@ del re
 
 def restore(delta, which):
     try:
-        tag = {1: '- ',
-        2: '+ '}[int(which)]
+        tag = {1: '- ', 2: '+ '}[int(which)]
     except KeyError:
         raise ValueError, 'unknown delta choice (must be 1 or 2): %r' % which
-
     prefixes = ('  ', tag)
     for line in delta:
         if line[:2] in prefixes:

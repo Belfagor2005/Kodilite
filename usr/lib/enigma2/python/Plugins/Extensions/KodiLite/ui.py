@@ -3,16 +3,24 @@
 
 from __future__ import print_function
 # from boxbranding import getMachineBrand
-from enigma import ePicLoad, eTimer, getDesktop, gMainDC, eSize
-from Screens.Screen import Screen
-from Components.Pixmap import Pixmap, MovingPixmap
-from Components.ActionMap import ActionMap
-from Components.Sources.StaticText import StaticText
-from Components.FileList import FileList
 from Components.AVSwitch import AVSwitch
-from Components.Sources.List import List
+from Components.ActionMap import ActionMap
 from Components.ConfigList import ConfigListScreen
-from Components.config import config, ConfigSubsection, ConfigInteger, ConfigSelection, ConfigText, ConfigYesNo, getConfigListEntry
+from Components.FileList import FileList
+from Components.Label import Label
+from Components.Pixmap import Pixmap, MovingPixmap
+from Components.Sources.List import List
+from Components.Sources.StaticText import StaticText
+from Components.config import ConfigSelection, ConfigYesNo 
+from Components.config import ConfigSubsection, ConfigInteger
+from Components.config import config, ConfigText
+from Components.config import getConfigListEntry
+from Screens.Screen import Screen
+from enigma import ePicLoad
+from enigma import eSize
+from enigma import eTimer
+from enigma import gMainDC
+from enigma import getDesktop
 import skin
 import sys
 
@@ -24,7 +32,7 @@ except:
     from Tools.Directories import resolveFilename, pathExists, SCOPE_MEDIA
 
 if DM:
-    from enigma import eRect, gPixmapPtr
+    from enigma import eRect  #, gPixmapPtr
 else:
     pass
 
@@ -34,10 +42,8 @@ if DM:
     from skin import componentSizes, TemplatedListFonts
 else:
     pass
-from Components.Label import Label
-# from Plugins.Extensions.KodiLite.adnutils import *
-from . import adnutils
-# from adnutils import *
+
+
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
 
 
@@ -99,7 +105,7 @@ class picscr(Screen):
 
 class picscrdm(Screen):
     skin = """
-        <screen name="picshow" position="center,80" size="1200,610" title="PicturePlayer">
+            <screen name="picshow" position="center,80" size="1200,610" title="PicturePlayer">
                 <ePixmap pixmap="skin_default/buttons/red.png" position="10,5" size="200,40"  />
                 <ePixmap pixmap="skin_default/buttons/green.png" position="210,5" size="200,40"  />
                 <ePixmap pixmap="skin_default/buttons/yellow.png" position="410,5" size="200,40"  />
@@ -109,10 +115,10 @@ class picscrdm(Screen):
                 <widget source="key_yellow" render="Label" position="410,5" size="200,40" zPosition="1" font="Regular;20" halign="center" valign="center" backgroundColor="#a08500" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-2,-2" />
                 <widget source="key_blue" render="Label" position="610,5" size="200,40" zPosition="1" font="Regular;20" halign="center" valign="center" backgroundColor="#18188b" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-2,-2" />
                 <widget source="global.CurrentTime" render="Label" position="1130,12" size="60,25" font="Regular;22" halign="right">
-                        <convert type="ClockToText">Default</convert>
+                    <convert type="ClockToText">Default</convert>
                 </widget>
                 <widget source="global.CurrentTime" render="Label" position="820,12" size="300,25" font="Regular;22" halign="right">
-                        <convert type="ClockToText">Format:%A %d. %B</convert>
+                    <convert type="ClockToText">Format:%A %d. %B</convert>
                 </widget>
                 <eLabel position="10,50" size="1180,1" backgroundColor="grey" />
                 <eLabel position="380,50" size="1,585" backgroundColor="grey" />
@@ -121,7 +127,8 @@ class picscrdm(Screen):
                 <widget source="label" render="Label" position="20,370" size="330,140" font="Regular;19"/>
                 <widget name="thn" position="40,60" size="300,300" />
                 <widget name="filelist" position="400,95" size="790,510" scrollbarMode="showOnDemand" />
-        </screen>"""
+            </screen>
+            """
 
 
 class picshow(Screen):
@@ -152,7 +159,6 @@ class picshow(Screen):
         self["key_blue"] = StaticText(_("Setup"))
         self["label"] = StaticText("")
         self["thn"] = Pixmap()
-
         currDir = config.pic.lastDir.value
         if not pathExists(currDir):
             currDir = "/"
@@ -163,7 +169,6 @@ class picshow(Screen):
         self.filelist = FileList(currDir, matchingPattern="(?i)^.*\.(jpeg|jpg|jpe|png|bmp|gif)")
         self["filelist"] = self.filelist
         self["filelist"].onSelectionChanged.append(self.selectionChanged)
-
         self.ThumbTimer = eTimer()
         try:
             self.ThumbTimer_conn = self.ThumbTimer.timeout.connect(self.showThumb)
@@ -309,8 +314,6 @@ class picshow(Screen):
         config.pic.save()
         self.close()
 
-# ------------------------------------------------------------------------------------------
-
 
 class Pic_Setup(Screen, ConfigListScreen):
 
@@ -381,8 +384,6 @@ class Pic_Setup(Screen, ConfigListScreen):
         from Screens.Setup import SetupSummary
         return SetupSummary
 
-# ---------------------------------------------------------------------------
-
 
 class Pic_Exif(Screen):
     skin = """
@@ -404,7 +405,7 @@ class Pic_Exif(Screen):
         Screen.__init__(self, session)
         self["actions"] = ActionMap(["SetupActions", "ColorActions"],
                                     {
-                                            "cancel": self.close
+                                        "cancel": self.close
                                     }, -1)
 
         self["key_red"] = StaticText(_("Close"))
@@ -423,8 +424,6 @@ class Pic_Exif(Screen):
 
     def layoutFinished(self):
         self.setTitle(_("Info"))
-
-# ----------------------------------------------------------------------------------------
 
 
 T_INDEX = 0
@@ -730,7 +729,7 @@ class Pic_Thumb(Screen):
             absY = self.spaceY + (posY * (self.spaceY + self.picY))
             self.positionlist.append((absX, absY))
             skincontent += "<widget source=\"label" + str(x) + "\" render=\"Label\" position=\"" + str(absX + 5) + "," + str(absY + self.picY - textsize) + "\" size=\"" + str(self.picX - 10) + "," + str(textsize) \
-                            + "\" font=\"Regular;" + str(thumtxt) + "\" zPosition=\"2\" transparent=\"1\" noWrap=\"1\" foregroundColor=\"" + self.textcolor + "\" />"
+                        + "\" font=\"Regular;" + str(thumtxt) + "\" zPosition=\"2\" transparent=\"1\" noWrap=\"1\" foregroundColor=\"" + self.textcolor + "\" />"
             skincontent += "<widget name=\"thumb" + str(x) + "\" position=\"" + str(absX + 5) + "," + str(absY + 5) + "\" size=\"" + str(self.picX - 10) + "," + str(self.picY - (textsize * 2)) + "\" zPosition=\"2\" transparent=\"1\" alphatest=\"on\" />"
         # Screen, backgroundlabel and MovingPixmap
         if pic_frame:
@@ -746,13 +745,13 @@ class Pic_Thumb(Screen):
         Screen.__init__(self, session)
         self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "MovieSelectionActions"],
                                     {
-                                            "cancel": self.Exit,
-                                            "ok": self.KeyOk,
-                                            "left": self.key_left,
-                                            "right": self.key_right,
-                                            "up": self.key_up,
-                                            "down": self.key_down,
-                                            "showEventInfo": self.StartExif,
+                                        "cancel": self.Exit,
+                                        "ok": self.KeyOk,
+                                        "left": self.key_left,
+                                        "right": self.key_right,
+                                        "up": self.key_up,
+                                        "down": self.key_down,
+                                        "showEventInfo": self.StartExif,
                                     }, -1)
         self["frame"] = MovingPixmap()
         for x in list(range(self.thumbsC)):
@@ -966,17 +965,16 @@ class Pic_Full_View(Screen):
         Screen.__init__(self, session)
 
         self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "MovieSelectionActions"],
-        {
-                "cancel": self.Exit,
-                "green": self.PlayPause,
-                "yellow": self.PlayPause,
-                "blue": self.nextPic,
-                "red": self.prevPic,
-                "left": self.prevPic,
-                "right": self.nextPic,
-                "showEventInfo": self.StartExif,
-        }, -1)
-
+                                    {
+                                        "cancel": self.Exit,
+                                        "green": self.PlayPause,
+                                        "yellow": self.PlayPause,
+                                        "blue": self.nextPic,
+                                        "red": self.prevPic,
+                                        "left": self.prevPic,
+                                        "right": self.nextPic,
+                                        "showEventInfo": self.StartExif,
+                                    }, -1)
         self["point"] = Pixmap()
         self["pic"] = Pixmap()
         self["play_icon"] = Pixmap()

@@ -1,14 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os, sys, warnings
+import os
+import sys
+import warnings
 __all__ = ['getpass', 'getuser', 'GetPassWarning']
+
 
 class GetPassWarning(UserWarning):
     pass
 
 
-def unix_getpass(prompt = 'Password: ', stream = None):
+def unix_getpass(prompt='Password: ', stream=None):
     fd = None
     tty = None
     try:
@@ -44,6 +47,7 @@ def unix_getpass(prompt = 'Password: ', stream = None):
                 stream.flush()
 
         except termios.error as e:
+            print(e)
             if passwd is not None:
                 raise
             del input
@@ -54,7 +58,7 @@ def unix_getpass(prompt = 'Password: ', stream = None):
     return passwd
 
 
-def win_getpass(prompt = 'Password: ', stream = None):
+def win_getpass(prompt='Password: ', stream=None):
     if sys.stdin is not sys.__stdin__:
         return fallback_getpass(prompt, stream)
     import msvcrt
@@ -78,7 +82,7 @@ def win_getpass(prompt = 'Password: ', stream = None):
     return pw
 
 
-def fallback_getpass(prompt = 'Password: ', stream = None):
+def fallback_getpass(prompt='Password: ', stream=None):
     warnings.warn('Can not control echo on the terminal.', GetPassWarning, stacklevel=2)
     if not stream:
         stream = sys.stderr
@@ -86,7 +90,7 @@ def fallback_getpass(prompt = 'Password: ', stream = None):
     return _raw_input(prompt, stream)
 
 
-def _raw_input(prompt = '', stream = None, input = None):
+def _raw_input(prompt='', stream=None, input=None):
     if not stream:
         stream = sys.stderr
     if not input:

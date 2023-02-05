@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+# 20221030 recoded Lululla
 # 20220111 utils.py bouquet make PY3
 # 20210914 utils.py showlist b removed
 # 20210902 hlsclient3.py for PY3
@@ -9,7 +10,7 @@ from __future__ import print_function
 # 20200425 5002 option removed from two class playvid and SREF changed in Playoption & playvids2##
 # 20190520 play with exteplayer option added
 # 20181226 5002 option removed from two class playvid
-# 20180903 new def playproxy for m3u8 to play via f4mproxy - for itv 
+# 20180903 new def playproxy for m3u8 to play via f4mproxy - for itv
 # 20180829 changes re playhls and 5002 option for startecmob (mobdro)
 # 20180618 lines 1134 and 1380
 # 20180609
@@ -25,46 +26,63 @@ from Components.Label import Label
 from Components.MenuList import MenuList
 from Components.MultiContent import MultiContentEntryText
 from Components.Pixmap import Pixmap
-from Components.ServiceEventTracker import InfoBarBase
+from Components.ServiceEventTracker import InfoBarBase, ServiceEventTracker
 from Components.Sources.List import List
 from Components.Task import Task, Job, job_manager as JobManager
-from Components.config import config, ConfigSubsection, ConfigDirectory, ConfigYesNo
+from Components.config import config
+from Components.config import ConfigSubsection, ConfigDirectory, ConfigYesNo
 from Plugins.Plugin import PluginDescriptor
 from Screens.ChoiceBox import ChoiceBox
 from Screens.InfoBar import InfoBar
 from Screens.InfoBar import MoviePlayer
-from Screens.InfoBarGenerics import InfoBarSeek, InfoBarAudioSelection, InfoBarNotifications
-from Screens.InfoBarGenerics import InfoBarSubtitleSupport, InfoBarMenu, InfoBarShowHide
+from Screens.InfoBarGenerics import InfoBarMenu, InfoBarSeek, InfoBarAudioSelection, InfoBarShowHide, \
+    InfoBarSubtitleSupport, InfoBarSummarySupport, InfoBarServiceErrorPopupSupport, InfoBarNotifications
 from Screens.MessageBox import MessageBox
 from Screens.Screen import Screen
 from Screens.TaskView import JobView
 from ServiceReference import ServiceReference
+from Tools.Directories import SCOPE_PLUGINS
 from Tools.Directories import fileExists
-from enigma import eListboxPythonMultiContent
-from enigma import gFont, getDesktop
-from enigma import eServiceReference, iServiceInformation
-from enigma import eTimer
+from Tools.Directories import resolveFilename
 from enigma import RT_HALIGN_LEFT
-from twisted.web.client import downloadPage
+from enigma import eListboxPythonMultiContent
+from enigma import eServiceReference
+from enigma import eTimer
+from enigma import gFont, getDesktop
+from enigma import iPlayableService
+from enigma import iServiceInformation
 from skin import parseColor
+from twisted.web.client import downloadPage
 import os
 import re
 import sys
 from Plugins.Extensions.KodiLite.lib.TaskView2 import JobViewNew
 from Plugins.Extensions.KodiLite.lib import xpath
 from Plugins.Extensions.KodiLite.lib.download import startdownload  # mfaraj2608 to for new download management
-from Plugins.Extensions.KodiLite.adnutils import *
-from .. import Player  
 
-# from ..plugin import cfg  # cfg.cachefold, cfg.directpl
-config.plugins.kodiplug = ConfigSubsection()
-cfg = config.plugins.kodiplug
-# cfg.cachefold = ConfigText("/media/hdd", False)
-cfg.cachefold = ConfigDirectory("/tmp")
-cfg.directpl = ConfigYesNo(False)
+global subsx
+from ..plugin import subsx
+from .. import Utils
 
 
+PY2 = False
+PY3 = False
+PY34 = False
+PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
+PY34 = sys.version_info[0:2] >= (3, 4)
+print("sys.version_info =", sys.version_info)
+Credits = " Linuxsat-support Forum"
+THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
+SREF = " "
+SERVICEAPP = 0
+
+f1 = open("/tmp/py.txt","a")
+msg = "xUtils PY3 = " + str(PY3) + " xUtils PY2 = " + str(PY2)
+f1.write(msg)
+f1.close()
+
+
 if PY3:
     from urllib.request import urlopen, Request
     from http.client import HTTPConnection
@@ -84,13 +102,25 @@ else:
 HTTPConnection.debuglevel = 1
 
 
-THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
-SREF = " "
-SERVICEAPP = 0
-NOSS = 0
-try:
-    from Plugins.Extensions.SubsSupport import SubsSupport, SubsSupportStatus, initSubsSettings
-except ImportError:
+# NOSS = 0
+
+if subsx is True:
+    try:
+        from Plugins.Extensions.SubsSupport import SubsSupport, SubsSupportStatus
+        subsx = True
+    except ImportError:
+        subsx = False 
+
+        class SubsSupport(object):
+            def __init__(self, *args, **kwargs):
+                pass
+
+        class SubsSupportStatus(object):
+            def __init__(self, *args, **kwargs):
+                pass
+
+else:
+    subsx = False
     class SubsSupport(object):
         def __init__(self, *args, **kwargs):
             pass
@@ -98,21 +128,6 @@ except ImportError:
     class SubsSupportStatus(object):
         def __init__(self, *args, **kwargs):
             pass
-    NOSS = 1 
-
-# if os.path.exists("/usr/bin/exteplayer3"):
-#      SERVICEAPP = 1
-
-
-def getDesktopSize():
-    from enigma import getDesktop
-    s = getDesktop(0).size()
-    return (s.width(), s.height())
-
-
-def isFHD():
-    desktopSize = getDesktopSize()
-    return desktopSize[0] == 1920
 
 
 std_headers = {
@@ -123,24 +138,30 @@ std_headers = {
               }
 
 
-
-class tvList(MenuList):
-    def __init__(self, list):
-        MenuList.__init__(self, list, False, eListboxPythonMultiContent)
-        self.l.setFont(0, gFont('Regular', 20))
-        self.l.setFont(1, gFont('Regular', 22))
-        self.l.setFont(2, gFont('Regular', 24))
-        self.l.setFont(3, gFont('Regular', 26))
-        self.l.setFont(4, gFont('Regular', 28))
-        self.l.setFont(5, gFont('Regular', 30))
-        self.l.setFont(6, gFont('Regular', 32))
-        self.l.setFont(7, gFont('Regular', 34))
-        self.l.setFont(8, gFont('Regular', 36))
-        self.l.setFont(9, gFont('Regular', 40))
-        if isFHD():
-            self.l.setItemHeight(50)
-        else:
-            self.l.setItemHeight(50)
+def returnIMDB(text_clear):
+    TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
+    IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
+    if TMDB:
+        try:
+            from Plugins.Extensions.TMBD.plugin import TMBD
+            text = html_conv.html_unescape(text_clear)
+            _session.open(TMBD.tmdbScreen, text, 0)
+        except Exception as e:
+            print("[XCF] Tmdb: ", str(e))
+        return True
+    elif IMDb:
+        try:
+            from Plugins.Extensions.IMDb.plugin import main as imdb
+            text = html_conv.html_unescape(text_clear)
+            imdb(_session, text)
+        except Exception as e:
+            print("[XCF] imdb: ", str(e))
+        return True
+    else:
+        text_clear = html_conv.html_unescape(text_clear)
+        _session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
+        return True
+    return
 
 
 class Getvid(Screen):
@@ -148,13 +169,11 @@ class Getvid(Screen):
     def __init__(self, session, name, url, desc):
         Screen.__init__(self, session)
         self.skinName = "Showrtmp"
-        # title = PlugDescription
-        # self["title"] = Button(title + Version)
         title = "Play"
         self.setTitle(title)
         self.list = []
         self["list"] = List(self.list)
-        self["list"] = RSList([])
+        self["list"] = Utils.tvList([])
         self["info"] = Label()
         self["key_red"] = Button(_("Exit"))
         self["key_green"] = Button(_("Download"))
@@ -171,16 +190,17 @@ class Getvid(Screen):
         self.icount = 0
         self.name = name
         self.url = url
+        self.desc = desc
         txt = _("Must do (1) Download  (2) Play.\n\n") + self.name + "\n\n" + desc
         self["info"].setText(txt)
-        self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
+        self.sref = self.session.nav.getCurrentlyPlayingServiceReference()
         self.onLayoutFinish.append(self.getrtmp)
 
     def showinfo(self):
         return
 
     def getrtmp(self):
-        fold = cfg.cachefold.value + "/"
+        fold = str(config.plugins.kodiplug.cachefold.value) + "/"
         fname = "savedvid"
         svfile = fold + "/" + fname + ".mpg"
         self.svf = svfile
@@ -200,7 +220,7 @@ class Getvid(Screen):
 
     def okClicked(self):
         self["info"].setText("Downloading ....")
-        fold = cfg.cachefold.value + "/xbmc/vid"
+        fold = str(config.plugins.kodiplug.cachefold.value) + "/xbmc/vid"
         fname = "savedvid"
         svfile = fold + "/" + fname + ".mpg"
         self.svf = svfile
@@ -213,7 +233,6 @@ class Getvid(Screen):
         currentjob = None
         for job in JobManager.getPendingJobs():
             currentjob = job
-
         if currentjob is not None:
             self.session.open(JobView, currentjob)
 
@@ -221,27 +240,23 @@ class Getvid(Screen):
         if os.path.exists(self.svf):
             # pass  # print "Showrtmp here 2"
             svfile = self.svf
-            desc = " "
-            self.session.open(Playvid2, self.name, svfile, desc)
-            # runKDplayer(self.session,name,svfile,desc)
+            desc = self.desc
+            self.session.open(Playgo, self.name, svfile, desc)
+            # runKDplayer(self.session, name, svfile, desc)
         else:
             txt = _("Download Video first.")
             self["info"].setText(txt)
 
     def cancel(self):
-        self.session.nav.playService(self.srefOld)
+        self.session.nav.playService(self.sref)
         self.close()
 
     def stopdl(self):
-        # svfile = self.svf
-        # cmd = "rm " + svfile
-        # os.system(cmd)
-        self.session.nav.playService(self.srefOld)
+        self.session.nav.playService(self.sref)
         cmd1 = "killall -9 rtmpdump"
         cmd2 = "killall -9 wget"
         os.system(cmd1)
         os.system(cmd2)
-        # self.close()
 
     def keyLeft(self):
         self["list"].left()
@@ -259,8 +274,6 @@ class Getvid2(Screen):
     def __init__(self, session, name, url, desc):
         Screen.__init__(self, session)
         self.skinName = "Showrtmp"
-        # title = PlugDescription
-        # self["title"] = Button(title + Version)
         self['list'] = MenuList([])
         self['info'] = Label()
         self['key_red'] = Button(_('Exit'))
@@ -276,7 +289,7 @@ class Getvid2(Screen):
                                          'ok': self.openTest}, -2)
         self.icount = 0
         self.bLast = 0
-        cachefold = cfg.cachefold.value
+        cachefold = str(config.plugins.kodiplug.cachefold.value)
         self.svfile = cachefold + "/xbmc/vid/savedfile.mpg"
         txt = _("Play direct OR Download and Play")
         self['info'].setText(txt)
@@ -289,7 +302,8 @@ class Getvid2(Screen):
         self.updateStatus()
         self.name = name
         self.url = url
-        self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
+        self.desc = desc
+        self.sref = self.session.nav.getCurrentlyPlayingServiceReference()
 
     def openTest(self):
         vid = self.name
@@ -297,14 +311,14 @@ class Getvid2(Screen):
         self['info'].setText(infotxt)
 
     def play(self):
-        desc = " "
+        desc = self.desc
         if self.icount == 0:
             url = self.url
             name = self.name
         else:
             url = self.svfile
             name = "Video"
-        self.session.open(Playvid2, name, url, desc)
+        self.session.open(Playgo, name, url, desc)
         # runKDplayer(self.session,name,url,desc)
 
     def okClicked(self):
@@ -336,7 +350,7 @@ class Getvid2(Screen):
             self.session.open(JobView, currentjob)
 
     def cancel(self):
-        self.session.nav.playService(self.srefOld)
+        self.session.nav.playService(self.sref)
         self.close()
 
     def stopDL(self):
@@ -356,19 +370,14 @@ class Getvid2(Screen):
 class Playoptions(Screen):
 
     def __init__(self, session, name, url, desc):
-        global SREF
         Screen.__init__(self, session)
-        self.name = name.replace('-', ' ').replace('+', ' ').replace('_', ' ')
-        self.url = url
         self.skinName = "Ploptions"
-        # title = PlugDescription
-        # self["title"] = Button(title + Version)
         self.hostaddr = ""
         self.list = []
         self["list"] = List(self.list)
-        self["list"] = tvList([])
+        self["list"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        Credits = " Linuxsat-support Forum"
+        # Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self['key_red'] = Button(_('Exit'))
@@ -384,8 +393,11 @@ class Playoptions(Screen):
         self.icount = 0
         self.bLast = 0
         self.useragent = "QuickTime/7.6.2 (qtver=7.6.2;os=Windows NT 5.1Service Pack 3)"
-        cachefold = cfg.cachefold.value
+        cachefold = str(config.plugins.kodiplug.cachefold.value)
         self.svfile = " "
+        self.name = name.replace('-', ' ').replace('+', ' ').replace('_', ' ')
+        self.url = url
+        self.desc = desc
         i = 0
         while i < 11:
             self.list.append(i)
@@ -406,7 +418,7 @@ class Playoptions(Screen):
             file1 = "/tmp/vid.txt"
             f1 = open(file1, "r + ")
             txt1 = f1.read()
-            pass  # print "In Playvid txt1 =", txt1
+            pass  # print "In Playoptions txt1 =", txt1
             n1 = txt1.find("http", 0)
             n2 = txt1.find("\n", n1)
             txt2 = txt1[n1:n2]
@@ -417,16 +429,16 @@ class Playoptions(Screen):
         n1 = self.url.find("|", 0)
         if n1 > -1:
             self.url = self.url[:n1]
-        pass  # print "Here in Playvid self.url B=", self.url
+        pass  # print "Here in Playoptions self.url B=", self.url
         self.updateTimer = eTimer()
         try:
             self.updateTimer_conn = self.updateTimer.timeout.connect(self.updateStatus)
         except AttributeError:
             self.updateTimer.callback.append(self.updateStatus)
         self['info'].setText(" ")
-        self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
+        self.sref = self.session.nav.getCurrentlyPlayingServiceReference()
         pass  # print "Here in Playoptions SREF =", SREF
-        if cfg.directpl.value is True:
+        if config.plugins.kodiplug.directpl.value is True:
             pass  # print "Here in directpl"
             self.onShown.append(self.start1)
         elif "hds://" in url:
@@ -441,50 +453,50 @@ class Playoptions(Screen):
             # self.onShown.append(self.start1)
 
     def start1(self):
-        desc = " "
+        desc = self.desc
         if "/tmp/vid.txt" in self.url:
             self.start5()
             self.cancel()
         elif "f4m" in self.url:
             pass  # print "In playVideo f4m url A=", self.url
             from F4mProxy import f4mProxyHelper
-            player = f4mProxyHelper()
+            fplayer = f4mProxyHelper()
             url = self.url
             name = self.name
-            self.url = player.playF4mLink(url, name, streamtype='HDS', direct="no")
-            self.session.open(Player.Playgo, self.name, self.url, desc)
+            self.url = fplayer.playF4mLink(url, name, streamtype='HDS', direct="no")
+            self.session.open(Playgo, self.name, self.url, desc)
             self.cancel()
         else:
-            self.session.open(Player.Playgo, self.name, self.url, desc)
+            self.session.open(Playgo, self.name, self.url, desc)
             self.cancel()
 
     def playproxy(self):
-        desc = " "
+        desc = self.desc
         if "m3u8" in self.url:
             pass  # print "In playVideo proxy m3u8 url A=", self.url
             from F4mProxy import f4mProxyHelper
-            player = f4mProxyHelper()
+            fplayer = f4mProxyHelper()
             url = self.url
             name = self.name
-            self.url = player.playF4mLink(url, name, streamtype='HLS', direct="no")
-            self.session.open(Player.Playgo, self.name, self.url, desc)
+            self.url = fplayer.playF4mLink(url, name, streamtype='HLS', direct="no")
+            self.session.open(Playgo, self.name, self.url, desc)
             self.cancel()
 
         elif "f4m" in self.url:
             pass  # print "In playVideo proxy f4m url A=", self.url
             from F4mProxy import f4mProxyHelper
-            player = f4mProxyHelper()
+            fplayer = f4mProxyHelper()
             url = self.url
             name = self.name
-            self.url = player.playF4mLink(url, name, streamtype='HDS', direct="no")
-            self.session.open(Player.Playgo, self.name, self.url, desc)
+            self.url = fplayer.playF4mLink(url, name, streamtype='HDS', direct="no")
+            self.session.open(Playgo, self.name, self.url, desc)
             self.cancel()
         else:
-            self.session.open(Player.Playgo, self.name, self.url, desc)
+            self.session.open(Playgo, self.name, self.url, desc)
             self.cancel()
 
     def playts(self):
-        desc = " "
+        desc = self.desc
         if ".ts" in self.url:
             url = self.url
             pass  # print "shahid url A= ", url
@@ -500,9 +512,9 @@ class Playoptions(Screen):
             os.system(cmd)
             os.system('sleep 3')
             self.url = '/tmp/hls.avi'
-            self.session.open(Player.Playgo, self.name, self.url, desc)
+            self.session.open(Playgo, self.name, self.url, desc)
         else:
-            self.session.open(Player.Playgo, self.name, self.url, desc)
+            self.session.open(Playgo, self.name, self.url, desc)
 
     def start3(self):
         from stream import GreekStreamTVList
@@ -514,62 +526,29 @@ class Playoptions(Screen):
         self.session.open(Playlist, self.url)
         self.close()
 
-    # def start5X(self):
-        # self.pop = 1
-        # n1 = self.url.find("video_id", 0)
-        # n2 = self.url.find("=", n1)
-        # vid = self.url[(n2+1):]
-        # cmd = "python '%s/%s/plugin.video.youtube/default.py' '6' '?plugin://plugin.video.youtube/play/?video_id=%s' &" % (THISPLUG, ADDONCAT, vid)
-        # self.p = os.popen(cmd)
-
     def start5(self):
+        desc = self.desc
         file1 = "/tmp/vid.txt"
         f1 = open(file1, "r + ")
         txt1 = f1.read()
-        pass  # print "In Playvid txt1 =", txt1
+        pass  # print "In Playoptions txt1 =", txt1
         self.url = txt1
-        self.session.open(Player.Playgo, self.name, self.url, desc=" ")
+        self.session.open(Playgo, self.name, self.url, desc)
         self.close()
 
     def start(self):
         # infotxt=(_("Selected: ")) + self.name
         infotxt = (_("Selected video: ")) + self.name + (_("\n\nDownload as :"))+self.getlocal_filename()[0]
         self['info'].setText(infotxt)
-        pass  # print "Going in showlist, self.list =", self.list
-        showlist(self.list, self['list'])
+        pass  # print "Going in Utils.showlist, self.list =", self.list
+        Utils.showlist(self.list, self['list'])
 
     def openTest(self):
         pass
 
-    # def playsl(self):
-        # pass  # print "Here in utils-py play with streamlink self.url =", self.url
-        # url = str(self.url)
-        # if ".ts" in url:
-            # pass  # print "playsl url A= ", url
-            # url = url.replace(".ts", ".m3u8")
-        # url = url.replace(":", "%3a")
-        # url = url.replace("\\", "/")
-        # pass  # print "url final= ", url
-        # ref = "5002:0:1:1:0:0:0:0:0:0:http%3a//127.0.0.1%3a8088/" + url
-        # pass  # print "ref= ", ref
-        # self.session.open(Player.Playgo, self.name, ref, desc=" ")
-        # self.close()
-
-    # def play2(self):
-        # pass  # print "We are in play2"
-        # url = "http://192.168.1.65:8080/dream.ts"
-        # url = url.replace(":", "%3a")
-        # ref = "4097:0:1:0:0:0:0:0:0:0:" + url
-        # sref = eServiceReference(ref)
-        # self.name = "Test"
-        # sref.setName(self.name)
-        # self.session.nav.stopService()
-        # self.session.nav.playService(sref)
-        # self.close()
-
     def playhls(self):
         print("Here in utils-py play self.icount =", self.icount)
-        desc = " "
+        desc = self.desc
         if self.icount == 0:
             print("Here in utils-py play self.urlmain =", self.urlmain)
             url1 = self.urlmain
@@ -600,7 +579,6 @@ class Playoptions(Screen):
                     cmd = 'python "%s/lib/hlsclient3.py" "%s" "1" "%s" + &' % (THISPLUG, url, header)
                 else:
                     cmd = 'python "%s/lib/hlsclient.py" "%s" "1" "%s" + &' % (THISPLUG, url, header)
-                    
                 # ok cmd = 'python "/usr/lib/enigma2/python/hlsclient.py" "' + url + '" "1" > /tmp/hls.txt 2>&1 &'
                 # cmd = 'python "/usr/lib/enigma2/python/hlsclient.py" "' + url + '" "1" &'
                 print("hls cmd = ", cmd)
@@ -610,10 +588,11 @@ class Playoptions(Screen):
         else:
             url = self.svfile
             name = "Video"
-        self.session.open(Player.Playgo, name, url, desc)
+        # from .. import Player
+        self.session.open(Playgo, name, url, desc)
 
     def getlocal_filename(self):
-        fold = cfg.cachefold.value + "/"
+        fold = str(config.plugins.kodiplug.cachefold.value) + "/"
         name = self.name.replace("/media/hdd/xbmc/vid/", "")
         name = name.replace(" ", "-")
         pattern = '[a-zA-Z0-9\-]'
@@ -654,13 +633,11 @@ class Playoptions(Screen):
         elif idx == 5:
             import urllib  # try with py3  - py2
             # transcode based on vlcplayerIHAD and vlc 2.0.5
-            vlcip = cfg.vlcip.value
+            vlcip = config.plugins.kodiplug.vlcip.value
             self.hostaddr = "http://" + vlcip + ":8080"
             url = quote(self.url, safe='')
-            pass  # print "In Playvid going in vlc url =", url
+            pass  # print "In Playoptions going in vlc url =", url
             cmd = self.hostaddr + "/requests/status.xml?command=in_play&input=" + url + "&option=%3Asout%3D%23transcode%7Bvcodec%3Dmp2v%2Cvb%3D2000%2Cvenc%3Dffmpeg%2Cfps%3D25%2Cvfilter%3Dcanvas%7Bwidth%3D352%2Cheight%3D288%2Caspect%3D4%3A3%7D%2Cacodec%3Dmp2a%2Cab%3D128%2Cchannels%3D2%2Csamplerate%3D0%7D%3Astd%7Baccess%3Dhttp%2Cmux%3Dts%7Bpid-video%3D68%2Cpid-audio%3D69%7D%2Cdst%3D%2Fdream.ts%7D&option=%3Asout-all&option=%3Asout-keep"
-            # cmd = self.hostaddr + "/requests/status.xml?command=in_play&input=" + url + "&option=%3Asout%3D%23transcode%7Bvcodec%3Dmp2v%2Cvb%3D2000%2Cvenc%3Dffmpeg%2Cfps%3D25%2Cvfilter%3Dcanvas%7Bwidth%3D1280%2Cheight%3D720%2Caspect%3D16%3A9%7D%2Cacodec%3Dmp2a%2Cab%3D128%2Cchannels%3D2%2Csamplerate%3D32000%7D%3Astd%7Baccess%3Dhttp%2Cmux%3Dts%7Bpid-video%3D68%2Cpid-audio%3D69%7D%2Cdst%3D%2Fdream.ts%7D&option=%3Asout-all&option=%3Asout-keep"
-            # url = self.url.replace(":", "%3a")
             password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, self.hostaddr, '', 'Admin')
             handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
@@ -670,11 +647,11 @@ class Playoptions(Screen):
             f = opener.open(cmd)
             f = opener.open(self.hostaddr + "/requests/status.xml?command=pl_play")
             vurl = self.hostaddr + "/dream.ts"
-            desc = " "
-            self.session.open(Player.Playgo, self.name, vurl, desc)
+            desc = self.desc
+            self.session.open(Playgo, self.name, vurl, desc)
 
         elif idx == 6:
-            pass  # print "In Playvid Download"
+            pass  # print "In Playoptions Download"
             if "#header#" in self.url:
                 self.svfile, self.filetitle = self.getlocal_filename()
                 cmd1 = "rm " + self.svfile
@@ -683,7 +660,7 @@ class Playoptions(Screen):
                 header = self.url[(n1+8):]
                 self.url = self.url[:n1]
                 cmd = 'wget -O "' + self.svfile + '" --header="' + header + '" --user-agent="Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" "' + self.url + '" &'
-                pass  # print "In Playvid cmd =", cmd
+                pass  # print "In Playoptions cmd =", cmd
                 os.system(cmd)
                 self.icount = 1
                 return
@@ -692,16 +669,15 @@ class Playoptions(Screen):
                 file1 = "/tmp/vid.txt"
                 f1 = open(file1, "r + ")
                 txt1 = f1.read()
-                pass  # print "In Playvid download youtube txt1 =", txt1
+                pass  # print "In Playoptions download youtube txt1 =", txt1
                 self.url = txt1
-                pass  # print "In Playvid download youtube self.url =", self.url
+                pass  # print "In Playoptions download youtube self.url =", self.url
                 self.svfile, self.filetitle = self.getlocal_filename()
                 downloadPage(self.url, self.svfile).addErrback(self.showError)
                 self.updateTimer.start(2000)
 
             elif ".m3u8" in self.url:
-                ###############################
-                pass  # print "In Playvid m3u8 download self.urlmain =", self.urlmain
+                pass  # print "In Playoptions m3u8 download self.urlmain =", self.urlmain
                 url1 = self.urlmain
                 n1 = url1.find("|", 0)
                 pass  # print "Here in hlsclient-py n1, url1 =", n1, url1
@@ -713,21 +689,20 @@ class Playoptions(Screen):
                 else:
                     self.url = url1
                     header = ""
-                ################################
                 self.svfile, self.filetitle = self.getlocal_filename()
                 # self.pop = 0
                 cmd = 'python "%s/lib/hlsdownld.py" "%s" "1" "%s" "%s" + &' % (THISPLUG, self.url, self.svfile, header)
-                pass  # print "In Playvid m3u8 download cmd =", cmd
+                pass  # print "In Playoptions m3u8 download cmd =", cmd
                 os.system(cmd)
                 self.icount = 1
                 # self.updateTimer.start(2000)
 
             elif self.url.startswith("https"):
-                pass  # print "In Playvid Download https url like youtube"
+                pass  # print "In Playoptions Download https url like youtube"
                 self.icount = 1
                 self.svfile, self.filetitle = self.getlocal_filename()
-                pass  # print "In Playvid Download https self.svfile,self.filetitle =", self.svfile, self.filetitle
-                pass  # print "In Playvid Download https self.url =", self.url
+                pass  # print "In Playoptions Download https self.svfile,self.filetitle =", self.svfile, self.filetitle
+                pass  # print "In Playoptions Download https self.url =", self.url
                 self.filetitle = self.filetitle.replace("-", "")
                 if PY3:
                     urlretrieve(self.url, self.svfile, reporthook=self.download_progress_hook)
@@ -747,7 +722,6 @@ class Playoptions(Screen):
                 params = params.replace(" tcUrl=", "' --tcUrl '")
                 params = params.replace(" swfUrl=", "' --swfUrl '")
                 pass  # print "params B=", params
-
                 self.svfile, self.filetitle = self.getlocal_filename()
                 self.urtmp = "rtmpdump -r " + params + " -o '" + self.svfile + "'"
                 self["info"].setText(_("Start downloading"))
@@ -761,8 +735,8 @@ class Playoptions(Screen):
             else:
                 self.icount = 1
                 self.svfile, self.filetitle = self.getlocal_filename()
-                pass  # print "In Playvid Download https self.svfile,self.filetitle =", self.svfile, self.filetitle
-                pass  # print "In Playvid Download https self.url =", self.url
+                pass  # print "In Playoptions Download https self.svfile,self.filetitle =", self.svfile, self.filetitle
+                pass  # print "In Playoptions Download https self.url =", self.url
                 self.filetitle = self.filetitle.replace("-", "")
                 if PY3:
                     urlretrieve(self.url, self.svfile, reporthook=self.download_progress_hook)
@@ -779,9 +753,7 @@ class Playoptions(Screen):
             try:
                 from Plugins.Extensions.KodiLite.lib.favorites import addfavorite
             except:
-                from favorites import addfavorite
-            import sys
-
+                from .favorites import addfavorite
             try:
                 addon_id = os.path.split(os.path.split(sys.argv[0])[0])[1]
                 pass  # print "470add_id",addon_id
@@ -807,8 +779,7 @@ class Playoptions(Screen):
 
         elif idx == 10:
             self.ebuf = []
-            Downloadpath = str(cfg.cachefold.value)
-            # mkdir(Downloadpath)
+            Downloadpath = str(config.plugins.kodiplug.cachefold.value)
             print("Downloadpath =", Downloadpath)
             if Downloadpath.endswith('/'):
                 pass
@@ -835,7 +806,7 @@ class Playoptions(Screen):
             url = res[1]
             name = res[0]
             desc = " "
-            self.session.open(Playvid2, name, url, desc)
+            self.session.open(Playgo, name, url, desc)
             self.close()
             """
             self.ebuf2 = []
@@ -850,8 +821,8 @@ class Playoptions(Screen):
             print("In playChoice res =", res)
             url = res[1]
             name = url
-            desc = " "
-            self.session.open(Player.Playgo, name, url, desc)
+            desc = self.desc
+            self.session.open(Playgo, name, url, desc)
             self.close()
         else:
             cmd = "rm -rf " + res[1]
@@ -862,8 +833,6 @@ class Playoptions(Screen):
         pass  # print "DownloadPage error = ", error
 
     def updateStatus(self):
-        # pass  # print "self.icount =", self.icount
-        # pass  # print "In updateStatus self.pop =", self.pop
         if self.pop == 1:
             try:
                 ptxt = self.p.read()
@@ -877,8 +846,8 @@ class Playoptions(Screen):
                     self.url = url.replace("ExQ", "=")
                     # pass  # print "In updateStatus url =", url
                     name = "Video"
-                    desc = " "
-                    self.session.open(Player.Playgo, self.name, self.url, desc)
+                    desc = self.desc
+                    self.session.open(Playgo, self.name, self.url, desc)
                     self.close()
                     self.updateTimer.stop()
                 # else:
@@ -911,7 +880,7 @@ class Playoptions(Screen):
     def download_progress_hook(self, count, blockSize, totalSize):
         # print("count, blockSize, totalSize =", count, blockSize, totalSize)
         # b1 = os.path.getsize(self.svfile)
-        b1 = count*blockSize
+        b1 = count * blockSize
         # print("b1 =", b1)
         if (b1 > totalSize) or (b1 == totalSize):
             infotxt = _('Download Complete....') + str(totalSize)
@@ -932,7 +901,7 @@ class Playoptions(Screen):
         pass  # print "Here in cancel"
         try:
             import urllib
-            vlcip = cfg.vlcip.value
+            vlcip = config.plugins.kodiplug.vlcip.value
             self.hostaddr = "http://" + vlcip + ":8080"
             password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, self.hostaddr, '', 'Admin')
@@ -941,7 +910,7 @@ class Playoptions(Screen):
             f = opener.open(self.hostaddr + "/requests/status.xml?command=pl_stop")
             f = opener.open(self.hostaddr + "/requests/status.xml?command=pl_empty")
             # self.session.nav.stopService()
-            # self.session.nav.playService(self.srefOld)
+            # self.session.nav.playService(self.sref)
         except:
             pass
         if os.path.exists("/tmp/hls.avi"):
@@ -951,7 +920,7 @@ class Playoptions(Screen):
     def stopDL(self):
         cmd = "rm -f " + self.svfile
         os.system(cmd)
-        self.session.nav.playService(self.srefOld)
+        self.session.nav.playService(self.sref)
         cmd1 = "killall -9 rtmpdump"
         cmd2 = "killall -9 wget"
         os.system(cmd1)
@@ -969,381 +938,308 @@ class Playoptions(Screen):
         self['list'].number(number)
 
 
-if NOSS == 0:
-    class Playgo(Screen, InfoBarMenu, InfoBarBase, SubsSupport, InfoBarSeek, InfoBarNotifications, InfoBarShowHide):
-        STATE_PLAYING = 1
-        STATE_PAUSED = 2
 
-        def __init__(self, session, name, url, desc):
+class TvInfoBarShowHide():
+    """ InfoBar show/hide control,
+        accepts toggleShow and hide actions,
+        might start
+        fancy animations.
+    """
+    STATE_HIDDEN = 0
+    STATE_HIDING = 1
+    STATE_SHOWING = 2
+    STATE_SHOWN = 3
+    skipToggleShow = False
 
-            Screen.__init__(self, session)
-            self.skinName = "Playvid2"
-            self.sref = None
-            # title = PlugDescription
-            # self["title"] = Button(title + Version)
-            self['key_yellow'] = Button(_('Subtitles'))
-            InfoBarMenu.__init__(self)
-            InfoBarNotifications.__init__(self)
-            InfoBarBase.__init__(self)
-            InfoBarShowHide.__init__(self)
-            # self.statusScreen = self.session.instantiateDialog(StatusScreen)
-            # aspect ratio stuff
+    def __init__(self):
+        self["ShowHideActions"] = ActionMap(["InfobarShowHideActions"], {"toggleShow": self.OkPressed,
+                                                                         "hide": self.hide}, 0)
+        self.__event_tracker = ServiceEventTracker(screen=self, eventmap={iPlayableService.evStart: self.serviceStarted})
+        self.__state = self.STATE_SHOWN
+        self.__locked = 0
+        self.hideTimer = eTimer()
+        try:
+            self.hideTimer_conn = self.hideTimer.timeout.connect(self.doTimerHide)
+        except:
+            self.hideTimer.callback.append(self.doTimerHide)
+        self.hideTimer.start(5000, True)
+        self.onShow.append(self.__onShow)
+        self.onHide.append(self.__onHide)
+
+    def OkPressed(self):
+        self.toggleShow()
+
+    def toggleShow(self):
+        if self.skipToggleShow:
+            self.skipToggleShow = False
+            return
+        if self.__state == self.STATE_HIDDEN:
+            self.show()
+            self.hideTimer.stop()
+        else:
+            self.hide()
+            self.startHideTimer()
+
+    def serviceStarted(self):
+        if self.execing:
+            if config.usage.show_infobar_on_zap.value:
+                self.doShow()
+
+    def __onShow(self):
+        self.__state = self.STATE_SHOWN
+        self.startHideTimer()
+
+    def startHideTimer(self):
+        if self.__state == self.STATE_SHOWN and not self.__locked:
+            self.hideTimer.stop()
+            idx = config.usage.infobar_timeout.index
+            if idx:
+                self.hideTimer.start(idx * 1500, True)
+
+    def __onHide(self):
+        self.__state = self.STATE_HIDDEN
+
+    def doShow(self):
+        self.hideTimer.stop()
+        self.show()
+        self.startHideTimer()
+
+    def doTimerHide(self):
+        self.hideTimer.stop()
+        if self.__state == self.STATE_SHOWN:
+            self.hide()
+
+    def lockShow(self):
+        try:
+            self.__locked += 1
+        except:
+            self.__locked = 0
+        if self.execing:
+            self.show()
+            self.hideTimer.stop()
+            self.skipToggleShow = False
+
+    def unlockShow(self):
+        try:
+            self.__locked -= 1
+        except:
+            self.__locked = 0
+        if self.__locked < 0:
+            self.__locked = 0
+        if self.execing:
+            self.startHideTimer()
+
+    def debug(obj, text=""):
+        print(text + " %s\n" % obj)
+
+
+class Playgo(InfoBarBase, TvInfoBarShowHide, InfoBarMenu, InfoBarSeek, InfoBarAudioSelection, InfoBarSubtitleSupport, InfoBarSummarySupport, InfoBarServiceErrorPopupSupport, SubsSupportStatus, InfoBarNotifications, Screen):
+
+    STATE_IDLE = 0
+    STATE_PLAYING = 1
+    STATE_PAUSED = 2
+    ENABLE_RESUME_SUPPORT = True
+    ALLOW_SUSPEND = True
+    screen_timeout = 5000
+
+    def __init__(self, session, name, url, desc):
+        global streaml
+        Screen.__init__(self, session)
+        global _session
+        _session = session
+        self.session = session
+        self.skinName = 'MoviePlayer'
+        streaml = False
+        self.allowPiP = False
+        self.service = None
+        self.url = url
+        self.desc = desc
+        print("******** name 3 ******* %s" % name)
+        self.name = Utils.decodeHtml(name)
+        self.state = self.STATE_PLAYING
+        self.srefInit = self.session.nav.getCurrentlyPlayingServiceReference()
+        InfoBarBase.__init__(self, steal_current_service=True)
+        InfoBarMenu.__init__(self)
+        InfoBarSeek.__init__(self, actionmap="InfobarSeekActions")
+        TvInfoBarShowHide.__init__(self)
+        InfoBarAudioSelection.__init__(self)
+        InfoBarSubtitleSupport.__init__(self)
+        InfoBarSummarySupport.__init__(self)
+        InfoBarServiceErrorPopupSupport.__init__(self)
+        InfoBarNotifications.__init__(self)
+        # InfoBarMoviePlayerSummarySupport.__init__(self) #error on play
+        if subsx is True:
+        # if cfg.subtitle.getValue() is True:
+            SubsSupport.__init__(self, searchSupport=True, embeddedSupport=True)
+            SubsSupportStatus.__init__(self)
+        try:
+            self.init_aspect = int(self.getAspect())
+        except:
+            self.init_aspect = 0
+        self.new_aspect = self.init_aspect
+
+        self['actions'] = ActionMap(['MoviePlayerActions',
+                                     'MovieSelectionActions',
+                                     'MediaPlayerActions',
+                                     'EPGSelectActions',
+                                     'MediaPlayerSeekActions',
+                                     'SetupActions',
+                                     'ColorActions',
+                                     'InfobarShowHideActions',
+                                     'InfobarActions',
+                                     'InfobarSeekActions'], {'epg': self.showIMDB,
+                                                             'info': self.showIMDB,
+                                                             'tv': self.cicleStreamType,
+                                                             'stop': self.leavePlayer,
+                                                             'cancel': self.cancel,
+                                                             'back': self.cancel}, -1)
+        if '8088' in str(self.url):
+            # self.onLayoutFinish.append(self.slinkPlay)
+            self.onFirstExecBegin.append(self.slinkPlay)
+        else:
+            # self.onLayoutFinish.append(self.cicleStreamType)
+            self.onFirstExecBegin.append(self.cicleStreamType)
+        self.onClose.append(self.cancel)
+
+    def getAspect(self):
+        return AVSwitch().getAspectRatioSetting()
+
+    def getAspectString(self, aspectnum):
+        return {
+                0: '4:3 Letterbox',
+                1: '4:3 PanScan',
+                2: '16:9',
+                3: '16:9 always',
+                4: '16:10 Letterbox',
+                5: '16:10 PanScan',
+                6: '16:9 Letterbox'
+                }[aspectnum]
+
+    def setAspect(self, aspect):
+        map = {
+               0: '4_3_letterbox',
+               1: '4_3_panscan',
+               2: '16_9',
+               3: '16_9_always',
+               4: '16_10_letterbox',
+               5: '16_10_panscan',
+               6: '16_9_letterbox'
+                }
+        config.av.aspectratio.setValue(map[aspect])
+        try:
+            AVSwitch().setAspectRatio(aspect)
+        except:
+            pass
+
+    def av(self):
+        temp = int(self.getAspect())
+        temp = temp + 1
+        if temp > 6:
+            temp = 0
+        self.new_aspect = temp
+        self.setAspect(temp)
+
+    def showIMDB(self):
+        idx = self.index
+        text_clear = self.names[idx]
+        if returnIMDB(text_clear):
+            print('show imdb/tmdb')
+
+    def slinkPlay(self, url):
+        name = self.name
+        ref = "{0}:{1}".format(url.replace(":", "%3a"), name.replace(":", "%3a"))
+        print('final reference:   ', ref)
+        sref = eServiceReference(ref)
+        sref.setName(name)
+        self.session.nav.stopService()
+        self.session.nav.playService(sref)
+
+    def openTest(self, servicetype, url):
+        name = self.name
+        ref = "{0}:0:1:0:0:0:0:0:0:0:{1}:{2}".format(servicetype, url.replace(":", "%3a"), name.replace(":", "%3a"))
+        print('reference:   ', ref)
+        if streaml is True:
+            url = 'http://127.0.0.1:8088/' + str(url)
+            ref = "{0}:0:1:0:0:0:0:0:0:0:{1}:{2}".format(servicetype, url.replace(":", "%3a"), name.replace(":", "%3a"))
+            print('streaml reference:   ', ref)
+
+        print('final reference:   ', ref)
+        sref = eServiceReference(ref)
+        sref.setName(name)
+        self.session.nav.stopService()
+        self.session.nav.playService(sref)
+
+    def cicleStreamType(self):
+        global streml
+        # streaml = False
+        # from itertools import cycle, islice
+        self.servicetype = '4097'
+        print('servicetype1: ', self.servicetype)
+        url = str(self.url)
+        if str(os.path.splitext(self.url)[-1]) == ".m3u8":
+            if self.servicetype == "1":
+                self.servicetype = "4097"
+        # currentindex = 0
+        # streamtypelist = ["4097"]
+        # # if "youtube" in str(self.url):
+            # # self.mbox = self.session.open(MessageBox, _('For Stream Youtube coming soon!'), MessageBox.TYPE_INFO, timeout=5)
+            # # return
+        # if Utils.isStreamlinkAvailable():
+            # streamtypelist.append("5002") #ref = '5002:0:1:0:0:0:0:0:0:0:http%3a//127.0.0.1%3a8088/' + url
+            # streaml = True
+        # if os.path.exists("/usr/bin/gstplayer"):
+            # streamtypelist.append("5001")
+        # if os.path.exists("/usr/bin/exteplayer3"):
+            # streamtypelist.append("5002")
+        # if os.path.exists("/usr/bin/apt-get"):
+            # streamtypelist.append("8193")
+        # for index, item in enumerate(streamtypelist, start=0):
+            # if str(item) == str(self.servicetype):
+                # currentindex = index
+                # break
+        # nextStreamType = islice(cycle(streamtypelist), currentindex + 1, None)
+        # self.servicetype = str(next(nextStreamType))
+        print('servicetype2: ', self.servicetype)
+        self.openTest(self.servicetype, url)
+
+    def up(self):
+        pass
+
+    def down(self):
+        self.up()
+
+    def doEofInternal(self, playing):
+        self.close()
+
+    def __evEOF(self):
+        self.end = True
+
+    def showVideoInfo(self):
+        if self.shown:
+            self.hideInfobar()
+        if self.infoCallback is not None:
+            self.infoCallback()
+        return
+
+    def showAfterSeek(self):
+        if isinstance(self, TvInfoBarShowHide):
+            self.doShow()
+
+    def cancel(self):
+        if os.path.isfile('/tmp/hls.avi'):
+            os.remove('/tmp/hls.avi')
+        self.session.nav.stopService()
+        self.session.nav.playService(self.srefInit)
+        if not self.new_aspect == self.init_aspect:
             try:
-                self.init_aspect = int(self.getAspect())
-            except:
-                self.init_aspect = 0
-            self.new_aspect = self.init_aspect
-            # end aspect ratio
-            self["actions"] = ActionMap(["WizardActions", "MoviePlayerActions", "EPGSelectActions", "MediaPlayerSeekActions", "ColorActions", "InfobarShowHideActions", "InfobarSeekActions", "InfobarActions"],
-                                        {"leavePlayer": self.cancel,
-                                         "back": self.cancel,
-                                         "info": self.showinfo,
-                                         "playpauseService": self.playpauseService,
-                                         "yellow": self.subtitles,
-                                         'down': self.av}, -1)
-            self.allowPiP = False
-            initSubsSettings()
-            SubsSupport.__init__(self, embeddedSupport=True, searchSupport=True)
-            self.subs = True
-            InfoBarSeek.__init__(self, actionmap="MediaPlayerSeekActions")
-            self.icount = 0
-            self.name = name
-            self.url = url
-            self.desc = desc
-            self.pcip = "None"
-            self.state = self.STATE_PLAYING
-            self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
-            self.onLayoutFinish.append(self.openTest)
-
-        def getAspect(self):
-            return AVSwitch().getAspectRatioSetting()
-
-        def getAspectString(self, aspectnum):
-            return {0: _('4:3 Letterbox'),
-                    1: _('4:3 PanScan'),
-                    2: _('16:9'),
-                    3: _('16:9 always'),
-                    4: _('16:10 Letterbox'),
-                    5: _('16:10 PanScan'),
-                    6: _('16:9 Letterbox')}[aspectnum]
-
-        def setAspect(self, aspect):
-            map = {0: '4_3_letterbox',
-                   1: '4_3_panscan',
-                   2: '16_9',
-                   3: '16_9_always',
-                   4: '16_10_letterbox',
-                   5: '16_10_panscan',
-                   6: '16_9_letterbox'}
-            config.av.aspectratio.setValue(map[aspect])
-            try:
-                AVSwitch().setAspectRatio(aspect)
+                self.setAspect(self.init_aspect)
             except:
                 pass
+        # streaml = False
+        self.close()
 
-        def av(self):
-            temp = int(self.getAspect())
-            pass  # print self.getAspectString(temp)
-            temp = temp + 1
-            if temp > 6:
-                temp = 0
-            self.new_aspect = temp
-            self.setAspect(temp)
-            pass  # print self.getAspectString(temp)
-            # self.statusScreen.setStatus(self.getAspectString(temp))
-
-        def showinfo(self):
-            debug = True
-            try:
-                servicename, serviceurl = getserviceinfo(self.sref)
-                if servicename is not None:
-                    sTitle = servicename
-                else:
-                    sTitle = ''
-                if serviceurl is not None:
-                    sServiceref = serviceurl
-                else:
-                    sServiceref = ''
-                currPlay = self.session.nav.getCurrentService()
-                sTagCodec = currPlay.info().getInfoString(iServiceInformation.sTagCodec)
-                sTagVideoCodec = currPlay.info().getInfoString(iServiceInformation.sTagVideoCodec)
-                sTagAudioCodec = currPlay.info().getInfoString(iServiceInformation.sTagAudioCodec)
-                # return str(sTitle)
-                # message='remote keys help:\nmenu: subtitle player\nnumbers 1-6 seek back and forward\nleft and right:next and previous channel when playlist supported\ninfo:help\nup and cancel keys:exit to playlist'
-                message = 'stitle:' + str(sTitle) + "\n" + 'sServiceref:' + str(sServiceref) + "\n" + 'sTagCodec:' + str(sTagCodec) + "\n" + 'sTagVideoCodec:' + str(sTagVideoCodec) + "\n" + 'sTagAudioCodec :' + str(sTagAudioCodec)
-                from XBMCAddonsinfo import XBMCAddonsinfoScreen
-                self.session.open(XBMCAddonsinfoScreen, None, 'XBMCAddonsPlayer', message)
-            except:
-                pass
-
-        def playpauseService(self):
-            pass  # print "playpauseService"
-            if self.state == self.STATE_PLAYING:
-                self.pause()
-                self.state = self.STATE_PAUSED
-            elif self.state == self.STATE_PAUSED:
-                self.unpause()
-                self.state = self.STATE_PLAYING
-
-        def pause(self):
-            self.session.nav.pause(True)
-
-        def unpause(self):
-            self.session.nav.pause(False)
-
-        def openTest(self):
-            if "5002" in self.url:
-                pass  # print "In openTest streamlink self.url 2= ", self.url
-                ref = self.url
-                pass  # print "ref= ", ref
-                sref = eServiceReference(ref)
-                sref.setName(self.name)
-                self.session.nav.stopService()
-                self.session.nav.playService(sref)
-            else:
-                if "pcip" in self.url:
-                    n1 = self.url.find("pcip")
-                    urlA = self.url
-                    self.url = self.url[:n1]
-                    self.pcip = urlA[(n1+4):]
-                url = self.url
-                name = self.name
-                pass  # print "Here in Playvid name A =", name
-                name = name.replace(":", "-")
-                name = name.replace("&", "-")
-                name = name.replace(" ", "-")
-                name = name.replace("/", "-")
-                name = name.replace("›", "-")
-                name = name.replace(",", "-")
-                pass  # print "Here in Playvid name B2 =", name
-                if url is not None:
-                    url = str(url)
-                    url = url.replace(":", "%3a")
-                    url = url.replace("\\", "/")
-                    pass  # print "url final= ", url
-                    ref = "4097:0:1:0:0:0:0:0:0:0:" + url
-                    pass  # print "ref= ", ref
-                    sref = eServiceReference(ref)
-                    sref.setName(self.name)
-                    self.session.nav.stopService()
-                    self.session.nav.playService(sref)
-                else:
-                    return
-
-        def subtitles(self):
-            try:
-                self.subsMenu()
-            except:
-                self.session.open(MessageBox, _("Subtitle Player cannot be started."), MessageBox.TYPE_ERROR, timeout=10)
-
-        def cancel(self):
-            if os.path.exists("/tmp/hls.avi"):
-                os.remove("/tmp/hls.avi")
-            self.session.nav.stopService()
-            pass  # print "Here in Playvid2 cancel SREF =", SREF
-            self.session.nav.playService(self.srefOld)
-            # try:
-            if self.pcip != "None":
-                url2 = "http://" + self.pcip + ":8080/requests/status.xml?command=pl_stop"
-                pass  # print "In Playvid2 url2 =", url2
-                resp = urlopen(url2)
-            # except:
-            # pass
-            # aspect ratio
-            if not self.new_aspect == self.init_aspect:
-                try:
-                    self.setAspect(self.init_aspect)
-                except:
-                    pass
-            # aspect ratio
-            self.close()
-
-
-if NOSS == 1:
-    class Playgo(Screen, InfoBarMenu, InfoBarBase, InfoBarSeek, InfoBarNotifications, InfoBarShowHide):
-        STATE_PLAYING = 1
-        STATE_PAUSED = 2
-
-        def __init__(self, session, name, url, desc):
-
-            Screen.__init__(self, session)
-            self.skinName = "MoviePlayer"
-            self.sref = None
-            # title = PlugDescription
-            # self["title"] = Button(title + Version)
-            self['key_yellow'] = Button(_(' '))
-            InfoBarMenu.__init__(self)
-            InfoBarNotifications.__init__(self)
-            InfoBarBase.__init__(self)
-            InfoBarShowHide.__init__(self)
-            # self.statusScreen = self.session.instantiateDialog(StatusScreen)
-            # aspect ratio stuff
-            try:
-                self.init_aspect = int(self.getAspect())
-            except:
-                self.init_aspect = 0
-
-            self.new_aspect = self.init_aspect
-            # end aspect ratio
-            self["actions"] = ActionMap(["WizardActions", "MoviePlayerActions", "EPGSelectActions", "MediaPlayerSeekActions", "ColorActions", "InfobarShowHideActions", "InfobarSeekActions", "InfobarActions"],
-                                        {"leavePlayer": self.cancel,
-                                         "back": self.cancel,
-                                         "info": self.showinfo,
-                                         "playpauseService": self.playpauseService,
-                                         "yellow": self.subtitles,
-                                         'down': self.av}, -1)
-            self.allowPiP = False
-            InfoBarSeek.__init__(self, actionmap="MediaPlayerSeekActions")
-            self.icount = 0
-            self.name = name
-            self.url = url
-            self.desc = desc
-            self.pcip = "None"
-            self.state = self.STATE_PLAYING
-            self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
-            self.onLayoutFinish.append(self.openTest)
-
-        # aspect ratio stuff
-        def getAspect(self):
-            return AVSwitch().getAspectRatioSetting()
-
-        def getAspectString(self, aspectnum):
-            return {0: _('4:3 Letterbox'),
-                    1: _('4:3 PanScan'),
-                    2: _('16:9'),
-                    3: _('16:9 always'),
-                    4: _('16:10 Letterbox'),
-                    5: _('16:10 PanScan'),
-                    6: _('16:9 Letterbox')}[aspectnum]
-
-        def setAspect(self, aspect):
-            map = {0: '4_3_letterbox',
-                   1: '4_3_panscan',
-                   2: '16_9',
-                   3: '16_9_always',
-                   4: '16_10_letterbox',
-                   5: '16_10_panscan',
-                   6: '16_9_letterbox'}
-            config.av.aspectratio.setValue(map[aspect])
-            try:
-                AVSwitch().setAspectRatio(aspect)
-            except:
-                pass
-
-        def av(self):
-            temp = int(self.getAspect())
-            pass  # print self.getAspectString(temp)
-            temp = temp + 1
-            if temp > 6:
-                temp = 0
-            self.new_aspect = temp
-            self.setAspect(temp)
-            pass  # print self.getAspectString(temp)
-            # self.statusScreen.setStatus(self.getAspectString(temp))
-
-        def showinfo(self):
-            debug = True
-            try:
-                servicename, serviceurl = getserviceinfo(self.sref)
-                if servicename is not None:
-                    sTitle = servicename
-                else:
-                    sTitle = ''
-                if serviceurl is not None:
-                    sServiceref = serviceurl
-                else:
-                    sServiceref = ''
-                currPlay = self.session.nav.getCurrentService()
-                sTagCodec = currPlay.info().getInfoString(iServiceInformation.sTagCodec)
-                sTagVideoCodec = currPlay.info().getInfoString(iServiceInformation.sTagVideoCodec)
-                sTagAudioCodec = currPlay.info().getInfoString(iServiceInformation.sTagAudioCodec)
-                # return str(sTitle)
-                # message='remote keys help:\nmenu: subtitle player\nnumbers 1-6 seek back and forward\nleft and right:next and previous channel when playlist supported\ninfo:help\nup and cancel keys:exit to playlist'
-                message = 'stitle:' + str(sTitle) + "\n" + 'sServiceref:' + str(sServiceref) + "\n" + 'sTagCodec:' + str(sTagCodec) + "\n" + 'sTagVideoCodec:' + str(sTagVideoCodec) + "\n" + 'sTagAudioCodec :' + str(sTagAudioCodec)
-                from XBMCAddonsinfo import XBMCAddonsinfoScreen
-                self.session.open(XBMCAddonsinfoScreen, None, 'XBMCAddonsPlayer', message)
-            except:
-                pass
-
-        def playpauseService(self):
-            pass  # print "playpauseService"
-            if self.state == self.STATE_PLAYING:
-                self.pause()
-                self.state = self.STATE_PAUSED
-            elif self.state == self.STATE_PAUSED:
-                self.unpause()
-                self.state = self.STATE_PLAYING
-
-        def pause(self):
-            self.session.nav.pause(True)
-
-        def unpause(self):
-            self.session.nav.pause(False)
-
-        def openTest(self):
-            if "5002" in self.url:
-                pass  # print "In openTest streamlink self.url 2= ", self.url
-                ref = self.url
-                pass  # print "ref= ", ref
-                sref = eServiceReference(ref)
-                sref.setName(self.name)
-                self.session.nav.stopService()
-                self.session.nav.playService(sref)
-            else:
-                if "pcip" in self.url:
-                    n1 = self.url.find("pcip")
-                    urlA = self.url
-                    self.url = self.url[:n1]
-                    self.pcip = urlA[(n1+4):]
-                url = self.url
-                name = self.name
-                pass  # print "Here in Playvid name A =", name
-                name = name.replace(":", "-")
-                name = name.replace("&", "-")
-                name = name.replace(" ", "-")
-                name = name.replace("/", "-")
-                name = name.replace("›", "-")
-                name = name.replace(",", "-")
-                pass  # print "Here in Playvid name B2 =", name
-                if url is not None:
-                    url = str(url)
-                    url = url.replace(":", "%3a")
-                    url = url.replace("\\", "/")
-                    pass  # print "url final= ", url
-                    ref = "4097:0:1:0:0:0:0:0:0:0:" + url
-                    pass  # print "ref= ", ref
-                    sref = eServiceReference(ref)
-                    sref.setName(self.name)
-                    self.session.nav.stopService()
-                    self.session.nav.playService(sref)
-
-                else:
-                    return
-
-        def subtitles(self):
-            self.session.open(MessageBox, _("Please install script.module.SubSupport."), MessageBox.TYPE_ERROR, timeout=10)
-
-        def cancel(self):
-            if os.path.exists("/tmp/hls.avi"):
-                os.remove("/tmp/hls.avi")
-            self.session.nav.stopService()
-            pass  # print "Here in Playvid2 cancel SREF =", SREF
-            self.session.nav.playService(self.srefOld)
-            # try:
-            if self.pcip != "None":
-                url2 = "http://" + self.pcip + ":8080/requests/status.xml?command=pl_stop"
-                pass  # print "In Playvid2 url2 =", url2
-                resp = urlopen(url2)
-            # except:
-            # pass
-            # aspect ratio
-            if not self.new_aspect == self.init_aspect:
-                try:
-                    self.setAspect(self.init_aspect)
-                except:
-                    pass
-            # aspect ratio
-            self.close()
+    def leavePlayer(self):
+        self.close()
 
 
 class Showrtmp(Screen):
@@ -1359,6 +1255,9 @@ class Showrtmp(Screen):
         self["key_green"] = Button(_("Download"))
         self["key_yellow"] = Button(_("Play"))
         self["key_blue"] = Button(_("Stop Download"))
+        self.list = []
+        self["list"] = List(self.list)
+        self["list"] = Utils.tvList([])
         self["setupActions"] = ActionMap(["SetupActions", "ColorActions", "TimerEditActions"],
                                         {
                                         "red": self.close,
@@ -1373,12 +1272,12 @@ class Showrtmp(Screen):
         self.url = url
         txt = "Video stream rtmp.\n\n\nMust do (1) Download  (2) Play.\n\n"
         self["info"].setText(txt)
-        self.srefOld = self.session.nav.getCurrentlyPlayingServiceReference()
+        self.sref = self.session.nav.getCurrentlyPlayingServiceReference()
         self.onLayoutFinish.append(self.getrtmp)
 
     def getrtmp(self):
         pic = THISPLUG + "/images/default.png"
-        if isFHD():
+        if Utils.isFHD():
             pic = res_plugin_path + "defaultL.png"
         self["pixmap"].instance.setPixmapFromFile(pic)
         params = self.url
@@ -1390,7 +1289,7 @@ class Showrtmp(Screen):
         params = params.replace("-tcUrl", " --tcUrl")
         params = params.replace("-swfUrl", " --swfUrl")
         pass  # print "params B=", params
-        fold = cfg.cachefold.value + "/xbmc/vid"
+        fold = str(config.plugins.kodiplug.cachefold.value) + "/xbmc/vid"
         name = self.name.replace("/media/hdd/xbmc/vid/", "")
         name = name.replace(":", "-")
         name = name.replace("&", "-")
@@ -1404,7 +1303,7 @@ class Showrtmp(Screen):
 
     def okClicked(self):
         self["info"].setText("Downloading ....")
-        fold = cfg.cachefold.value + "/xbmc/vid"
+        fold = str(config.plugins.kodiplug.cachefold.value) + "/xbmc/vid"
         name = self.name.replace("/media/hdd/xbmc/vid/", "")
         name = name.replace(":", "-")
         name = name.replace("&", "-")
@@ -1428,22 +1327,22 @@ class Showrtmp(Screen):
     def play(self):
         if os.path.exists(self.svf):
             svfile = self.svf
-            desc = " "
-            self.session.open(Playvid2, self.name, svfile, desc)
+            desc = self.desc
+            self.session.open(Playgo, self.name, svfile, desc)
             # runKDplayer(self.session,name,svfile,desc)
         else:
             txt = "Download Video first."
             self["info"].setText(txt)
 
     def cancel(self):
-        self.session.nav.playService(self.srefOld)
+        self.session.nav.playService(self.sref)
         self.close()
 
     def stopdl(self):
         svfile = self.svf
         cmd = "rm " + svfile
         os.system(cmd)
-        self.session.nav.playService(self.srefOld)
+        self.session.nav.playService(self.sref)
         cmd1 = "killall -9 rtmpdump"
         cmd2 = "killall -9 wget"
         os.system(cmd1)
@@ -1506,63 +1405,6 @@ class downloadTask(Task):
 
     def afterRun(self):
         pass
-
-
-class tvList(MenuList):
-    def __init__(self, list):
-        from enigma import eListboxPythonMultiContent
-        from enigma import gFont
-        MenuList.__init__(self, list, False, eListboxPythonMultiContent)
-        self.l.setFont(0, gFont('Regular', 20))
-        self.l.setFont(1, gFont('Regular', 22))
-        self.l.setFont(2, gFont('Regular', 24))
-        self.l.setFont(3, gFont('Regular', 26))
-        self.l.setFont(4, gFont('Regular', 28))
-        self.l.setFont(5, gFont('Regular', 30))
-        self.l.setFont(6, gFont('Regular', 32))
-        self.l.setFont(7, gFont('Regular', 34))
-        self.l.setFont(8, gFont('Regular', 36))
-        self.l.setFont(9, gFont('Regular', 40))
-        if isFHD():
-            self.l.setItemHeight(50)
-        else:
-            self.l.setItemHeight(50)
-
-def rvListEntry(name, idx):
-    from Components.MultiContent import MultiContentEntryText
-    from Components.MultiContent import MultiContentEntryPixmapAlphaTest
-    from enigma import RT_HALIGN_LEFT, RT_VALIGN_CENTER
-    from enigma import loadPNG
-    from Tools.Directories import SCOPE_PLUGINS
-    from Tools.Directories import resolveFilename
-    res = [name]
-    if 'radio' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/radio.png".format('KodiLite'))
-    elif 'webcam' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/webcam.png".format('KodiLite'))
-    elif 'music' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/music.png".format('KodiLite'))
-    elif 'sport' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/sport.png".format('KodiLite'))
-    else:
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/res/pics/tv.png".format('KodiLite'))
-    if isFHD():
-        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
-        res.append(MultiContentEntryText(pos=(90, 0), size=(1900, 50), font=7, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
-    else:
-        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
-        res.append(MultiContentEntryText(pos=(90, 0), size=(1000, 50), font=2, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
-    return res
-
-
-def showlist(data, list):
-    idx = 0
-    plist = []
-    for line in data:
-        name = data[idx]
-        plist.append(rvListEntry(name, idx))
-        idx = idx + 1
-        list.setList(plist)
 
 
 def getserviceinfo(sref):  # this def returns the current playing service name and stream_url from give sref
@@ -1639,8 +1481,7 @@ class StatusScreen(Screen):
             self.delayTimer_conn = self.delayTimer.timeout.connect(self.hideStatus)
         except AttributeError:
             self.delayTimer.callback.append(self.hideStatus)
-
-        self.delayTimerDelay = 1500
+        self.delayTimer = 1500
         self.shown = True
         self.skin = '\n            <screen name="StatusScreen" position="%s,%s" size="%s,90" zPosition="0" backgroundColor="transparent" flags="wfNoBorder">\n                    <widget name="status" position="0,0" size="%s,70" valign="center" halign="left" font="Regular;22" transparent="1" foregroundColor="yellow" shadowColor="#40101010" shadowOffset="3,3" />\n            </screen>' % (str(statusPositionX),
                 str(statusPositionY),
@@ -1648,9 +1489,7 @@ class StatusScreen(Screen):
                 str(self.sc_width))
         Screen.__init__(self, session)
         self.stand_alone = True
-        pass  # print 'initializing status display'
-        # title = PlugDescription
-        # self["title"] = Button(title + Version)
+
         self['status'] = Label('')
         self.onClose.append(self.__onClose)
 
@@ -1658,7 +1497,7 @@ class StatusScreen(Screen):
         self['status'].setText(text)
         self['status'].instance.setForegroundColor(parseColor(color))
         self.show()
-        self.delayTimer.start(self.delayTimerDelay, True)
+        self.delayTimer.start(self.delayTimer, True)
 
     def hideStatus(self):
         self.hide()
@@ -1667,3 +1506,4 @@ class StatusScreen(Screen):
     def __onClose(self):
         self.delayTimer.stop()
         del self.delayTimer
+

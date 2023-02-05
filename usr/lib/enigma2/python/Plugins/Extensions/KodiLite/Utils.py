@@ -1553,10 +1553,13 @@ def clean_html(html):
 
 
 def cleanName(name):
-    name = name.strip()
+    # name = name.strip()
     # filter out non-allowed characters
     non_allowed_characters = "/.\\:*?<>|\""
     name = name.replace('\xc2\x86', '').replace('\xc2\x87', '')
+    name = name.replace(' ', '-').replace("'", '').replace('&', 'e')
+    name = name.replace('(', '').replace(')', '')
+    name = name.strip()
     name = ''.join(['_' if c in non_allowed_characters or ord(c) < 32 else c for c in name])
     return name
 
