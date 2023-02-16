@@ -186,27 +186,28 @@ else:
 
 
 def returnIMDB(text_clear):
-    if Utils.is_tmdb:
+    TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
+    IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
+    if os.path.exists(TMDB):
         try:
             from Plugins.Extensions.TMBD.plugin import TMBD
             text = html_conv.html_unescape(text_clear)
             _session.open(TMBD.tmdbScreen, text, 0)
-        except Exception as ex:
-            print("[XCF] Tmdb: ", str(ex))
+        except Exception as e:
+            print("[XCF] Tmdb: ", str(e))
         return True
-    elif Utils.is_imdb:
+    elif os.path.exists(IMDb):
         try:
             from Plugins.Extensions.IMDb.plugin import main as imdb
             text = html_conv.html_unescape(text_clear)
             imdb(_session, text)
-        except Exception as ex:
-            print("[XCF] imdb: ", str(ex))
+        except Exception as e:
+            print("[XCF] imdb: ", str(e))
         return True
     else:
         text_clear = html_conv.html_unescape(text_clear)
         _session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
         return True
-    return
 
 
 import requests
@@ -652,10 +653,8 @@ class Rundefault(Screen):
         Screen.__init__(self, session)
         self.name = name
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self.url = url
         self.nextrun = nextrun
         self.onShown.append(self.start)
@@ -1153,12 +1152,9 @@ class XbmcPluginPics(Screen):
         Screen.__init__(self, session)
         title = PlugDescription
         self.session = session
-        # lululla added
         global _session
         _session = session
-        # end
         self["title"] = Button(title + Version)
-        # self["bild"] = startspinner()
         self.curr_run = curr_run
         self.nextrun = self.curr_run+1
         self.pos = []
@@ -1203,7 +1199,6 @@ class XbmcPluginPics(Screen):
         self.rundef = None
         self.plug = ''
         self.keylock = False
-        # self.spinner_running = False
         print("self.mlist =", self.mlist)
         list = names
         self["menu"] = List(list)
@@ -1248,8 +1243,6 @@ class XbmcPluginPics(Screen):
             print('show imdb/tmdb')
 
     def exit(self):
-        # if self.spinner_running is True:
-        # self.stopSpinner()
         self.keylock = False
         afile = open("/tmp/stopaddon", "w")
         afile.write("stop execution")
@@ -1259,8 +1252,6 @@ class XbmcPluginPics(Screen):
             self.rundef.stoprun()
         except:
             pass
-        # else:
-            # self.stopSpinner()
         self.close()
 
     def progressCallBack(self, progress):
@@ -1518,8 +1509,8 @@ class XbmcPluginPics(Screen):
 
     def searchCallback(self, search_txt):
         if search_txt:
-            print("In XbmcPluginScreen self.url 2=", self.url)
-            print("In XbmcPluginScreen search_txt 1=", search_txt)
+            # print("In XbmcPluginScreen self.url 2=", self.url)
+            # print("In XbmcPluginScreen search_txt 1=", search_txt)
             n1 = self.url.find("?", 0)
             file = open("/tmp/xbmc_search.txt", 'w')
             file.write(search_txt)
@@ -1643,8 +1634,6 @@ class XbmcPluginScreen(Screen):
             print('show imdb/tmdb')
 
     def exit(self):
-        # if self.spinner_running is True:
-        # self.stopSpinner()
         self.keylock = False
         afile = open("/tmp/stopaddon", "w")
         afile.write("stop execution")
@@ -1654,8 +1643,6 @@ class XbmcPluginScreen(Screen):
             self.rundef.stoprun()
         except:
             pass
-        # else:
-            # self.stopSpinner()
         self.close()
 
     def progressCallBack(self, progress):
@@ -1746,7 +1733,6 @@ class XbmcPluginScreen(Screen):
         return
 
     def okClicked(self):
-        # self["bild"] = startspinner()
         if self.keylock:
             return
         if DEBUG == 1:
@@ -1960,7 +1946,6 @@ class Start_mainmenu(Screen):
         self.session = session
         global _session
         _session = session
-        # end
         title = PlugDescription
         self["title"] = Button(title + Version)
         self["label1"] = StaticText("")
@@ -2751,7 +2736,6 @@ class Start_mainmenu(Screen):
         self.plugin_id = self.name
         sys.argv = [arg1, arg2, arg3, arg4]
         d = THISADDON
-        # dellog()
         # ########
         xpath_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/xpath.py"
         # fixed2_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/fixed2"
@@ -2938,7 +2922,6 @@ class DelAdd(Screen):
         self['info'] = Label()
         self.info = (_("Please select addon type"))
         self["info"].setText(self.info)
-        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -2980,7 +2963,6 @@ class DelAdd(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -3000,7 +2982,6 @@ class DelAdd1(Screen):
         self['info'] = Label()
         self.info = " "
         self["info"].setText(self.info)
-        # self["bild"] = startspinner()
         self.type = type
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
@@ -3073,7 +3054,6 @@ class Getadds(Screen):
         self['info'] = Label()
         self.info = (_("Please select install method"))
         self["info"].setText(self.info)
-        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -3191,7 +3171,6 @@ class Getadds1(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -3271,7 +3250,6 @@ class Getadds7(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -3376,7 +3354,6 @@ class Getaddons(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -3481,7 +3458,6 @@ class GetaddonsA2(Screen):
         if url2 == '':
             xurl = url1
             xdest = "/tmp/plug.zip"
-            # downloadPage(xurl, xdest).addCallback(self.install).addErrback(self.showError)
             f = Utils.getUrlresp(xurl)
             print("f =", f)
             fpage = f.read()
@@ -3513,7 +3489,6 @@ class GetaddonsA2(Screen):
             # fpage = urlopen(url2).read()
             xurl = xurl
             print("xurl =", xurl)
-            # downloadPage(xurl, xdest).addCallback(self.getdown).addErrback(self.showError)
             f = Utils.getUrlresp(xurl)
             print("f =", f)
             fpage = f.read().decode()
@@ -3602,7 +3577,6 @@ class GetaddonsA2(Screen):
                 os.system(cmd)
 
         self.close()
-        # self.checkfix()
 
     def checkfix(self):
         url = "http://www.turk-dreamworld.com/bayraklar/Receiverler/Dreambox/TDW/e2/addons/KodiDirect/Fix/list.txt"
@@ -3637,7 +3611,6 @@ class GetaddonsA2(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -3657,7 +3630,6 @@ class Getadds3(Screen):
         self['info'] = Label()
         self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request."))
         self["info"].setText(self.info)
-        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -3698,7 +3670,6 @@ class Getadds3(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -3772,7 +3743,6 @@ class GetaddonsA3(Screen):
                 xdest3 = xdest + "/" + url1
                 f3 = open(xdest3, "w")
                 f3.write(fpage2)
-                # f2.close()
                 f3.close()
                 self.close()
         return
@@ -3801,7 +3771,6 @@ class GetaddonsA3(Screen):
         else:
             # ####print  "Here Ad 2"
             self.pinEntered(True)
-        # return
 
     def pinEntered(self, result):
         # ####print  "Here Ad 3 result =", result
@@ -3818,7 +3787,6 @@ class GetaddonsA3(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -3838,7 +3806,6 @@ class Getadds4(Screen):
         self['info'] = Label()
         self.info = (_("WARNING ! Many repository addons may not work. This may be because they are not updated. \nIf you want this addon - please post your request.."))
         self["info"].setText(self.info)
-        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -3908,7 +3875,6 @@ class Getadds4(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -3949,7 +3915,6 @@ class Getadds5(Screen):
         self["pixmap1"].instance.setPixmapFromFile(pic)
         xurl = self.url
         print("In Getadds5 xurl =", xurl)
-        # getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
         html = Utils.getUrl(xurl)
         self.gotPage(html)
 
@@ -3999,7 +3964,6 @@ class Getadds5(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -4042,12 +4006,10 @@ class Getadds6(Screen):
         self["pixmap1"].instance.setPixmapFromFile(pic)
         xurl = self.url
         print("xurl 2=", xurl)
-        # getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
         html = Utils.getUrl(xurl)
         self.gotPage(html)
 
     def gotPage(self, html):
-        # try:
         if DEBUG == 1:
             print("html 2= ", html)
         self.html = html
@@ -4118,7 +4080,6 @@ class Getadds6(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -4139,7 +4100,6 @@ class Fusion(Screen):
         self['info'] = Label()
         self.info = (_("Please select repository type"))
         self["info"].setText(self.info)
-        # self["bild"] = startspinner()
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
                                           {"ok": self.okClicked,
@@ -4193,10 +4153,8 @@ class Fusion(Screen):
         else:
             # ####print  "Here Ad 2"
             self.pinEntered(True)
-        # return
 
     def pinEntered(self, result):
-        # ####print  "Here Ad 3 result =", result
         if result:
             self.session.open(Fusion2, self.selname, self.selurl)
         else:
@@ -4210,7 +4168,6 @@ class Fusion(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -4278,7 +4235,6 @@ class Fusion2(Screen):
             xurl = url
             print("xurl =", xurl)
             xdest = "/tmp/plug.zip"
-            # downloadPage(xurl, xdest).addCallback(self.install).addErrback(self.showError)
             fpage = Utils.getUrl(xurl)
             f = open(xdest, 'w')
             f.write(fpage)
@@ -4304,7 +4260,6 @@ class Fusion2(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -4345,7 +4300,6 @@ class Repo2(Screen):
         self["pixmap1"].instance.setPixmapFromFile(pic)
         xurl = self.infourl
         print("In Repo2 xurl =", xurl)
-        # getPage(xurl).addCallback(self.gotPage).addErrback(self.getfeedError)
         html = Utils.getUrl(xurl)
         self.gotPage(html)
 
@@ -4362,8 +4316,6 @@ class Repo2(Screen):
             self.names.append(name)
             self.urls.append(url)
         Utils.showlist(self.names, self["menu"])
-        # except Exception, error:
-        # print  "[plugins]: Could not download HTTP Page\n" + str(error)
 
     def getfeedError(self, error=""):
         error = str(error)
@@ -4415,7 +4367,6 @@ class Repo2(Screen):
         self["menu"].right()
 
     def keyNumberGlobal(self, number):
-        # print  "pressed", number
         self["menu"].number(number)
 
 
@@ -4760,7 +4711,7 @@ class ShowPage2(Screen):
         self.skinName = "ShowPage"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.ftext = newstext  # global
+        self.ftext = newstext 
         self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
@@ -4898,7 +4849,6 @@ class ShowPage2(Screen):
         # self["menu"].right()
 
     # def keyNumberGlobal(self, number):
-        # # print  "pressed", number
         # self["menu"].number(number)
 
 
@@ -5109,7 +5059,6 @@ class ShowPage2(Screen):
         # self["menu"].right()
 
     # def keyNumberGlobal(self, number):
-        # # print  "pressed", number
         # self["menu"].number(number)
 
 
@@ -5124,7 +5073,6 @@ class ShowPage2(Screen):
         # self.skinName = "ShowPage"
         # # self["list"] = MenuList([])
         # self.ftext = newstext  # global
-
         # self["menu"] = Utils.tvList([])
         # self['infoc'] = Label(_('Info'))
         # self['infoc2'] = Label('%s' % Credits)
@@ -5176,7 +5124,6 @@ class ShowPage2(Screen):
         # self["menu"].right()
 
     # def keyNumberGlobal(self, number):
-        # # print  "pressed", number
         # self["menu"].number(number)
 
 
@@ -5308,7 +5255,6 @@ class ShowPage2(Screen):
         # self["menu"].right()
 
     # def keyNumberGlobal(self, number):
-        # # print  "pressed", number
         # self["menu"].number(number)
 '''
 
@@ -5499,7 +5445,6 @@ def main(session, **kwargs):
             os.mkdir(os.path.join('/etc', "KodiLite"))
         except:
             pass
-        # os.system("mkdir -p /etc/KodiLite")
     if not os.path.exists("/etc/KodiLite/favorites.xml"):
         cmd = "cp " + THISPLUG + "/lib/defaults/favorites.xml /etc/KodiLite/"
         os.system(cmd)
@@ -5559,8 +5504,7 @@ def main(session, **kwargs):
     afile.write(cachefolder)
     afile.close()
     print("In def main 6")
-    # start()
-    # if cfg.update.getValue() is True:
+
     try:
         from Plugins.Extensions.KodiLite.Update2 import updstart2
         updstart2()
@@ -5581,7 +5525,7 @@ def start():
     if os.path.exists(gpath):
         cmd = "rm -rf " + gpath
         os.system(cmd)
-    #  _session.open(Getcats)
+
     global ADDONCAT
     ADDONCAT = "plugins"
     f1 = open("/tmp/addoncat.txt", "w")
@@ -5635,16 +5579,11 @@ class classJobManagerViews():
             self.session = session
             global globalActionMap
             readKeymap(jobmanagerviews_keymap)
-            # self.dialog = session.instantiateDialog(ScreenGrabber.ScreenGrabberView)
-            # self.dialog.show()
             globalActionMap.actions['JobManagerView'] = self.ShowHide
-            # self.ShowHide()
         except:
             return
 
     def ShowHide(self):
-        # from  Plugins.Extensions.KodiLite.lib.download import viewdownloads
-        # viewdownloads(self.session,THISPLUG)
         try:
             from Plugins.Extensions.KodiLite.lib.XBMCAddonsMediaExplorer import XBMCAddonsMediaExplorer
         except:
