@@ -450,8 +450,8 @@ def getpics(names, pics, tmpfold, picfold):
                                 except Exception as e:
                                     print("Error: Exception")
                                     print('===========2222222222=================\n')
-                                    if PY3:
-                                        poster = poster.encode()
+                                    # if PY3:
+                                        # poster = poster.encode()
                                     callInThread(threadGetPage, url=poster, file=tpicf, success=downloadPic, fail=downloadError)
                                 '''
                                 print(str(e))
@@ -465,7 +465,7 @@ def getpics(names, pics, tmpfold, picfold):
                     cmd = "cp " + defpic + " " + tpicf
                     os.system(cmd)
 
-        if not fileExists(tpicf):
+        if not os.path.exists(tpicf):
             cmd = "cp " + defpic + " " + tpicf
             os.system(cmd)
 
@@ -500,17 +500,17 @@ def getpics(names, pics, tmpfold, picfold):
                     except Exception as e:
                         print(e)
 
-                    # crop and center image
-                    bg = Image.new("RGBA", size, (255, 255, 255, 0))
+                    # # crop and center image
+                    # bg = Image.new("RGBA", size, (255, 255, 255, 0))
 
-                    im_alpha = im.convert("RGBA").split()[-1]
-                    bgwidth, bgheight = bg.size
-                    bg_alpha = bg.convert("RGBA").split()[-1]
-                    temp = Image.new("L", (bgwidth, bgheight), 0)
-                    temp.paste(im_alpha, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)), im_alpha)
-                    bg_alpha = ImageChops.screen(bg_alpha, temp)
-                    bg.paste(im, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)))
-                    im = bg
+                    # im_alpha = im.convert("RGBA").split()[-1]
+                    # bgwidth, bgheight = bg.size
+                    # bg_alpha = bg.convert("RGBA").split()[-1]
+                    # temp = Image.new("L", (bgwidth, bgheight), 0)
+                    # temp.paste(im_alpha, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)), im_alpha)
+                    # bg_alpha = ImageChops.screen(bg_alpha, temp)
+                    # bg.paste(im, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)))
+                    # im = bg
 
                     im.save(file_name + ".png", "PNG")
 
