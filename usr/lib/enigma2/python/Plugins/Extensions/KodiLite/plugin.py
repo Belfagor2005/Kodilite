@@ -222,7 +222,7 @@ def threadGetPage(url=None, file=None, key=None, success=None, fail=None, *args,
         # from requests import get, exceptions
         # from requests.exceptions import HTTPError
         # from twisted.internet.reactor import callInThread
-        response = get(url)
+        response = get(url, verify=False)
         response.raise_for_status()
         if file is None:
             success(response.content)
@@ -501,16 +501,16 @@ def getpics(names, pics, tmpfold, picfold):
                         print(e)
 
                     # # crop and center image
-                    # bg = Image.new("RGBA", size, (255, 255, 255, 0))
+                    bg = Image.new("RGBA", size, (255, 255, 255, 0))
 
-                    # im_alpha = im.convert("RGBA").split()[-1]
-                    # bgwidth, bgheight = bg.size
-                    # bg_alpha = bg.convert("RGBA").split()[-1]
-                    # temp = Image.new("L", (bgwidth, bgheight), 0)
-                    # temp.paste(im_alpha, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)), im_alpha)
-                    # bg_alpha = ImageChops.screen(bg_alpha, temp)
-                    # bg.paste(im, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)))
-                    # im = bg
+                    im_alpha = im.convert("RGBA").split()[-1]
+                    bgwidth, bgheight = bg.size
+                    bg_alpha = bg.convert("RGBA").split()[-1]
+                    temp = Image.new("L", (bgwidth, bgheight), 0)
+                    temp.paste(im_alpha, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)), im_alpha)
+                    bg_alpha = ImageChops.screen(bg_alpha, temp)
+                    bg.paste(im, (int((bgwidth - imagew) / 2), int((bgheight - imageh) / 2)))
+                    im = bg
 
                     im.save(file_name + ".png", "PNG")
 
