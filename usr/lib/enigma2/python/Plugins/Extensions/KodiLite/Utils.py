@@ -1,19 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# 15.01.2023
+# 30.03.2023
 # a common tips used from Lululla
-
+#
 import sys
 import datetime
 import os
 import re
 import base64
 from random import choice
-from Components.MenuList import MenuList
-from Tools.Directories import resolveFilename
+# Added for support of wqhd detection
+from enigma import getDesktop
+screenwidth = getDesktop(0).size()
+# End of code
 # from sys import version_info
-# pythonFull = float(str(sys.version_info.major) + "." + str(sys.version_info.minor))
+# pythonFull = float(str(sys.version_info.major) + '.' + str(sys.version_info.minor))
 pythonVer = sys.version_info.major
 # PY3 = version_info[0] == 3
 
@@ -27,101 +29,35 @@ PY3 = sys.version_info[0] == 3
 PY34 = sys.version_info[0:2] >= (3, 4)
 PY39 = sys.version_info[0:2] >= (3, 9)
 
-f1 = open("/tmp/py.txt", "a")
-msg = "Utils PY3 = " + str(PY3) + " Utils PY2 = " + str(PY2)
-f1.write(msg)
-f1.close()
-
+PY3 = sys.version_info.major >= 3
 if PY3:
-    # Python 3
-    PY3 = True
-    unicode = str
-    unichr = chr
-    long = int
-    xrange = range
-    from http.client import HTTPConnection
+    bytes = bytes
+    str = unicode = basestring = str
+    range = range
+    zip = zip
+    def iteritems(d, **kw):
+        return iter(d.items(**kw))
     from urllib.parse import quote
     from urllib.request import urlopen
     from urllib.request import Request
     from urllib.error import HTTPError, URLError
 
-else:
-    # # Python 2
-    # _str = str
-    # str = unicode
-    # range = xrange
-    # unicode = unicode
-    # basestring = basestring
+if PY2:
+    _str = str
+    str = unicode
+    range = xrange
+    from itertools import izip
+    zip = izip
+    unicode = unicode
+    basestring = basestring
+    def bytes(b, encoding="ascii"):
+        return _str(b)
+    def iteritems(d, **kw):
+        return d.iteritems(**kw)
     from urllib import quote
-    from httplib import HTTPConnection
     from urllib2 import urlopen
     from urllib2 import Request
     from urllib2 import HTTPError, URLError
-
-
-HTTPConnection.debuglevel = 1
-
-
-class tvList(MenuList):
-    def __init__(self, list):
-        from enigma import eListboxPythonMultiContent
-        from enigma import gFont
-        MenuList.__init__(self, list, False, eListboxPythonMultiContent)
-        self.l.setFont(0, gFont('Regular', 20))
-        self.l.setFont(1, gFont('Regular', 22))
-        self.l.setFont(2, gFont('Regular', 24))
-        self.l.setFont(3, gFont('Regular', 26))
-        self.l.setFont(4, gFont('Regular', 28))
-        self.l.setFont(5, gFont('Regular', 30))
-        self.l.setFont(6, gFont('Regular', 32))
-        self.l.setFont(7, gFont('Regular', 34))
-        self.l.setFont(8, gFont('Regular', 36))
-        self.l.setFont(9, gFont('Regular', 40))
-        if isFHD():
-            self.l.setItemHeight(50)
-        else:
-            self.l.setItemHeight(50)
-
-
-def klEntry(name, idx):
-    from Components.MultiContent import MultiContentEntryText
-    from Components.MultiContent import MultiContentEntryPixmapAlphaTest
-    from enigma import RT_HALIGN_LEFT, RT_VALIGN_CENTER
-    from enigma import loadPNG
-    from Tools.Directories import SCOPE_PLUGINS
-    from Tools.Directories import resolveFilename
-    res = [name]
-    if 'radio' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/radio.png".format('KodiLite'))
-    elif 'webcam' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/webcam.png".format('KodiLite'))
-    elif 'music' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/music.png".format('KodiLite'))
-    elif 'sport' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/sport.png".format('KodiLite'))
-    elif 'adult' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/xxx.png".format('KodiLite'))
-    elif 'exit' in name.lower():
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/exit.png".format('KodiLite'))
-    else:
-        pngs = resolveFilename(SCOPE_PLUGINS, "Extensions/{}/skin/pics/tv.png".format('KodiLite'))
-    if isFHD():
-        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
-        res.append(MultiContentEntryText(pos=(90, 0), size=(1900, 50), font=7, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
-    else:
-        res.append(MultiContentEntryPixmapAlphaTest(pos=(10, 0), size=(50, 50), png=loadPNG(pngs)))
-        res.append(MultiContentEntryText(pos=(90, 0), size=(1000, 50), font=2, text=name, color=0xa6d1fe, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER))
-    return res
-
-
-def showlist(data, list):
-    idx = 0
-    plist = []
-    for line in data:
-        name = data[idx]
-        plist.append(klEntry(name, idx))
-        idx = idx + 1
-        list.setList(plist)
 
 
 if sys.version_info >= (2, 7, 9):
@@ -132,10 +68,28 @@ if sys.version_info >= (2, 7, 9):
         sslContext = None
 
 
+def ensure_str(text, encoding='utf-8', errors='strict'):
+    if type(text) is str:
+        return text
+    if PY2:
+        if isinstance(text, unicode):
+            try:
+                return text.encode(encoding, errors)
+            except Exception:
+                return text.encode(encoding, 'ignore')
+    else: #PY3
+        if isinstance(text, bytes):
+            try:
+                return text.decode(encoding, errors)
+            except Exception:
+                return text.decode(encoding, 'ignore')
+    return text
+
+
 def checkGZIP(url):
     from io import StringIO
     import gzip
-    hdr = {"User-Agent": "Enigma2 - XCForever Plugin"}
+    hdr = {"User-Agent": "Enigma2 - Plugin"}
     response = None
     request = Request(url, headers=hdr)
 
@@ -157,6 +111,8 @@ def checkGZIP(url):
     except Exception as e:
         print(e)
         return None
+
+
 def ssl_urlopen(url):
     if sslContext:
         return urlopen(url, context=sslContext)
@@ -170,20 +126,22 @@ def getDesktopSize():
     return (s.width(), s.height())
 
 
+# Chaneg code for support of wqhd detection
 def isUHD():
-    desktopSize = getDesktopSize()
-    return desktopSize[0] == 3840
-
-
+    UHD = False
+    if screenwidth.width() == 2560:
+        UHD = True
+        return UHD
 def isFHD():
-    desktopSize = getDesktopSize()
-    return desktopSize[0] == 1920
-
+    if screenwidth.width() == 1920:
+        FHD = True
+        return FHD
 
 def isHD():
-    desktopSize = getDesktopSize()
-    return desktopSize[0] >= 1280 and desktopSize[0] < 1920
-
+    if screenwidth.width() == 1280:
+        HD = True
+        return HD
+# End of code change
 
 def DreamOS():
     DreamOS = False
@@ -191,12 +149,14 @@ def DreamOS():
         DreamOS = True
         return DreamOS
 
+
 def getEnigmaVersionString():
     try:
         from enigma import getEnigmaVersionString
         return getEnigmaVersionString()
     except:
         return "N/A"
+
 
 def getImageVersionString():
     try:
@@ -207,10 +167,10 @@ def getImageVersionString():
             splitted = x.split('=')
             if splitted[0] == "version":
                 #     YYYY MM DD hh mm
-                #0120 2005 11 29 01 16
-                #0123 4567 89 01 23 45
+                # 0120 2005 11 29 01 16
+                # 0123 4567 89 01 23 45
                 version = splitted[1]
-                image_type = version[0] # 0 = release, 1 = experimental
+                image_type = version[0]  # 0 = release, 1 = experimental
                 major = version[1]
                 minor = version[2]
                 revision = version[3]
@@ -232,6 +192,8 @@ def getImageVersionString():
         pass
 
     return "unavailable"
+
+
 def mySkin():
     from Components.config import config
     currentSkin = config.skin.primary_skin.value.replace('/skin.xml', '')
@@ -276,7 +238,6 @@ def sizeToString(nbytes):
     return size
 
 
-
 def convert_size(size_bytes):
     import math
     if size_bytes == 0:
@@ -301,6 +262,7 @@ def getMountPoint(path):
         parent_device = os.stat(pathname).st_dev
     return mount_point
 
+
 def getMointedDevice(pathname):
     md = None
     try:
@@ -320,12 +282,13 @@ def getFreeSpace(path):
     try:
         moin_point = getMountPoint(path)
         device = getMointedDevice(moin_point)
-        print(moin_point+"|" + device)
+        print(moin_point + "|" + device)
         stat = os.statvfs(device)  # @UndefinedVariable
         print(stat)
         return sizeToString(stat.f_bfree*stat.f_bsize)
     except:
         return "N/A"
+
 
 def listDir(what):
     f = None
@@ -349,11 +312,11 @@ def getLanguage():
         from Components.config import config
         language = config.osd.language.value
         language = language[:-3]
-        return language
+        # return language
     except:
         language = 'en'
-        return language
-        pass
+    return language
+    pass
 
 
 def downloadFile(url, target):
@@ -364,19 +327,23 @@ def downloadFile(url, target):
         from urllib2 import HTTPError, URLError
     try:
         response = urlopen(url, None, 5)
-        with open(target, 'w') as output:
+        with open(target, 'wb') as output:
             # print('response: ', response)
-            output.write(response.read())
+            if PY3:
+                output.write(response.read().decode('utf-8'))
+            else:
+                output.write(response.read())
+            # output.write(response.read())
         response.close()
         return True
     except HTTPError:
-        print("Http error")
+        print('Http error')
         return False
     except URLError:
-        print("Url error")
+        print('Url error')
         return False
     except socket.timeout:
-        print("sochet error")
+        print('sochet error')
         return False
 
 
@@ -426,7 +393,8 @@ global CountConnOk
 CountConnOk = 0
 
 
-def zCheckInternet(opt=1, server=None, port=None):  # opt=5 custom server and port.
+# opt=5 custom server and port.
+def zCheckInternet(opt=1, server=None, port=None):
     global CountConnOk
     sock = False
     checklist = [("8.8.44.4", 53), ("8.8.88.8", 53), ("www.lululla.altervista.org/", 80), ("www.linuxsat-support.com", 443), ("www.google.com", 443)]
@@ -461,7 +429,7 @@ def checkInternet():
     try:
         import socket
         socket.setdefaulttimeout(0.5)
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(("8.8.8.8", 53))
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(('8.8.8.8', 53))
         return True
     except:
         return False
@@ -485,7 +453,7 @@ def check(url):
         return False
 
 
-def testWebConnection(host="www.google.com", port=80, timeout=3):
+def testWebConnection(host='www.google.com', port=80, timeout=3):
     import socket
     try:
         socket.setdefaulttimeout(timeout)
@@ -506,61 +474,60 @@ def checkStr(text, encoding='utf8'):
     return text
 
 
-# def checkStr(txt):
-    # # convert variable to type str both in Python 2 and 3
-    # if PY3:
-        # # Python 3
-        # if type(txt) == type(bytes()):
-            # txt = txt.decode('utf-8')
-    # else:
-        # #Python 2
-        # if type(txt) == type(unicode()):
-            # txt = txt.encode('utf-8')
-    # return txt
-
-# def checkStr(txt):
-    # import six
-    # if six.PY3:
-        # if isinstance(txt, type(bytes())):
-            # txt = txt.decode('utf-8')
-    # else:
-        # if isinstance(txt, type(six.text_type())):
-            # txt = txt.encode('utf-8')
-    # return txt
-
-
-# def checkRedirect(url):
-    # # print('*** check redirect ***')
-    # try:
-        # import requests
-        # x = requests.get(url, timeout=15, verify=False, stream=True)
-        # print('**** redirect url 1 *** %s' % x.url)
-        # return str(x.url)
-    # except Exception as e:
-        # print('checkRedirect get failed: ', str(e))
-        # print('**** redirect url 2 *** %s' % url)
-        # return str(url)
-
-
 def checkRedirect(url):
     # print("*** check redirect ***")
     import requests
     from requests.adapters import HTTPAdapter
-    hdr = {"User-Agent": "Enigma2 - XCForever Plugin"}
+    hdr = {"User-Agent": "Enigma2 - Enigma2 Plugin"}
     x = ""
     adapter = HTTPAdapter()
     http = requests.Session()
     http.mount("http://", adapter)
     http.mount("https://", adapter)
     try:
-
         x = http.get(url, headers=hdr, timeout=15, verify=False, stream=True)
-
         return str(x.url)
     except Exception as e:
         print(e)
-
         return str(url)
+
+
+# def checkRedirect2(url):
+    # print("*** check redirect ***")
+    # import requests
+    # from requests.adapters import HTTPAdapter
+    # hdr = {"User-Agent": "Enigma2 - Enigma2 Plugin"}
+    # x = ""
+    # adapter = HTTPAdapter()
+    # http = requests.Session()
+    # http.mount("http://", adapter)
+    # http.mount("https://", adapter)
+    # try:
+        # x = http.get(url, headers=hdr, timeout=15, verify=False, stream=True)
+        # return str(x.url)
+    # except Exception as e:
+        # print(e)
+        # return str(url)
+    # import ssl
+    # from urllib3 import poolmanager
+    # class TLSAdapter(requests.adapters.HTTPAdapter):
+
+
+        # def init_poolmanager(self, connections, maxsize, block=False):
+            # """Create and initialize the urllib3 PoolManager."""
+            # ctx = ssl.create_default_context()
+            # ctx.set_ciphers('DEFAULT@SECLEVEL=1')
+            # self.poolmanager = poolmanager.PoolManager(
+                    # num_pools=connections,
+                    # maxsize=maxsize,
+                    # block=block,
+                    # ssl_version=ssl.PROTOCOL_TLS,
+                    # ssl_context=ctx)
+
+    # session = requests.session()
+    # session.mount('https://', TLSAdapter())
+    # res = session.get(url)
+    # return res
 
 
 def freespace():
@@ -585,11 +552,10 @@ def b64encoder(source):
 
 
 def b64decoder(s):
-    """Add missing padding to string and return the decoded base64 string."""
+    '''Add missing padding to string and return the decoded base64 string.'''
     import base64
     s = str(s).strip()
     try:
-        # return base64.b64decode(s)
         outp = base64.b64decode(s)
         print('outp1 ', outp)
         if PY3:
@@ -600,7 +566,7 @@ def b64decoder(s):
     except TypeError:
         padding = len(s) % 4
         if padding == 1:
-            print("Invalid base64 string: {}".format(s))
+            print('Invalid base64 string: {}'.format(s))
             return ''
         elif padding == 2:
             s += b'=='
@@ -621,7 +587,7 @@ def __createdir(list):
         if not os.path.exists(dir):
             try:
                 from os import mkdir
-                os.mkdir(dir)
+                mkdir(dir)
             except:
                 print('Mkdir Failed', dir)
 
@@ -657,19 +623,31 @@ def uniq(inlist):
 
 
 def ReloadBouquets():
-    # global set
     print('\n----Reloading bouquets----\n')
-    # if set == 1:
-        # set = 0
-        # terrestrial_rest()
+    # try:
+        # eDVBDB = None
+        # os.system('wget -qO - http://127.0.0.1/web/servicelistreload?mode=2 > /dev/null 2>&1 &')
+        # print('bouquets reloaded...')
+    # except:
+        # from enigma import eDVBDB
+        # eDVBDB.getInstance().reloadBouquets()
+        # print('bouquets reloaded...')
     try:
         from enigma import eDVBDB
-        eDVBDB.getInstance().reloadBouquets()
-        print('bouquets reloaded...')
-    except:
+    except ImportError:
         eDVBDB = None
-        os.system('wget -qO - http://127.0.0.1/web/servicelistreload?mode=2 > /dev/null 2>&1 &')
-        print('bouquets reloaded...')
+    if eDVBDB:
+        # eDVBDB.getInstance().reloadServicelist()
+        # eDVBDB.getInstance().reloadBouquets()
+        db = eDVBDB.getInstance()
+        if db:
+            db.reloadServicelist()
+            db.reloadBouquets()
+            print("eDVBDB: bouquets reloaded...")
+    else:
+        os.system("wget -qO - http://127.0.0.1/web/servicelistreload?mode=2 > /dev/null 2>&1 &")
+        os.system("wget -qO - http://127.0.0.1/web/servicelistreload?mode=4 > /dev/null 2>&1 &")
+        print("wGET: bouquets reloaded...")
 
 
 def deletetmp():
@@ -939,26 +917,6 @@ def RequestAgent():
     return RandomAgent
 
 
-# def ReadUrl2(url):
-    # import sys
-    # if sys.version_info.major == 3:
-        # import urllib.request as urllib2
-    # elif sys.version_info.major == 2:
-        # import urllib2
-    # req = urllib2.Request(url)
-    # req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14')
-    # r = urllib2.urlopen(req, None, 15)
-    # link = r.read()
-    # r.close()
-    # content = link
-    # if str(type(content)).find('bytes') != -1:
-        # try:
-            # content = content.decode('utf-8')
-        # except Exception as e:
-            # print('error: ', str(e))
-    # return content
-
-
 def ReadUrl2(url, referer):
     if sys.version_info.major == 3:
         import urllib.request as urllib2
@@ -971,7 +929,7 @@ def ReadUrl2(url, referer):
     except:
         CONTEXT = None
 
-    TIMEOUT_URL = 15
+    TIMEOUT_URL = 30
     print('ReadUrl1:\n  url = %s' % url)
     try:
 
@@ -980,9 +938,6 @@ def ReadUrl2(url, referer):
         req.add_header('Referer', referer)
         # req = urllib2.Request(url)
         # req.add_header('User-Agent', RequestAgent())
-
-
-
         try:
             r = urllib2.urlopen(req, None, TIMEOUT_URL, context=CONTEXT)
         except Exception as e:
@@ -1041,7 +996,7 @@ def ReadUrl(url):
     except:
         CONTEXT = None
 
-    TIMEOUT_URL = 15
+    TIMEOUT_URL = 30
     print('ReadUrl1:\n  url = %s' % url)
     try:
         req = urllib2.Request(url)
@@ -1103,46 +1058,46 @@ if PY3:
         req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         try:
-            response = urlopen(req)
+            response = urlopen(req, timeout=20)
             link = response.read().decode(errors='ignore')
             response.close()
-            return link
+            # return link
         except:
             import ssl
             gcontext = ssl._create_unverified_context()
-            response = urlopen(req, context=gcontext)
+            response = urlopen(req, timeout=20, context=gcontext)
             link = response.read().decode(errors='ignore')
             response.close()
-            return link
+        return link
 
     def getUrl2(url, referer):
         req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         req.add_header('Referer', referer)
         try:
-            response = urlopen(req)
+            response = urlopen(req, timeout=20)
             link = response.read().decode()
             response.close()
-            return link
+            # return link
         except:
             import ssl
             gcontext = ssl._create_unverified_context()
-            response = urlopen(req, context=gcontext)
+            response = urlopen(req, timeout=20, context=gcontext)
             link = response.read().decode()
             response.close()
-            return link
+        return link
 
     def getUrlresp(url):
         req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         try:
-            response = urlopen(req)
-            return response
+            response = urlopen(req, timeout=20)
+            # return response
         except:
             import ssl
             gcontext = ssl._create_unverified_context()
-            response = urlopen(req, context=gcontext)
-            return response
+            response = urlopen(req, timeout=20, context=gcontext)
+        return response
 else:
     import sys
     if sys.version_info.major == 3:
@@ -1154,46 +1109,46 @@ else:
         req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         try:
-            response = urlopen(req)
+            response = urlopen(req, timeout=20)
             link = response.read()
             response.close()
-            return link
+            # return link
         except:
             import ssl
             gcontext = ssl._create_unverified_context()
-            response = urlopen(req, context=gcontext)
+            response = urlopen(req, timeout=20, context=gcontext)
             link = response.read()
             response.close()
-            return link
+        return link
 
     def getUrl2(url, referer):
         req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         req.add_header('Referer', referer)
         try:
-            response = urlopen(req)
+            response = urlopen(req, timeout=20)
             link = response.read()
             response.close()
-            return link
+            # return link
         except:
             import ssl
             gcontext = ssl._create_unverified_context()
-            response = urlopen(req, context=gcontext)
+            response = urlopen(req, timeout=20, context=gcontext)
             link = response.read()
             response.close()
-            return link
+        return link
 
     def getUrlresp(url):
         req = urllib2.Request(url)
         req.add_header('User-Agent', RequestAgent())
         try:
-            response = urlopen(req)
-            return response
+            response = urlopen(req, timeout=20)
+            # return response
         except:
             import ssl
             gcontext = ssl._create_unverified_context()
-            response = urlopen(req, context=gcontext)
-            return response
+            response = urlopen(req, timeout=20, context=gcontext)
+        return response
 
 
 def decodeUrl(text):
@@ -1248,32 +1203,25 @@ def decodeHtml(text):
     text = text.replace('&auml;', 'ä')
     text = text.replace('\u00e4', 'ä')
     text = text.replace('&#228;', 'ä')
-
     text = text.replace('&Auml;', 'Ä')
     text = text.replace('\u00c4', 'Ä')
     text = text.replace('&#196;', 'Ä')
-
     text = text.replace('&ouml;', 'ö')
     text = text.replace('\u00f6', 'ö')
     text = text.replace('&#246;', 'ö')
-
     text = text.replace('&ouml;', 'Ö')
     text = text.replace('&Ouml;', 'Ö')
     text = text.replace('\u00d6', 'Ö')
     text = text.replace('&#214;', 'Ö')
-
     text = text.replace('&uuml;', 'ü')
     text = text.replace('\u00fc', 'ü')
     text = text.replace('&#252;', 'ü')
-
     text = text.replace('&Uuml;', 'Ü')
     text = text.replace('\u00dc', 'Ü')
     text = text.replace('&#220;', 'Ü')
-
     text = text.replace('&szlig;', 'ß')
     text = text.replace('\u00df', 'ß')
     text = text.replace('&#223;', 'ß')
-
     text = text.replace('&amp;', '&')
     text = text.replace('&quot;', '\"')
     text = text.replace('&gt;', '>')
@@ -1549,12 +1497,15 @@ def clean_html(html):
     if strType == 'utf-8':
         html = html.encode('utf-8')
     return html.strip()
-#######################################
+
+
+def cachedel(folder):
+    fold = str(folder)
+    cmd = "rm " + fold + "/*"
+    os.system(cmd)
 
 
 def cleanName(name):
-    # name = name.strip()
-    # filter out non-allowed characters
     non_allowed_characters = "/.\\:*?<>|\""
     name = name.replace('\xc2\x86', '').replace('\xc2\x87', '')
     name = name.replace(' ', '-').replace("'", '').replace('&', 'e')
@@ -1682,6 +1633,7 @@ def addstreamboq(bouquetname=None):
             fp.write('#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.%s.tv" ORDER BY bouquet\n' % bouquetname)
             fp.close()
             add = True
+    return
 
 
 def stream2bouquet(url=None, name=None, bouquetname=None):
