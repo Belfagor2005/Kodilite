@@ -69,6 +69,10 @@ from enigma import iPlayableService
 from keymapparser import readKeymap
 from twisted.web.client import downloadPage
 from twisted.web.client import getPage
+import requests
+from requests import get, exceptions
+from requests.exceptions import HTTPError
+from twisted.internet.reactor import callInThread
 import os
 import re
 import sys
@@ -187,41 +191,41 @@ else:
 
 def returnIMDB(text_clear):
     TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
+    tmdb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('tmdb'))
     IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
+    text = html_conv.html_unescape(text_clear)
     if os.path.exists(TMDB):
         try:
             from Plugins.Extensions.TMBD.plugin import TMBD
-            text = html_conv.html_unescape(text_clear)
             _session.open(TMBD.tmdbScreen, text, 0)
         except Exception as e:
             print("[XCF] Tmdb: ", str(e))
         return True
+
+    elif os.path.exists(tmdb):
+        try:
+            from Plugins.Extensions.tmdb.plugin import tmdb
+            _session.open(tmdb.tmdbScreen, text, 0)
+        except Exception as e:
+            print("[XCF] Tmdb: ", str(e))
+        return True
+
     elif os.path.exists(IMDb):
         try:
             from Plugins.Extensions.IMDb.plugin import main as imdb
-            text = html_conv.html_unescape(text_clear)
             imdb(_session, text)
         except Exception as e:
             print("[XCF] imdb: ", str(e))
         return True
     else:
-        text_clear = html_conv.html_unescape(text_clear)
-        _session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
+        _session.open(MessageBox, text, MessageBox.TYPE_INFO)
         return True
-
-
-import requests
-from requests import get, exceptions
-from requests.exceptions import HTTPError
-from twisted.internet.reactor import callInThread
+    return False
 
 
 def threadGetPage(url=None, file=None, key=None, success=None, fail=None, *args, **kwargs):
     print('[kodilite][threadGetPage] url, file, key, args, kwargs', url, "   ", file, "   ", key, "   ", args, "   ", kwargs)
     try:
-        # from requests import get, exceptions
-        # from requests.exceptions import HTTPError
-        # from twisted.internet.reactor import callInThread
         response = get(url, verify=False)
         response.raise_for_status()
         if file is None:
@@ -407,11 +411,6 @@ def getpics(names, pics, tmpfold, picfold):
             cmd = "cp " + picf + " " + tmpfold
             print("In getpics fileExists(picf) cmd =", cmd)
             os.system(cmd)
-
-        # test remove this
-        # if os.path.exists(tpicf):
-            # cmd = "rm " + tpicf
-            # os.system(cmd)
 
         if not os.path.exists(picf):
             if THISPLUG in url:
