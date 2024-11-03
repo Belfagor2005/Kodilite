@@ -10,18 +10,14 @@ from Components.Button import Button
 from Components.ActionMap import NumberActionMap
 from Components.Label import Label
 from Tools.Directories import copyfile
-from enigma import eListboxPythonMultiContent
-from enigma import gFont
 from enigma import eTimer
 from Components.Pixmap import Pixmap
-from Components.MenuList import MenuList
 from .. import Utils
 
 THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
 
 
 def getproxylinks(plugin_id):
-    done = True
     links = []
     try:
         f = open("/etc/XTkodi/proxy_links", "r")
@@ -36,7 +32,7 @@ def getproxylinks(plugin_id):
             proxy_link = item.split("$")[2].strip()
             if plugin == plugin_id:
                 if not proxy_link.endswith("/"):
-                    proxy_link = proxy_link+"/"
+                    proxy_link = proxy_link + "/"
                 if not proxy_link.startswith("http://"):
                     proxy_link = "http://" + proxy_link
                 links.append((proxy_link, proxy_name))
@@ -165,21 +161,18 @@ class Addonsett2Screen(Screen):
         self["menu"].onSelectionChanged.append(self.selection_changed)
         if self.type == 'text' or self.type == 'number':
             self.timer = eTimer()
-            # self.timer.callback.append(self.okClicked)
-            # self.timer.start(50, 1)
             try:
                 self.timer_conn = self.timer.timeout.connect(self.okClicked)
             except:
                 self.timer.callback.append(self.okClicked)
             self.timer.start(50, True)
-        
+
         else:
             self.onShown.append(self.sel)
 
     def sel(self):
         pic1 = THISPLUG + "/skin/images/default.png"
         self["pixmap"].instance.setPixmapFromFile(pic1)
-        # list.append((id,default,type,label,values,index))
         vals = self.list[4]
         default = self.list[1]
         if self.type == 'bool':

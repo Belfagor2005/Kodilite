@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-# from boxbranding import getMachineBrand
 from Components.AVSwitch import AVSwitch
 from Components.ActionMap import ActionMap
 from Components.ConfigList import ConfigListScreen
@@ -11,7 +10,7 @@ from Components.Label import Label
 from Components.Pixmap import Pixmap, MovingPixmap
 from Components.Sources.List import List
 from Components.Sources.StaticText import StaticText
-from Components.config import ConfigSelection, ConfigYesNo 
+from Components.config import ConfigSelection, ConfigYesNo
 from Components.config import ConfigSubsection, ConfigInteger
 from Components.config import config, ConfigText
 from Components.config import getConfigListEntry
@@ -32,7 +31,7 @@ except:
     from Tools.Directories import resolveFilename, pathExists, SCOPE_MEDIA
 
 if DM:
-    from enigma import eRect  #, gPixmapPtr
+    from enigma import eRect
 else:
     pass
 
@@ -60,18 +59,13 @@ def setPixmap(dest, ptr, scaleSize, aspectRatio):
         pic_scale_width = pic_scale_size.width()
         pic_scale_height = pic_scale_size.height()
 
-        # print "pic scale size %dx%d" %(pic_scale_width, pic_scale_height)
-        # print "dest area size %dx%d" %(dest_width, dest_height)
-        if pic_scale_width == dest_width:  # v center
+        if pic_scale_width == dest_width:
             dest_rect = eRect(0, (dest_height - pic_scale_height) / 2, pic_scale_width, pic_scale_height)
-        else:  # h center
+        else:
             dest_rect = eRect((dest_width - pic_scale_width) / 2, 0, pic_scale_width, pic_scale_height)
-
-        # print "dest rect", (dest_rect.left(), dest_rect.top(), dest_rect.width(), dest_rect.height())
         dest.instance.setScale(1)
         dest.instance.setScaleDest(dest_rect)
     else:
-        # print "no scale!"
         dest.instance.setScale(0)
     dest.instance.setPixmap(ptr)
 
@@ -166,7 +160,7 @@ class picshow(Screen):
         currDir = picDir + "/"
         print("In ui.py currDir 3 = ", currDir)
         self["path"] = Label(currDir)
-        self.filelist = FileList(currDir, matchingPattern="(?i)^.*\.(jpeg|jpg|jpe|png|bmp|gif)")
+        self.filelist = FileList(currDir, matchingPattern=r"(?i)^.*\.(jpeg|jpg|jpe|png|bmp|gif)")
         self["filelist"] = self.filelist
         self["filelist"].onSelectionChanged.append(self.selectionChanged)
         self.ThumbTimer = eTimer()
@@ -192,15 +186,6 @@ class picshow(Screen):
 
     def showPic(self, picInfo=""):
         ptr = self.picload.getData()
-        """
-        if ptr is not None:
-            if DM:
-                setPixmap(self["thn"], ptr, self._scaleSize, self._aspectRatio)
-                self["thn"].show()
-            else:
-                self["thn"].instance.setPixmap(ptr.__deref__())
-                self["thn"].show()
-        """
         if ptr is not None:
             self["thn"].instance.setPixmap(ptr.__deref__())
             self["thn"].show()
@@ -239,13 +224,6 @@ class picshow(Screen):
     def KeyMenu(self):
         self.session.openWithCallback(self.setConf, Pic_Setup)
 
-    """
-    def KeyOk(self):
-        if self.filelist.canDescent():
-            self.filelist.descent()
-        else:
-            self.session.openWithCallback(self.callbackView, Pic_Full_View, self.filelist.getFileList(), self.filelist.getSelectionIndex(), self.filelist.getCurrentDirectory())
-    """
     def KeyOk(self):
         print("In ui.py self.filelist.getFileList() = ", self.filelist.getFileList())
         idx = self.filelist.getSelectionIndex()
@@ -263,18 +241,10 @@ class picshow(Screen):
             if name2 in self.names[i]:
                 idx2 = i
                 break
-            i = i+1
+            i += 1
         print("In ui.py idx2 = ", idx2)
         url = self.urls[idx2]
 
-        """
-        idx1 = idx
-        print("In ui.py idx1 = ", idx1)
-        name = self.names[idx1]
-#                print("In ui.py name = ", name)
-        url = self.urls[idx1]
-        print("In ui.py url = ", url)
-        """
         if "adult" in self.sname.lower():
             tname = self.sname.replace("(Adult)", "")
             path = THISPLUG + "/plugins/Adult/" + tname + "/default.py"
@@ -327,12 +297,10 @@ class Pic_Setup(Screen, ConfigListScreen):
         self.session = session
         ConfigListScreen.__init__(self, [], session=session, on_change=self.changedEntry)
         self["actions"] = ActionMap(["SetupActions", "MenuActions"],
-                                    {
-                                            "cancel": self.keyCancel,
-                                            "save": self.keySave,
-                                            "ok": self.keySave,
-                                            "menu": self.closeRecursive,
-                                    }, -2)
+                                    {"cancel": self.keyCancel,
+                                     "save": self.keySave,
+                                     "ok": self.keySave,
+                                     "menu": self.closeRecursive}, -2)
         self["key_red"] = StaticText(_("Cancel"))
         self["key_green"] = StaticText(_("OK"))
         self["HelpWindow"] = Pixmap()
@@ -346,17 +314,15 @@ class Pic_Setup(Screen, ConfigListScreen):
         self.setTitle(self.setup_title)
 
     def createSetup(self):
-        setup_list = [
-                    getConfigListEntry(_("Slide show interval (sec.)"), config.pic.slidetime),
-                    getConfigListEntry(_("Scaling mode"), config.pic.resize),
-                    getConfigListEntry(_("Cache thumbnails"), config.pic.cache),
-                    getConfigListEntry(_("Show info line"), config.pic.infoline),
-                    getConfigListEntry(_("Frame size in full view"), config.pic.framesize),
-                    getConfigListEntry(_("Slide picture in loop"), config.pic.loop),
-                    getConfigListEntry(_("Background color"), config.pic.bgcolor),
-                    getConfigListEntry(_("Text color"), config.pic.textcolor),
-                    getConfigListEntry(_("Fulview resulution"), config.usage.pic_resolution),
-                    ]
+        setup_list = [getConfigListEntry(_("Slide show interval (sec.)"), config.pic.slidetime),
+                      getConfigListEntry(_("Scaling mode"), config.pic.resize),
+                      getConfigListEntry(_("Cache thumbnails"), config.pic.cache),
+                      getConfigListEntry(_("Show info line"), config.pic.infoline),
+                      getConfigListEntry(_("Frame size in full view"), config.pic.framesize),
+                      getConfigListEntry(_("Slide picture in loop"), config.pic.loop),
+                      getConfigListEntry(_("Background color"), config.pic.bgcolor),
+                      getConfigListEntry(_("Text color"), config.pic.textcolor),
+                      getConfigListEntry(_("Fulview resulution"), config.usage.pic_resolution)]
         self["config"].list = setup_list
         self["config"].l.setList(setup_list)
 
@@ -369,7 +335,6 @@ class Pic_Setup(Screen, ConfigListScreen):
     def keyCancel(self):
         self.close()
 
-    # for summary:
     def changedEntry(self):
         for x in self.onChangedEntry:
             x()
@@ -388,28 +353,24 @@ class Pic_Setup(Screen, ConfigListScreen):
 class Pic_Exif(Screen):
     skin = """
             <screen name="Pic_Exif" position="center,center" size="560,360" title="Info" >
-                    <ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphatest="on" />
-                    <widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#9f1313" transparent="1" />
-                    <widget source="menu" render="Listbox" position="5,50" size="550,310" scrollbarMode="showOnDemand" selectionDisabled="1" >
-                            <convert type="TemplatedMultiContent">
-                            {
-                                    "template": [  MultiContentEntryText(pos = (5, 5), size = (250, 30), flags = RT_HALIGN_LEFT, text = 0), MultiContentEntryText(pos = (260, 5), size = (290, 30), flags = RT_HALIGN_LEFT, text = 1)],
-                                    "fonts": [gFont("Regular", 20)],
-                                    "itemHeight": 30
-                            }
-                            </convert>
-                    </widget>
+                <ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphatest="on" />
+                <widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#9f1313" transparent="1" />
+                <widget source="menu" render="Listbox" position="5,50" size="550,310" scrollbarMode="showOnDemand" selectionDisabled="1" >
+                    <convert type="TemplatedMultiContent">
+                    {
+                    "template": [  MultiContentEntryText(pos = (5, 5), size = (250, 30), flags = RT_HALIGN_LEFT, text = 0), MultiContentEntryText(pos = (260, 5), size = (290, 30), flags = RT_HALIGN_LEFT, text = 1)],
+                    "fonts": [gFont("Regular", 20)],
+                    "itemHeight": 30
+                    }
+                    </convert>
+                </widget>
             </screen>"""
 
     def __init__(self, session, exiflist):
         Screen.__init__(self, session)
         self["actions"] = ActionMap(["SetupActions", "ColorActions"],
-                                    {
-                                        "cancel": self.close
-                                    }, -1)
-
+                                    {"cancel": self.close}, -1)
         self["key_red"] = StaticText(_("Close"))
-
         exifdesc = [_("filename") + ':', "EXIF-Version:", "Make:", "Camera:", "Date/Time:", "Width / Height:", "Flash used:", "Orientation:", "User Comments:", "Metering Mode:", "Exposure Program:", "Light Source:", "CompressedBitsPerPixel:", "ISO Speed Rating:", "X-Resolution:", "Y-Resolution:", "Resolution Unit:", "Brightness:", "Exposure Time:", "Exposure Bias:", "Distance:", "CCD-Width:", "ApertureFNumber:"]
         list = []
 
@@ -487,29 +448,27 @@ class Pic_ThumbDM(Screen):
             skincontent += '<widget source="label%s" render="Label" position="%s,%s" size="%s,%s" font="%s;%s" valign="top" halign="center" zPosition="2" transparent="1" foregroundColor="%s"/>' % (x, absX, absY + self._thumbY - self._descSize, self._thumbX, self._descSize, self._labelFontFace, self._labelFontSize, self.textcolor)
             skincontent += '<widget name="thumb%s" position="%s,%s" size="%s,%s" zPosition="2" transparent="1" />' % (x, absX, absY, self._thumbX, self._thumbY - self._descSize - self._margin)
 
-        # Screen, backgroundlabel and MovingPixmap
         self.doubleMargin = self._margin * 2
         self.skin = """<screen position="0,0" size="{0},{1}" flags="wfNoBorder" >
-                <eLabel position="0,0" zPosition="0" size="{0},{1}" backgroundColor="{2}" /> \
-                <widget name="frame" position="35,30" size="{3},{4}" pixmap="pic_frame.png" zPosition="1" alphatest="on" />{5}</screen>""".format(size_w, size_h, self.color, self._thumbX + self.doubleMargin, self._thumbY + self.doubleMargin, skincontent)
+                        <eLabel position="0,0" zPosition="0" size="{0},{1}" backgroundColor="{2}" /> \
+                        <widget name="frame" position="35,30" size="{3},{4}" pixmap="pic_frame.png" zPosition="1" alphatest="on" />{5}
+                        </screen>""".format(size_w, size_h, self.color, self._thumbX + self.doubleMargin, self._thumbY + self.doubleMargin, skincontent)
 
         Screen.__init__(self, session)
 
         self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "MovieSelectionActions"],
-                                    {
-                                            "cancel": self.Exit,
-                                            "ok": self.KeyOk,
-                                            "left": self.key_left,
-                                            "right": self.key_right,
-                                            "up": self.key_up,
-                                            "down": self.key_down,
-                                            "showEventInfo": self.StartExif,
-                                    }, -1)
+                                    {"cancel": self.Exit,
+                                     "ok": self.KeyOk,
+                                     "left": self.key_left,
+                                     "right": self.key_right,
+                                     "up": self.key_up,
+                                     "down": self.key_down,
+                                     "showEventInfo": self.StartExif}, -1)
 
         self["frame"] = MovingPixmap()
         for x in range(self.thumbsC):
-            self["label"+str(x)] = StaticText()
-            self["thumb"+str(x)] = Pixmap()
+            self["label" + str(x)] = StaticText()
+            self["thumb" + str(x)] = Pixmap()
 
         self.Thumbnaillist = []
         self.filelist = []
@@ -531,7 +490,7 @@ class Pic_ThumbDM(Screen):
             else:
                 self.dirlistcount += 1
 
-        self.maxentry = len(self.filelist)-1
+        self.maxentry = len(self.filelist) - 1
         self.index = lastindex - self.dirlistcount
         if self.index < 0:
             self.index = 0
@@ -563,14 +522,12 @@ class Pic_ThumbDM(Screen):
         self.Thumbnaillist = []
         # clear Labels and Thumbnail
         for x in range(self.thumbsC):
-            self["label"+str(x)].setText("")
-            self["thumb"+str(x)].hide()
-        # paint Labels and fill Thumbnail-List
+            self["label" + str(x)].setText("")
+            self["thumb" + str(x)].hide()
         for x in self.filelist:
             if x[T_PAGE] == self.currPage:
-                self["label"+str(x[T_FRAME_POS])].setText("(" + str(x[T_INDEX]+1) + ") " + x[T_NAME])
+                self["label" + str(x[T_FRAME_POS])].setText("(" + str(x[T_INDEX] + 1) + ") " + x[T_NAME])
                 self.Thumbnaillist.append([0, x[T_FRAME_POS], x[T_FULL]])
-        # paint Thumbnail start
         self.showPic()
 
     def showPic(self, picInfo=""):
@@ -639,17 +596,10 @@ class Pic_ThumbDM(Screen):
             if name2 in self.names[i]:
                 idx2 = i
                 break
-            i = i + 1
+            i += 1
         print("In ui.py idx2 = ", idx2)
         url = self.urls[idx2]
-        """
-        idx1 = idx
-        print("In ui.py idx1 = ", idx1)
-        name = self.names[idx1]
-#                print("In ui.py name = ", name)
-        url = self.urls[idx1]
-        print("In ui.py url = ", url)
-        """
+
         if "adult" in self.sname.lower():
             tname = self.sname.replace("(Adult)", "")
             path = THISPLUG + "/plugins/Adult/" + tname + "/default.py"
@@ -729,7 +679,7 @@ class Pic_Thumb(Screen):
             absY = self.spaceY + (posY * (self.spaceY + self.picY))
             self.positionlist.append((absX, absY))
             skincontent += "<widget source=\"label" + str(x) + "\" render=\"Label\" position=\"" + str(absX + 5) + "," + str(absY + self.picY - textsize) + "\" size=\"" + str(self.picX - 10) + "," + str(textsize) \
-                        + "\" font=\"Regular;" + str(thumtxt) + "\" zPosition=\"2\" transparent=\"1\" noWrap=\"1\" foregroundColor=\"" + self.textcolor + "\" />"
+                + "\" font=\"Regular;" + str(thumtxt) + "\" zPosition=\"2\" transparent=\"1\" noWrap=\"1\" foregroundColor=\"" + self.textcolor + "\" />"
             skincontent += "<widget name=\"thumb" + str(x) + "\" position=\"" + str(absX + 5) + "," + str(absY + 5) + "\" size=\"" + str(self.picX - 10) + "," + str(self.picY - (textsize * 2)) + "\" zPosition=\"2\" transparent=\"1\" alphatest=\"on\" />"
         # Screen, backgroundlabel and MovingPixmap
         if pic_frame:
@@ -744,15 +694,13 @@ class Pic_Thumb(Screen):
 
         Screen.__init__(self, session)
         self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "MovieSelectionActions"],
-                                    {
-                                        "cancel": self.Exit,
-                                        "ok": self.KeyOk,
-                                        "left": self.key_left,
-                                        "right": self.key_right,
-                                        "up": self.key_up,
-                                        "down": self.key_down,
-                                        "showEventInfo": self.StartExif,
-                                    }, -1)
+                                    {"cancel": self.Exit,
+                                     "ok": self.KeyOk,
+                                     "left": self.key_left,
+                                     "right": self.key_right,
+                                     "up": self.key_up,
+                                     "down": self.key_down,
+                                     "showEventInfo": self.StartExif}, -1)
         self["frame"] = MovingPixmap()
         for x in list(range(self.thumbsC)):
             self["label" + str(x)] = StaticText()
@@ -819,16 +767,13 @@ class Pic_Thumb(Screen):
 
     def newPage(self):
         self.Thumbnaillist = []
-        # clear Labels and Thumbnail
         for x in list(range(self.thumbsC)):
             self["label" + str(x)].setText("")
             self["thumb" + str(x)].hide()
-        # paint Labels and fill Thumbnail-List
         for x in self.filelist:
             if x[T_PAGE] == self.currPage:
                 self["label" + str(x[T_FRAME_POS])].setText("(" + str(x[T_INDEX] + 1) + ") " + x[T_NAME])
                 self.Thumbnaillist.append([0, x[T_FRAME_POS], x[T_FULL]])
-        # paint Thumbnail start
         self.showPic()
 
     def showPic(self, picInfo=""):
@@ -897,18 +842,9 @@ class Pic_Thumb(Screen):
             if name2 in self.names[i]:
                 idx2 = i
                 break
-            i = i+1
+            i += 1
         print("In ui.py idx2 = ", idx2)
         url = self.urls[idx2]
-
-        """
-        idx1 = idx
-        print("In ui.py idx1 = ", idx1)
-        name = self.names[idx1]
-#                print("In ui.py name = ", name)
-        url = self.urls[idx1]
-        print("In ui.py url = ", url)
-        """
         if "adult" in self.sname.lower():
             tname = self.sname.replace("(Adult)", "")
             path = THISPLUG + "/plugins/Adult/" + tname + "/default.py"
@@ -965,16 +901,14 @@ class Pic_Full_View(Screen):
         Screen.__init__(self, session)
 
         self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "MovieSelectionActions"],
-                                    {
-                                        "cancel": self.Exit,
-                                        "green": self.PlayPause,
-                                        "yellow": self.PlayPause,
-                                        "blue": self.nextPic,
-                                        "red": self.prevPic,
-                                        "left": self.prevPic,
-                                        "right": self.nextPic,
-                                        "showEventInfo": self.StartExif,
-                                    }, -1)
+                                    {"cancel": self.Exit,
+                                     "green": self.PlayPause,
+                                     "yellow": self.PlayPause,
+                                     "blue": self.nextPic,
+                                     "red": self.prevPic,
+                                     "left": self.prevPic,
+                                     "right": self.nextPic,
+                                     "showEventInfo": self.StartExif}, -1)
         self["point"] = Pixmap()
         self["pic"] = Pixmap()
         self["play_icon"] = Pixmap()

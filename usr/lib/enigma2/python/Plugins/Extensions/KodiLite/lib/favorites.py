@@ -27,7 +27,7 @@ def addfavorite(addon_id, media_title, media_url):
             for addon in root.getiterator('addon'):
                 id = addon.get('id')
                 # print id
-                if id == ddon_id:  # addon exist,add media entry
+                if id == addon_id:  # addon exist,add media entry
                     media = SubElement(addon, "media")
                     media.set("title", media_title)
                     media.text = media_url

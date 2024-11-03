@@ -20,36 +20,23 @@ import xbmcplugin
 import xbmcgui
 import xbmc
 import xbmcvfs
-# import urllib
-# import urlparse
 import sys
 import os
 import re
 import time
 import strings
 import CustomProgressDialog
-
+from six import text_type, string_types
 
 PY3 = sys.version_info[0] == 3
 if PY3:
-    import http.client
-    from urllib.parse import quote, unquote_plus, unquote, urlencode
-    from urllib.parse import parse_qs, parse_qsl
-    from urllib.request import urlopen, Request
-    from urllib.error import URLError, HTTPError
+    from urllib.parse import urlencode
     from urllib.parse import urlparse
-    from urllib.parse import urlencode, quote
-    from urllib.request import urlretrieve
 
 else:
-    import httplib
-    from urllib import quote, unquote_plus, unquote, urlencode
-    from urlparse import parse_qs, parse_qsl
-    from urllib2 import urlopen, Request
-    from urllib2 import URLError, HTTPError
+    # import httplib
+    from urllib import urlencode
     from urlparse import urlparse
-    from urllib import urlencode, quote
-    from urllib import urlretrieve
 
 
 addon = xbmcaddon.Addon('script.module.urlresolver')
@@ -72,7 +59,7 @@ def translate_path(path):
 
 
 def set_setting(id, value):
-    if not isinstance(value, basestring):
+    if not isinstance(value, string_types):
         value = str(value)
     addon.setSetting(id, value)
 
@@ -150,7 +137,7 @@ def get_plugin_url(queries):
         query = urlencode(queries)
     except UnicodeEncodeError:
         for k in queries:
-            if isinstance(queries[k], unicode):
+            if isinstance(queries[k], text_type):
                 queries[k] = queries[k].encode('utf-8')
         query = urlencode(queries)
 

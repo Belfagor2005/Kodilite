@@ -20,7 +20,7 @@ PLUGIN_PATH = THISPLUG
 
 def XBMCAddonsScreen1_channels(entry):
     return [entry,
-            (eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, 0, 1, 35, 35, loadPNG(PLUGIN_PATH+'/skin/images/movie.png')),
+            (eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, 0, 1, 35, 35, loadPNG(PLUGIN_PATH + '/skin/images/movie.png')),
             (eListboxPythonMultiContent.TYPE_TEXT, 45, 10, 860, 37, 0, RT_HALIGN_LEFT, str(entry[0].strip()))
             ]
 
@@ -50,22 +50,18 @@ def get_filedate(file):
         return mdate
     except:
         return ""
-        # print "created: %s" % time.ctime(os.path.getctime(file))
 
 
 def freespace():
     downloadlocation = getDownloadPath()
     try:
         diskSpace = os.statvfs(downloadlocation)
-        # tspace=os.stat('/')
         capacity = float(diskSpace.f_bsize * diskSpace.f_blocks)
         available = float(diskSpace.f_bsize * diskSpace.f_bavail)
-        # used = diskSpace.f_bsize * (diskSpace.f_blocks -diskSpace.f_bavail)
-        fspace = round(float((available) / (1024.0*1024.0)), 2)
+        fspace = round(float((available) / (1024.0 * 1024.0)), 2)
         tspace = round(float((capacity) / (1024.0 * 1024.0)), 1)
         # self.freespace=nspace
         spacestr = 'Free space(' + str(fspace) + 'MB) Total space(' + str(tspace) + 'MB)'
-        # self["info1"].setText('Free space available:' +str(fspace)+'MB Total space:' + str(tspace)+' MB')
         return spacestr
     except:
         return 0
@@ -84,7 +80,7 @@ class XBMCAddonsMediaExplorer(Screen):
         self['key_yellow'] = Button(_("Rename "))
         self['key_blue'] = Button(_("Delete"))
         downloadlocation = str(config.plugins.kodiplug.cachefold.value)
-        self["info"] = Label(_("Download Path: ")+downloadlocation)
+        self["info"] = Label(_("Download Path: ") + downloadlocation)
         self.streamMenuList = MenuList([], enableWrapAround=True, content=eListboxPythonMultiContent)
         self.streamMenuList.l.setFont(0, gFont('Regular', 20))
         self.streamMenuList.l.setFont(1, gFont('Regular', 18))
@@ -92,14 +88,11 @@ class XBMCAddonsMediaExplorer(Screen):
         self.streamMenuList.l.setFont(3, gFont('Regular', 10))
         self.streamMenuList.l.setItemHeight(37)
         self["list"] = self.streamMenuList
-        # # ##########
         self.movie_list = []
         self.searchstr = None
         self.searchagain = "titanic"
         self.filmliste = []
-        # self.mlist.setList(map(channelEntryIPTVplaylist, self.channel_list))
         self.page = 1
-        # self.glist.onSelectionChanged.append(self.groupselectionchanged)
         self.streamMenuList.onSelectionChanged.append(self.moviesselectionchanged)
         self.onShown.append(self.getlocalmedia)
         self["actions"] = ActionMap(["ColorActions",
@@ -119,16 +112,11 @@ class XBMCAddonsMediaExplorer(Screen):
                                                            "left": self["list"].pageUp,
                                                            "right": self["list"].pageDown}, -1)
         self.pages = []
-        cat_movies = []
         self.movies = []
         self.pagemovies = []
         self.desc = ""
         self.keyLocked = False
         self.download = False
-        # self.onLayoutFinish.append(self.loadPage)
-        # self.timer = eTimer()
-        # self.timer.callback.append(self.getlocalmedia)
-        # self.timer.start(100, 1)
 
     def renamefile(self):
         from Screens.VirtualKeyBoard import VirtualKeyBoard
@@ -160,23 +148,23 @@ class XBMCAddonsMediaExplorer(Screen):
     def getlocalmedia(self, result=None):
         folder = getDownloadPath()
         if freespace() == 0:
-            self["info"].setText(folder+(_(" Free space: zero or invalid location")))
+            self["info"].setText(folder + (_(" Free space: zero or invalid location")))
             return
         else:
             fspace = str(freespace())
-            self["info"].setText(folder+(_(" Free space: ")) + fspace + "MB")
+            self["info"].setText(folder + (_(" Free space: ")) + fspace + "MB")
 
         if folder.endswith("/"):
             self.folder = folder
         else:
-            self.folder = folder+"/"
+            self.folder = folder + "/"
         try:
             self.mediafiles = []
             for x in os.listdir(self.folder):
                 fullpath = self.folder + x
                 if os.path.isfile(fullpath):
                     msize = os.path.getsize(fullpath)
-                    localimagesize = str(round(float((msize) / (1024.0*1024.0)), 2)) + 'MB'
+                    localimagesize = str(round(float((msize) / (1024.0 * 1024.0)), 2)) + 'MB'
                     x = x.strip()
                     if x.endswith(".mpg") or x.endswith(".ts") or x.endswith(".mp3") or x.endswith(".mp4") or x.endswith(".avi") or x.endswith(".flv") or x.endswith(".wmv"):
                         try:
@@ -187,11 +175,9 @@ class XBMCAddonsMediaExplorer(Screen):
                 else:
                     pass
             self.streamMenuList.setList(map(XBMCAddonsScreen1_channels, self.mediafiles))
-            # self["infoload"].setText(" ")
         except:
             self.mediafiles.append(((_('Invalid download path')), ""))
             self.streamMenuList.setList(map(XBMCAddonsScreen1_channels, self.mediafiles))
-            # self["infoload"].setText(" ")
 
     def changepath(self):
         return
@@ -203,10 +189,7 @@ class XBMCAddonsMediaExplorer(Screen):
 
     def deletefile(self):
         try:
-            downloadlocation = getDownloadPath()
             self.filename = self["list"].getCurrent()[0][2]
-            print "In deletefile self.filename =", self.filename
-            # self.filename=downloadlocation+self.fname
             self.session.openWithCallback(self.removefile, MessageBox, _(self.filename + " will be removed,are you sure?"), MessageBox.TYPE_YESNO)
             return
         except:
@@ -214,7 +197,6 @@ class XBMCAddonsMediaExplorer(Screen):
 
     def removefile(self, result):
         if result:
-            print "324", self.filename
             try:
                 os.remove(self.filename)
                 self.getlocalmedia()
@@ -223,7 +205,6 @@ class XBMCAddonsMediaExplorer(Screen):
                 self["info"].setText(_("sorry unable to delete file! "))
 
     def keyOK(self):
-        downloadlocation = getDownloadPath()
         try:
             self.filename = self["list"].getCurrent()[0][2]
         except:
@@ -238,7 +219,6 @@ class XBMCAddonsMediaExplorer(Screen):
     def refreshlists(self, result=False):
         if result is True:
             self.close
-            # self.showpage()
 
     def moviesselectionchanged(self):
         folder = getDownloadPath()

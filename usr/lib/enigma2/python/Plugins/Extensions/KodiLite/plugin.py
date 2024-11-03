@@ -2,6 +2,47 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+
+from . import _
+from . import Utils
+from . import html_conv
+from .lib.xUtils import Getvid, Getvid2, Playoptions
+from .lib.SkinLoader import loadPluginSkin
+
+from Components.ActionMap import NumberActionMap
+from Components.Button import Button
+from Components.Label import Label
+from Components.Pixmap import Pixmap, MovingPixmap
+from Components.Sources.List import List
+from Components.Sources.StaticText import StaticText
+from Components.config import ConfigSubsection, ConfigSelection
+from Components.config import ConfigText, ConfigDirectory
+from Components.config import NoSave, ConfigYesNo
+from Components.config import config
+from Components.eConsoleAppContainer import eConsoleAppContainer
+from PIL import Image, ImageChops
+from Plugins.Plugin import PluginDescriptor
+from Screens.ChoiceBox import ChoiceBox
+from Screens.Console import Console
+from Screens.InputBox import PinInput
+from Screens.MessageBox import MessageBox
+from Screens.Screen import Screen
+from Screens.VirtualKeyBoard import VirtualKeyBoard
+from Tools.Directories import SCOPE_PLUGINS
+from Tools.Directories import fileExists, copyfile
+from Tools.Directories import resolveFilename
+from enigma import eTimer
+from keymapparser import readKeymap
+from twisted.web.client import downloadPage
+from twisted.web.client import getPage
+import requests
+from requests import get, exceptions
+from requests.exceptions import HTTPError
+from twisted.internet.reactor import callInThread
+import os
+import re
+import sys
+import xml.etree.cElementTree
 """
     This file is part of Plugin KodiLite pcd@xtrend-alliance.com
     Copyright (C) 2014
@@ -28,64 +69,9 @@ from __future__ import print_function
 20230205 v9.1r3 recoded getpics - spinner removed - minor fix by Lululla
 '''
 
-from . import _
-from Components.AVSwitch import AVSwitch
-from Components.ActionMap import NumberActionMap
-from Components.Button import Button
-from Components.ConfigList import ConfigListScreen
-from Components.Label import Label
-from Components.MenuList import MenuList
-from Components.Pixmap import Pixmap, MovingPixmap
-from Components.ServiceEventTracker import ServiceEventTracker, InfoBarBase
-from Components.Sources.List import List
-from Components.Sources.StaticText import StaticText
-from Components.config import ConfigSubsection, ConfigSelection
-from Components.config import ConfigText, ConfigDirectory
-from Components.config import NoSave, ConfigYesNo
-from Components.config import config
-from Components.config import getConfigListEntry
-from PIL import Image, ImageChops
-from Plugins.Plugin import PluginDescriptor
-from Screens.ChoiceBox import ChoiceBox
-from Screens.Console import Console
-from Screens.InfoBar import MoviePlayer
-from Screens.InfoBarGenerics import InfoBarMenu, InfoBarSeek, InfoBarAudioSelection, \
-    InfoBarSubtitleSupport, InfoBarSummarySupport, InfoBarServiceErrorPopupSupport, InfoBarNotifications
-from Screens.InputBox import PinInput
-from Screens.MessageBox import MessageBox
-from Screens.Screen import Screen
-from Screens.Standby import TryQuitMainloop
-from Screens.VirtualKeyBoard import VirtualKeyBoard
-from Tools.Directories import SCOPE_PLUGINS
-from Tools.Directories import fileExists, copyfile
-from Tools.Directories import resolveFilename
-from Tools.LoadPixmap import LoadPixmap
-from enigma import eConsoleAppContainer, gPixmapPtr
-from enigma import eListboxPythonMultiContent
-from enigma import eServiceReference
-from enigma import eTimer
-from enigma import gFont
-from enigma import iPlayableService
-from keymapparser import readKeymap
-from twisted.web.client import downloadPage
-from twisted.web.client import getPage
-import requests
-from requests import get, exceptions
-from requests.exceptions import HTTPError
-from twisted.internet.reactor import callInThread
-import os
-import re
-import sys
-import xml.etree.cElementTree
-
 global subsx
 subsx = False
 
-
-from . import Utils
-from . import html_conv
-from .lib.xUtils import Getvid, Getvid2, Playoptions
-from .lib.SkinLoader import loadPluginSkin
 
 PY3 = sys.version_info.major >= 3
 
@@ -236,7 +222,7 @@ def threadGetPage(url=None, file=None, key=None, success=None, fail=None, *args,
             success(response.content, file)
     except HTTPError as httperror:
         print('[kodilite][threadGetPage] Http error: ', httperror)
-        fail(error)  # E0602 undefined name 'error'
+        # fail(error)  # E0602 undefined name 'error'
     except exceptions.RequestException as error:
         print(error)
 
@@ -246,7 +232,7 @@ def findmax(match=[]):
     B = []
     C = []
     D = []
-    E = []
+    # E = []
     imax = 0
     for item in match:
         item = item.replace("%7E", "~")
@@ -438,27 +424,16 @@ def getpics(names, pics, tmpfold, picfold):
                                 f1.write(p)
                         else:
                             try:
-                                # print("Going in urlopen url =", url)
-                                # p = Utils.gettUrl(url)
-                                # with open(tpicf, 'wb') as f1:
-                                    # f1.write(p)
                                 try:
                                     with open(tpicf, 'wb') as f:
                                         f.write(requests.get(url, stream=True, allow_redirects=True).content)
                                     print('=============11111111=================\n')
                                 except Exception as e:
                                     print("Error: Exception")
-                                    print('===========2222222222=================\n')
-                                    # if PY3:
-                                        # poster = poster.encode()
+                                    print('===========2222222222=================\n', e)
                                     callInThread(threadGetPage, url=poster, file=tpicf, success=downloadPic, fail=downloadError)
-                                '''
-                                print(str(e))
-                                open(tpicf, 'wb').write(requests.get(poster, stream=True, allow_redirects=True).content)
-                                '''
                             except Exception as e:
-                                print("Error: Exception 2")
-                                print(str(e))
+                                print("Error: Exception 2", e)
 
                 except:
                     cmd = "cp " + defpic + " " + tpicf
@@ -690,9 +665,8 @@ class Rundefault(Screen):
             self.close()
 
         else:
-            # pictures?###########
             n1 = url.find("default.py?", 0)
-            urla = url[(n1+11):]
+            urla = url[(n1 + 11):]
             print("In Rundefault urla =", urla)
             plugin_id = os.path.split(THISADDON)[1]
             if ("plugin.image" in plugin_id) or ("plugin.picture" in plugin_id) and ("url=" not in urla) and ("plugin://" not in urla):
@@ -746,7 +720,7 @@ class Rundefault(Screen):
             self.stoprun()
             return
         if rstr:
-            self.data1 = self.data1+rstr
+            self.data1 = self.data1 + rstr
             if self.progressCallBack is not None:
                 self.progress = self.progress + "..."
                 self.progressCallBack(self.progress)
@@ -766,7 +740,6 @@ class Rundefault(Screen):
         afile = open("/tmp/test.txt", "w")
         afile.write("going in default.py")
         afile.write(cmd)
-        fdef = 'default'  # NEWDEFPY[:-3]
         args = cmd.split(" ")
         arg1 = args[1]
         arg2 = args[2]
@@ -789,7 +762,7 @@ class Rundefault(Screen):
             print("Here in select writing result.txt text =", text)
             f.write(text)
             f.close()
-            myfile = file(r"/tmp/arg1.txt")
+            myfile = open(r"/tmp/arg1.txt")
             icount = 0
             for line in myfile.readlines():
                 sysarg = line
@@ -822,7 +795,7 @@ class Rundefault(Screen):
         self.updateTimer.start(self.timeint)
 
     def showback(self):
-        myfile = file(r"/tmp/arg1.txt")
+        myfile = open(r"/tmp/arg1.txt")
         icount = 0
         for line in myfile.readlines():
             sysarg = line
@@ -836,7 +809,6 @@ class Rundefault(Screen):
         os.system(cmd)
 
     def updateStatus(self):
-        ncount = cfg.wait.value
         self.timecount = self.timecount + 1
         print("In rundef updateStatus self.timecount =", self.timecount)
         self.dtext = self.p.read()
@@ -895,7 +867,7 @@ class Rundefault(Screen):
         afile = open("/tmp/test.txt", "w")
         afile.write("\nin action=")
         # datain = ""
-        parameters = []
+        # parameters = []
         print("In Rundefault action 3")
         self.data = []
         # dtext = self.p.read()
@@ -1124,7 +1096,7 @@ class Rundefault(Screen):
             n1 = urlFull.find("http", start)
             if n1 < 0:
                 break
-            n2 = urlFull.find("http", (n1+4))
+            n2 = urlFull.find("http", (n1 + 4))
             if n2 < 0:
                 n2 = len(urlFull)
             url1 = urlFull[n1:n2]
@@ -1155,7 +1127,7 @@ class XbmcPluginPics(Screen):
         _session = session
         self["title"] = Button(title + Version)
         self.curr_run = curr_run
-        self.nextrun = self.curr_run+1
+        self.nextrun = self.curr_run + 1
         self.pos = []
 
         if Utils.isFHD():
@@ -1192,7 +1164,7 @@ class XbmcPluginPics(Screen):
         self.curr_run = curr_run
         txt = str(SELECT[self.curr_run])
         print("In XbmcPluginScreen SELECT[self.curr_run] A=", SELECT[self.curr_run])
-        self.nextrun = self.curr_run+1
+        self.nextrun = self.curr_run + 1
         print("2028", txt)
         self.select = txt
         self.rundef = None
@@ -1203,7 +1175,6 @@ class XbmcPluginPics(Screen):
         self["menu"] = List(list)
         for x in list:
             print("x in list =", x)
-        ip = 0
         print("self.pics = ", self.pics)
         self["frame"] = MovingPixmap()
         i = 0
@@ -1307,20 +1278,20 @@ class XbmcPluginPics(Screen):
     def openTest(self):
         print("self.index, openTest self.ipage, self.npage =", self.index, self.ipage, self.npage)
         if self.ipage < self.npage:
-            self.maxentry = (10*self.ipage)-1
-            self.minentry = (self.ipage-1)*10
+            self.maxentry = (10 * self.ipage) - 1
+            self.minentry = (self.ipage - 1) * 10
             print("self.ipage , self.minentry, self.maxentry =", self.ipage, self.minentry, self.maxentry)
 
         elif self.ipage == self.npage:
             print("self.ipage , len(self.pics) =", self.ipage, len(self.pics))
             self.maxentry = len(self.pics) - 1
-            self.minentry = (self.ipage-1)*10
+            self.minentry = (self.ipage - 1) * 10
             print("self.ipage , self.minentry, self.maxentry B=", self.ipage, self.minentry, self.maxentry)
             i1 = 0
             blpic = dblank
             while i1 < 10:
-                self["label" + str(i1+1)].setText(" ")
-                self["pixmap" + str(i1+1)].instance.setPixmapFromFile(blpic)
+                self["label" + str(i1 + 1)].setText(" ")
+                self["pixmap" + str(i1 + 1)].instance.setPixmapFromFile(blpic)
                 i1 += 1
         print("len(self.pics), self.minentry, self.maxentry =", len(self.pics), self.minentry, self.maxentry)
         self.npics = len(self.pics)
@@ -1328,12 +1299,12 @@ class XbmcPluginPics(Screen):
         i1 = 0
         self.picnum = 0
         print("doing pixmap")
-        ln = self.maxentry - (self.minentry-1)
+        ln = self.maxentry - (self.minentry - 1)
         while i < ln:
             idx = self.minentry + i
             print("i, idx =", i, idx)
             print("self.names1[idx] B=", self.names1[idx])
-            self["label" + str(i+1)].setText(self.names1[idx])
+            self["label" + str(i + 1)].setText(self.names1[idx])
             print("idx, self.pics[idx]", idx, self.pics[idx])
             pic = self.pics[idx]
             print("pic =", pic)
@@ -1343,9 +1314,9 @@ class XbmcPluginPics(Screen):
                 print("pic path exists not")
             picd = defpic
             try:
-                self["pixmap" + str(i+1)].instance.setPixmapFromFile(pic)  # ok
+                self["pixmap" + str(i + 1)].instance.setPixmapFromFile(pic)  # ok
             except:
-                self["pixmap" + str(i+1)].instance.setPixmapFromFile(picd)
+                self["pixmap" + str(i + 1)].instance.setPixmapFromFile(picd)
             i += 1
         self.index = self.minentry
         print("self.minentry, self.index =", self.minentry, self.index)
@@ -1431,7 +1402,7 @@ class XbmcPluginPics(Screen):
             print("In XbmcPluginScreen search")
             ebuf = []
             ebuf.append((_("New"), ""))
-            f = file(r"/etc/history")
+            f = open(r"/etc/history")
             fileslist = []
             icount = 0
             for line in f.readlines():
@@ -1510,7 +1481,6 @@ class XbmcPluginPics(Screen):
         if search_txt:
             # print("In XbmcPluginScreen self.url 2=", self.url)
             # print("In XbmcPluginScreen search_txt 1=", search_txt)
-            n1 = self.url.find("?", 0)
             file = open("/tmp/xbmc_search.txt", 'w')
             file.write(search_txt)
             file.close()
@@ -1689,7 +1659,7 @@ class XbmcPluginScreen(Screen):
                     if n1 < 0:
                         continue
                     n2 = line.rfind(" ", 0, n1)
-                    pid = line[(n2+1):n1]
+                    pid = line[(n2 + 1):n1]
                     print("In Rundefault pid =", pid)
                     cmdnet = "kill " + str(pid)
                     self.container = eConsoleAppContainer()
@@ -1735,14 +1705,14 @@ class XbmcPluginScreen(Screen):
         if self.keylock:
             return
         if DEBUG == 1:
-            print("screen number"+str(self.curr_run) + "okClicked")
+            print("screen number" + str(self.curr_run) + "okClicked")
         itype = self["menu"].getSelectionIndex()
         url = self.urls1[itype]
         name = self.names1[itype]
         self.name = name
         global SELECT
         # SELECT.append(self.name)
-        print("screen number"+str(self.curr_run)+"okClicked SELECT[0]=", SELECT[0])
+        print("screen number" + str(self.curr_run) + "okClicked SELECT[0]=", SELECT[0])
         # SELECT[self.curr_run] = SELECT[self.curr_run-1] + " -> " + self.name
         SELECT.append(SELECT[self.curr_run] + " -> " + self.name)
         self.next_select = SELECT[self.curr_run]
@@ -1780,7 +1750,7 @@ class XbmcPluginScreen(Screen):
             if itype == 0:
                 self.cancel()
             elif itype == 1 and self.curr_run == 1:
-                if name == "Setup":  # ##to generate e2 e2sett.py
+                if name == "Setup":  # to generate e2 e2sett.py
                     d = THISPLUG + "/plugins/" + self.plug
                     settings_file = d + "/resources/settings.xml"
                     import os
@@ -1803,7 +1773,7 @@ class XbmcPluginScreen(Screen):
                     try:
                         if not os.path.exists("/etc/KodiLite"):
                             os.makedirs("/etc/KodiLite")
-                        copyfile(THISPLUG+"/lib/defaults/favorites.xml", favorites_xml)
+                        copyfile(THISPLUG + "/lib/defaults/favorites.xml", favorites_xml)
                     except:
                         return
                 try:
@@ -1850,7 +1820,6 @@ class XbmcPluginScreen(Screen):
         if search_txt:
             print("In XbmcPluginScreen self.url 2=", self.url)
             print("In XbmcPluginScreen search_txt 1=", search_txt)
-            n1 = self.url.find("?", 0)
             file = open("/tmp/xbmc_search.txt", 'w')
             file.write(search_txt)
             file.close()
@@ -1873,7 +1842,7 @@ class XbmcPluginScreen(Screen):
             rundef = Rundefault(self.session, self.name, self.url, 2, self.progressCallBack)
             rundef.start()
             if rundef.error:
-                self["info"].setText(_("Error:")+rundef.error)
+                self["info"].setText(_("Error:") + rundef.error)
 
 
 class Favorites(Screen):
@@ -1957,7 +1926,6 @@ class Start_mainmenu(Screen):
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
         global newstext
-        news = newstext
         self.cancel = False
         self.data1 = ''
         self.keylock = False
@@ -2005,10 +1973,10 @@ class Start_mainmenu(Screen):
         self.timecount = 0
         ncount = cfg.wait.value
         nc = int(ncount) * 1000
-        timeint = int(float(nc/120))
+        timeint = int(float(nc / 120))
         print("timeint =", timeint)
         self.timeint = 1000
-        self.nct = int(float(nc/self.timeint))
+        self.nct = int(float(nc / self.timeint))
         print("self.nct =", self.nct)
         self.pos = 0
         self.num = 0
@@ -2289,14 +2257,14 @@ class Start_mainmenu(Screen):
         n31 = txt.find("'", n2)
         if n31 > -1:
             if n31 < n3:
-                n4 = txt.find("'", (n31+2))
-                version = txt[(n31+1):n4]
+                n4 = txt.find("'", (n31 + 2))
+                version = txt[(n31 + 1):n4]
             else:
-                n4 = txt.find('"', (n3+2))
-                version = txt[(n3+1):n4]
+                n4 = txt.find('"', (n3 + 2))
+                version = txt[(n3 + 1):n4]
         else:
-            n4 = txt.find('"', (n3+2))
-            version = txt[(n3+1):n4]
+            n4 = txt.find('"', (n3 + 2))
+            version = txt[(n3 + 1):n4]
         print("In checkUpd version = ", version)
         f.close()
         try:
@@ -2707,8 +2675,8 @@ class Start_mainmenu(Screen):
         n1 = ftext.find("<extension", 0)
         n2 = ftext.find("library", n1)
         n3 = ftext.find('"', n2)
-        n4 = ftext.find('"', (n3+1))
-        fmod = ftext[(n3+1):n4]
+        n4 = ftext.find('"', (n3 + 1))
+        fmod = ftext[(n3 + 1):n4]
         print("Newmod =", fmod)
         return fmod
 
@@ -2723,7 +2691,7 @@ class Start_mainmenu(Screen):
         os.system("rm /tmp/type.txt")
         if DEBUG == 1:
             print("DEBUG =", DEBUG)
-        fdef = 'default'
+        # fdef = 'default'
         arg1 = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/default.py"
         arg2 = "1"
         arg3 = ""
@@ -2741,7 +2709,7 @@ class Start_mainmenu(Screen):
         default_file = THISPLUG + "/" + ADDONCAT + "/" + self.name + "/default.py"
         # if not os.path.exists(xpath_file):
         os.system("cp -f " + THISPLUG + "/lib/xpath.py " + xpath_file)
-        cmd = 'python ' + default_file + ' 1 ' + "'"+arg3 + "'"
+        cmd = 'python ' + default_file + ' 1 ' + "'" + arg3 + "'"
         print(cmd)
 
         if os.path.exists("/tmp/data.txt"):
@@ -2756,7 +2724,7 @@ class Start_mainmenu(Screen):
         self.updateTimer.start(self.timeint)
 
     def updateStatus(self):
-        ncount = cfg.wait.value
+        # ncount = cfg.wait.value
         # nct = int(ncount)/4
         self.timecount += 1
         print("In StartPlugin_mainmenu updateStatus self.timecount =", self.timecount)
@@ -2795,8 +2763,8 @@ class Start_mainmenu(Screen):
         self.vidinfo = []
         afile = open("/tmp/test.txt", "w")
         afile.write("\nin action=")
-        datain = " "
-        parameters = []
+        # datain = " "
+        # parameters = []
         self.data = []
         print("StartPlugin_mainmenu self.dtext =", self.dtext)
         data = self.dtext.splitlines()
@@ -2984,12 +2952,10 @@ class DelAdd1(Screen):
         self.type = type
         self["pixmap1"] = Pixmap()
         self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions"],
-                                          {
-                                            "ok": self.okClicked,
-                                            "back": self.close,
-                                            "red": self.close,
-                                            "green": self.okClicked,
-                                          }, -1)
+                                          {"ok": self.okClicked,
+                                           "back": self.close,
+                                           "red": self.close,
+                                           "green": self.okClicked}, -1)
         self["key_red"] = Button(_("Cancel"))
         self["key_green"] = Button(_("Select"))
         self.icount = 0
@@ -3298,7 +3264,6 @@ class Getaddons(Screen):
             except:
                 fpage = Utils.getUrl(ServerS1 + '/Newkodilite/adlist3.txt')
             print("In install fpage =", fpage)
-            icount = 0
             lines = fpage.split("\n")
             for line in lines:
                 print("In Getaddons openTest line =", line)
@@ -3411,7 +3376,7 @@ class GetaddonsA2(Screen):
         print("In GetaddonsA2 self.cat =", self.cat)
         # self.cat = self.cat.encode("UTF-8")
         n1 = fpage.find(self.cat)
-        n2 = fpage.find("#####", (n1+10))
+        n2 = fpage.find("#####", (n1 + 10))
         fpage2 = fpage[n1:n2]
         lines = fpage2.splitlines()
         print("In install lines =", lines)
@@ -3530,9 +3495,7 @@ class GetaddonsA2(Screen):
             f1 = open(xdest, "wb")
             f1.write(fpage)
             f1.close()
-            fplug = ""
             self.install()
-
         else:
             return
 
@@ -3592,9 +3555,6 @@ class GetaddonsA2(Screen):
         else:
             print("No fix to install")
             self.close()
-
-    def showError(self, error):
-        print("ERROR :", error)
 
     def installB(self, fplug):
         fdest = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite/plugins"
@@ -3850,12 +3810,12 @@ class Getadds4(Screen):
                 if "<info" in line:
                     n1 = line.find(">", 0)
                     n2 = line.find('<', n1)
-                    infourl = line[(n1+1):n2]
+                    infourl = line[(n1 + 1):n2]
                     print("In Repo infourl A=", infourl)
                 if "<datadir" in line:
                     n1 = line.find(">", 0)
                     n2 = line.find('<', n1)
-                    plugurl = line[(n1+1):n2]
+                    plugurl = line[(n1 + 1):n2]
                     print("In Repo plugurl =", plugurl)
                     if "false" in line:
                         zipcode = "false"
@@ -4496,7 +4456,7 @@ class Addons(Screen):
         f1 = open(file1, "r+")
         fpage = f1.read()
         n1 = fpage.find("Frodo")
-        n2 = fpage.find("#####", (n1+10))
+        n2 = fpage.find("#####", (n1 + 10))
         fpage2 = fpage[n1:n2]
         self.html = html
         self.names = []
@@ -4710,7 +4670,7 @@ class ShowPage2(Screen):
         self.skinName = "ShowPage"
         title = PlugDescription
         self["title"] = Button(title + Version)
-        self.ftext = newstext 
+        self.ftext = newstext
         self["menu"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
         self['infoc2'] = Label('%s' % Credits)
@@ -5574,7 +5534,7 @@ class classJobManagerViews():
         global _session
         _session = session
         try:
-            jobmanagerviews_keymap = THISPLUG+"/lib/jobs_keymap.xml"
+            jobmanagerviews_keymap = THISPLUG + "/lib/jobs_keymap.xml"
             self.session = session
             global globalActionMap
             readKeymap(jobmanagerviews_keymap)

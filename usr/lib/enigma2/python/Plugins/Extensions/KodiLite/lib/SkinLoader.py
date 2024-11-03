@@ -23,13 +23,12 @@
 
 
 from skin import loadSkin
-from Components.config import config
 from enigma import getDesktop
 import os
 from .. import Utils
 DESKHEIGHT = getDesktop(0).size().height()
 
-    
+
 def loadSkinReal(skinPath):
     if os.path.exists(skinPath):
         print("[SKLDR] Loading skin ", skinPath)

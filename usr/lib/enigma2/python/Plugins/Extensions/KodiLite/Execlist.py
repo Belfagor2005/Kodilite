@@ -12,4 +12,3 @@ def Execlist(session, index):
     elif "Tivu18" in index:
         from plugins.Tivu18E2.Tivu18 import Tivu18
         session.open(Tivu18)
-

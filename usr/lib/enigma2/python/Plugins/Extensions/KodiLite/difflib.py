@@ -1,12 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import heapq
 from collections import namedtuple as _namedtuple
 from functools import reduce
 import re
+import heapq
+
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
 
 Match = _namedtuple('Match', 'a b size')
+
 
 __all__ = ['get_close_matches',
            'ndiff',
@@ -305,7 +313,7 @@ class Differ():
             elif tag == 'equal':
                 g = self._dump(' ', a, alo, ahi)
             else:
-                raise ValueError, 'unknown tag %r' % (tag,)
+                raise 'unknown tag %r' % (tag,)
             for line in g:
                 yield line
 
@@ -370,7 +378,7 @@ class Differ():
                     atags += ' ' * la
                     btags += ' ' * lb
                 else:
-                    raise ValueError, 'unknown tag %r' % (tag,)
+                    raise 'unknown tag %r' % (tag,)
 
             for line in self._qformat(aelt, belt, atags, btags):
                 yield line
@@ -833,10 +841,11 @@ class HtmlDiff(object):
                                 tolist[i]))
 
         if fromdesc or todesc:
-            header_row = '<thead><tr>%s%s%s%s</tr></thead>' % ('<th class="diff_next"><br /></th>',
-                         '<th colspan="2" class="diff_header">%s</th>' % fromdesc,
-                         '<th class="diff_next"><br /></th>',
-                         '<th colspan="2" class="diff_header">%s</th>' % todesc)
+            header_row = '<thead><tr>%s%s%s%s</tr></thead>' % (
+                '<th class="diff_next"><br /></th>',
+                '<th colspan="2" class="diff_header">%s</th>' % fromdesc,
+                '<th class="diff_next"><br /></th>',
+                '<th colspan="2" class="diff_header">%s</th>' % todesc)
         else:
             header_row = ''
         table = self._table_template % dict(data_rows=''.join(s), header_row=header_row, prefix=self._prefix[1])
@@ -850,7 +859,7 @@ def restore(delta, which):
     try:
         tag = {1: '- ', 2: '+ '}[int(which)]
     except KeyError:
-        raise ValueError, 'unknown delta choice (must be 1 or 2): %r' % which
+        raise 'unknown delta choice (must be 1 or 2): %r' % which
     prefixes = ('  ', tag)
     for line in delta:
         if line[:2] in prefixes:

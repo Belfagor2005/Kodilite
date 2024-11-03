@@ -2,6 +2,40 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from ..plugin import subsx
+from .. import Utils
+
+from Components.AVSwitch import AVSwitch
+from Components.ActionMap import ActionMap
+from Components.Button import Button
+from Components.Label import Label
+from Components.MenuList import MenuList
+from Components.Pixmap import Pixmap
+from Components.ServiceEventTracker import InfoBarBase, ServiceEventTracker
+from Components.Sources.List import List
+from Components.Task import Task, Job, job_manager as JobManager
+from Components.config import config
+from Screens.ChoiceBox import ChoiceBox
+from Screens.InfoBarGenerics import InfoBarMenu, InfoBarSeek, InfoBarAudioSelection, \
+    InfoBarSubtitleSupport, InfoBarSummarySupport, InfoBarServiceErrorPopupSupport, InfoBarNotifications
+from Screens.MessageBox import MessageBox
+from Screens.Screen import Screen
+from Screens.TaskView import JobView
+from ServiceReference import ServiceReference
+from enigma import eServiceReference
+from enigma import eTimer
+from enigma import getDesktop
+from enigma import iPlayableService
+from skin import parseColor
+from twisted.web.client import downloadPage
+import os
+import re
+import sys
+from Plugins.Extensions.KodiLite.lib.TaskView2 import JobViewNew
+
+global subsx
+
+
 # 20221030 recoded Lululla
 # 20220111 utils.py bouquet make PY3
 # 20210914 utils.py showlist b removed
@@ -19,51 +53,6 @@ from __future__ import print_function
 #   Mainly Coded by pcd, July 2013                            #
 #                                                             #
 # #############################################################
-from Components.AVSwitch import AVSwitch
-from Components.ActionMap import ActionMap
-from Components.Button import Button
-from Components.Label import Label
-from Components.MenuList import MenuList
-from Components.MultiContent import MultiContentEntryText
-from Components.Pixmap import Pixmap
-from Components.ServiceEventTracker import InfoBarBase, ServiceEventTracker
-from Components.Sources.List import List
-from Components.Task import Task, Job, job_manager as JobManager
-from Components.config import config
-from Components.config import ConfigSubsection, ConfigDirectory, ConfigYesNo
-from Plugins.Plugin import PluginDescriptor
-from Screens.ChoiceBox import ChoiceBox
-from Screens.InfoBar import InfoBar
-from Screens.InfoBar import MoviePlayer
-from Screens.InfoBarGenerics import InfoBarMenu, InfoBarSeek, InfoBarAudioSelection, InfoBarShowHide, \
-    InfoBarSubtitleSupport, InfoBarSummarySupport, InfoBarServiceErrorPopupSupport, InfoBarNotifications
-from Screens.MessageBox import MessageBox
-from Screens.Screen import Screen
-from Screens.TaskView import JobView
-from ServiceReference import ServiceReference
-from Tools.Directories import SCOPE_PLUGINS
-from Tools.Directories import fileExists
-from Tools.Directories import resolveFilename
-from enigma import RT_HALIGN_LEFT
-from enigma import eListboxPythonMultiContent
-from enigma import eServiceReference
-from enigma import eTimer
-from enigma import gFont, getDesktop
-from enigma import iPlayableService
-from enigma import iServiceInformation
-from skin import parseColor
-from twisted.web.client import downloadPage
-import os
-import re
-import sys
-from Plugins.Extensions.KodiLite.lib.TaskView2 import JobViewNew
-from Plugins.Extensions.KodiLite.lib import xpath
-from Plugins.Extensions.KodiLite.lib.download import startdownload  # mfaraj2608 to for new download management
-
-global subsx
-from ..plugin import subsx
-from .. import Utils
-
 
 PY2 = False
 PY3 = False
@@ -77,25 +66,19 @@ THISPLUG = "/usr/lib/enigma2/python/Plugins/Extensions/KodiLite"
 SREF = " "
 SERVICEAPP = 0
 
-f1 = open("/tmp/py.txt","a")
+f1 = open("/tmp/py.txt", "a")
 msg = "xUtils PY3 = " + str(PY3) + " xUtils PY2 = " + str(PY2)
 f1.write(msg)
 f1.close()
 
 
 if PY3:
-    from urllib.request import urlopen, Request
     from http.client import HTTPConnection
-    from urllib.error import URLError, HTTPError
-    from urllib.parse import urlparse
-    from urllib.parse import urlencode, quote, unquote_plus, unquote
+    from urllib.parse import quote
     from urllib.request import urlretrieve
 else:
-    from urllib2 import urlopen, Request
     from httplib import HTTPConnection
-    from urllib2 import URLError, HTTPError
-    from urlparse import urlparse
-    from urllib import urlencode, quote, unquote_plus, unquote
+    from urllib import quote
     from urllib import urlretrieve
 
 
@@ -109,7 +92,7 @@ if subsx is True:
         from Plugins.Extensions.SubsSupport import SubsSupport, SubsSupportStatus
         subsx = True
     except ImportError:
-        subsx = False 
+        subsx = False
 
         class SubsSupport(object):
             def __init__(self, *args, **kwargs):
@@ -121,6 +104,7 @@ if subsx is True:
 
 else:
     subsx = False
+
     class SubsSupport(object):
         def __init__(self, *args, **kwargs):
             pass
@@ -130,38 +114,10 @@ else:
             pass
 
 
-std_headers = {
-                'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.6) Gecko/20100627 Firefox/3.6.6',
-                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-              }
-
-
-def returnIMDB(text_clear):
-    TMDB = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('TMDB'))
-    IMDb = resolveFilename(SCOPE_PLUGINS, "Extensions/{}".format('IMDb'))
-    if TMDB:
-        try:
-            from Plugins.Extensions.TMBD.plugin import TMBD
-            text = html_conv.html_unescape(text_clear)
-            _session.open(TMBD.tmdbScreen, text, 0)
-        except Exception as e:
-            print("[XCF] Tmdb: ", str(e))
-        return True
-    elif IMDb:
-        try:
-            from Plugins.Extensions.IMDb.plugin import main as imdb
-            text = html_conv.html_unescape(text_clear)
-            imdb(_session, text)
-        except Exception as e:
-            print("[XCF] imdb: ", str(e))
-        return True
-    else:
-        text_clear = html_conv.html_unescape(text_clear)
-        _session.open(MessageBox, text_clear, MessageBox.TYPE_INFO)
-        return True
-    return
+std_headers = {'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.6) Gecko/20100627 Firefox/3.6.6',
+               'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+               'Accept-Language': 'en-us,en;q=0.5'}
 
 
 class Getvid(Screen):
@@ -180,13 +136,13 @@ class Getvid(Screen):
         self["key_yellow"] = Button(_("Play"))
         self["key_blue"] = Button(_("Stop Download"))
         self["setupActions"] = ActionMap(["SetupActions", "ColorActions", "TimerEditActions"],
-                                        {"red": self.close,
-                                         "green": self.okClicked,
-                                         "yellow": self.play,
-                                         "info": self.showinfo,
-                                         "blue": self.stopdl,
-                                         "cancel": self.cancel,
-                                         "ok": self.okClicked}, -2)
+                                         {"red": self.close,
+                                          "green": self.okClicked,
+                                          "yellow": self.play,
+                                          "info": self.showinfo,
+                                          "blue": self.stopdl,
+                                          "cancel": self.cancel,
+                                          "ok": self.okClicked}, -2)
         self.icount = 0
         self.name = name
         self.url = url
@@ -281,12 +237,12 @@ class Getvid2(Screen):
         self['key_yellow'] = Button(_('Play'))
         self['key_blue'] = Button(_('Stop Download'))
         self['setupActions'] = ActionMap(['SetupActions', 'ColorActions', 'TimerEditActions'],
-                                        {'red': self.close,
-                                         'green': self.okClicked,
-                                         'yellow': self.play,
-                                         'blue': self.stopDL,
-                                         'cancel': self.cancel,
-                                         'ok': self.openTest}, -2)
+                                         {'red': self.close,
+                                          'green': self.okClicked,
+                                          'yellow': self.play,
+                                          'blue': self.stopDL,
+                                          'cancel': self.cancel,
+                                          'ok': self.openTest}, -2)
         self.icount = 0
         self.bLast = 0
         cachefold = str(config.plugins.kodiplug.cachefold.value)
@@ -377,7 +333,6 @@ class Playoptions(Screen):
         self["list"] = List(self.list)
         self["list"] = Utils.tvList([])
         self['infoc'] = Label(_('Info'))
-        # Credits = " Linuxsat-support Forum"
         self['infoc2'] = Label('%s' % Credits)
         self['info'] = Label()
         self['key_red'] = Button(_('Exit'))
@@ -385,15 +340,14 @@ class Playoptions(Screen):
         self['key_yellow'] = Button(_('Play'))
         self['key_blue'] = Button(_('Stop Download'))
         self['setupActions'] = ActionMap(['SetupActions', 'ColorActions', 'TimerEditActions'], {'red': self.close,
-                                         'green': self.okClicked,
-                                         'yellow': self.start1,
-                                         'blue': self.stopDL,
-                                         'cancel': self.cancel,
-                                         'ok': self.okClicked}, -2)
+                                                                                                'green': self.okClicked,
+                                                                                                'yellow': self.start1,
+                                                                                                'blue': self.stopDL,
+                                                                                                'cancel': self.cancel,
+                                                                                                'ok': self.okClicked}, -2)
         self.icount = 0
         self.bLast = 0
         self.useragent = "QuickTime/7.6.2 (qtver=7.6.2;os=Windows NT 5.1Service Pack 3)"
-        cachefold = str(config.plugins.kodiplug.cachefold.value)
         self.svfile = " "
         self.name = name.replace('-', ' ').replace('+', ' ').replace('_', ' ')
         self.url = url
@@ -413,23 +367,18 @@ class Playoptions(Screen):
         self.list[8] = (_("Add to favorites"))
         self.list[9] = (_("Add to bouquets"))
         self.list[10] = (_("Current Downloads"))
-        #############################
         if "/tmp/vid.txt" in self.url:
             file1 = "/tmp/vid.txt"
             f1 = open(file1, "r + ")
             txt1 = f1.read()
-            pass  # print "In Playoptions txt1 =", txt1
             n1 = txt1.find("http", 0)
             n2 = txt1.find("\n", n1)
             txt2 = txt1[n1:n2]
             self.url = txt2
-        # ############################
-        # self.url = self.url.replace("|", "\|")
         self.urlmain = self.url
         n1 = self.url.find("|", 0)
         if n1 > -1:
             self.url = self.url[:n1]
-        pass  # print "Here in Playoptions self.url B=", self.url
         self.updateTimer = eTimer()
         try:
             self.updateTimer_conn = self.updateTimer.timeout.connect(self.updateStatus)
@@ -437,20 +386,15 @@ class Playoptions(Screen):
             self.updateTimer.callback.append(self.updateStatus)
         self['info'].setText(" ")
         self.sref = self.session.nav.getCurrentlyPlayingServiceReference()
-        pass  # print "Here in Playoptions SREF =", SREF
         if config.plugins.kodiplug.directpl.value is True:
-            pass  # print "Here in directpl"
             self.onShown.append(self.start1)
         elif "hds://" in url:
             self.onShown.append(self.start3)
         elif self.url.startswith("stack://"):
             self.onShown.append(self.start4)
-        # elif "plugin://plugin.video.youtube" in self.url or "youtube.com/" in self.url :
-        # self.onShown.append(self.start5)
         else:
             pass  # print "Here in no directpl"
             self.onLayoutFinish.append(self.start)
-            # self.onShown.append(self.start1)
 
     def start1(self):
         desc = self.desc
@@ -458,7 +402,6 @@ class Playoptions(Screen):
             self.start5()
             self.cancel()
         elif "f4m" in self.url:
-            pass  # print "In playVideo f4m url A=", self.url
             from F4mProxy import f4mProxyHelper
             fplayer = f4mProxyHelper()
             url = self.url
@@ -473,7 +416,6 @@ class Playoptions(Screen):
     def playproxy(self):
         desc = self.desc
         if "m3u8" in self.url:
-            pass  # print "In playVideo proxy m3u8 url A=", self.url
             from F4mProxy import f4mProxyHelper
             fplayer = f4mProxyHelper()
             url = self.url
@@ -483,7 +425,6 @@ class Playoptions(Screen):
             self.cancel()
 
         elif "f4m" in self.url:
-            pass  # print "In playVideo proxy f4m url A=", self.url
             from F4mProxy import f4mProxyHelper
             fplayer = f4mProxyHelper()
             url = self.url
@@ -499,16 +440,11 @@ class Playoptions(Screen):
         desc = self.desc
         if ".ts" in self.url:
             url = self.url
-            pass  # print "shahid url A= ", url
             try:
                 os.remove("/tmp/hls.avi")
             except:
                 pass
-            # url=url.split("?hls")[0]
             cmd = 'python "%s/lib/tsclient.py" "%s" "1" &' % (THISPLUG, url)
-            # ok cmd = 'python "/usr/lib/enigma2/python/hlsclient.py" "' + url + '" "1" > /tmp/hls.txt 2>&1 &'
-            # cmd = 'python "/usr/lib/enigma2/python/hlsclient.py" "' + url + '" "1" &'
-            pass  # print "hls cmd = ", cmd
             os.system(cmd)
             os.system('sleep 3')
             self.url = '/tmp/hls.avi'
@@ -531,16 +467,13 @@ class Playoptions(Screen):
         file1 = "/tmp/vid.txt"
         f1 = open(file1, "r + ")
         txt1 = f1.read()
-        pass  # print "In Playoptions txt1 =", txt1
         self.url = txt1
         self.session.open(Playgo, self.name, self.url, desc)
         self.close()
 
     def start(self):
-        # infotxt=(_("Selected: ")) + self.name
-        infotxt = (_("Selected video: ")) + self.name + (_("\n\nDownload as :"))+self.getlocal_filename()[0]
+        infotxt = (_("Selected video: ")) + self.name + (_("\n\nDownload as :")) + self.getlocal_filename()[0]
         self['info'].setText(infotxt)
-        pass  # print "Going in Utils.showlist, self.list =", self.list
         Utils.showlist(self.list, self['list'])
 
     def openTest(self):
@@ -557,30 +490,25 @@ class Playoptions(Screen):
             if n1 > -1:
                 url = url1[:n1]
                 print("Here in hlsclient-py url =", url)
-                header = url1[(n1+1):]
+                header = url1[(n1 + 1):]
                 print("Here in hlsclient-py header = ", header)
             else:
                 url = url1
                 header = ""
-            # url = self.url
             name = self.name
             if ".ts" in url:
-                pass  # print "shahid url A= ", url
                 url = url.replace(".ts", ".m3u8")
             else:
-                # if "shahid.net" in url:
                 print("shahid url = ", url)
                 try:
                     os.remove("/tmp/hls.avi")
                 except:
                     pass
-                # url=url.split("?hls")[0]
                 if PY3:
                     cmd = 'python "%s/lib/hlsclient3.py" "%s" "1" "%s" + &' % (THISPLUG, url, header)
                 else:
                     cmd = 'python "%s/lib/hlsclient.py" "%s" "1" "%s" + &' % (THISPLUG, url, header)
-                # ok cmd = 'python "/usr/lib/enigma2/python/hlsclient.py" "' + url + '" "1" > /tmp/hls.txt 2>&1 &'
-                # cmd = 'python "/usr/lib/enigma2/python/hlsclient.py" "' + url + '" "1" &'
+
                 print("hls cmd = ", cmd)
                 os.system(cmd)
                 os.system('sleep 5')
@@ -595,7 +523,7 @@ class Playoptions(Screen):
         fold = str(config.plugins.kodiplug.cachefold.value) + "/"
         name = self.name.replace("/media/hdd/xbmc/vid/", "")
         name = name.replace(" ", "-")
-        pattern = '[a-zA-Z0-9\-]'
+        pattern = r'[a-zA-Z0-9\-]'
         input = name
         output = ''.join(re.findall(pattern, input))
         self.name = output
@@ -619,24 +547,21 @@ class Playoptions(Screen):
 
     def okClicked(self):
         idx = self["list"].getSelectionIndex()
-        pass  # print "idx",idx
         if idx == 0:
-                self.start1()
+            self.start1()
         elif idx == 1:
-                self.playexte()
+            self.playexte()
         elif idx == 2:
-                self.playts()
+            self.playts()
         elif idx == 3:
-                self.playhls()
+            self.playhls()
         elif idx == 4:
-                self.playproxy()
+            self.playproxy()
         elif idx == 5:
-            import urllib  # try with py3  - py2
-            # transcode based on vlcplayerIHAD and vlc 2.0.5
+            import urllib
             vlcip = config.plugins.kodiplug.vlcip.value
             self.hostaddr = "http://" + vlcip + ":8080"
             url = quote(self.url, safe='')
-            pass  # print "In Playoptions going in vlc url =", url
             cmd = self.hostaddr + "/requests/status.xml?command=in_play&input=" + url + "&option=%3Asout%3D%23transcode%7Bvcodec%3Dmp2v%2Cvb%3D2000%2Cvenc%3Dffmpeg%2Cfps%3D25%2Cvfilter%3Dcanvas%7Bwidth%3D352%2Cheight%3D288%2Caspect%3D4%3A3%7D%2Cacodec%3Dmp2a%2Cab%3D128%2Cchannels%3D2%2Csamplerate%3D0%7D%3Astd%7Baccess%3Dhttp%2Cmux%3Dts%7Bpid-video%3D68%2Cpid-audio%3D69%7D%2Cdst%3D%2Fdream.ts%7D&option=%3Asout-all&option=%3Asout-keep"
             password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, self.hostaddr, '', 'Admin')
@@ -651,58 +576,44 @@ class Playoptions(Screen):
             self.session.open(Playgo, self.name, vurl, desc)
 
         elif idx == 6:
-            pass  # print "In Playoptions Download"
             if "#header#" in self.url:
                 self.svfile, self.filetitle = self.getlocal_filename()
                 cmd1 = "rm " + self.svfile
                 os.system(cmd1)
                 n1 = self.url.find("#header#", 0)
-                header = self.url[(n1+8):]
+                header = self.url[(n1 + 8):]
                 self.url = self.url[:n1]
                 cmd = 'wget -O "' + self.svfile + '" --header="' + header + '" --user-agent="Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" "' + self.url + '" &'
-                pass  # print "In Playoptions cmd =", cmd
                 os.system(cmd)
                 self.icount = 1
                 return
 
-            if "plugin://plugin.video.youtube" in self.url or "youtube.com/" in self.url :
+            if "plugin://plugin.video.youtube" in self.url or "youtube.com/" in self.url:
                 file1 = "/tmp/vid.txt"
                 f1 = open(file1, "r + ")
                 txt1 = f1.read()
-                pass  # print "In Playoptions download youtube txt1 =", txt1
                 self.url = txt1
-                pass  # print "In Playoptions download youtube self.url =", self.url
                 self.svfile, self.filetitle = self.getlocal_filename()
                 downloadPage(self.url, self.svfile).addErrback(self.showError)
                 self.updateTimer.start(2000)
 
             elif ".m3u8" in self.url:
-                pass  # print "In Playoptions m3u8 download self.urlmain =", self.urlmain
                 url1 = self.urlmain
                 n1 = url1.find("|", 0)
-                pass  # print "Here in hlsclient-py n1, url1 =", n1, url1
                 if n1 > -1:
                     self.url = url1[:n1]
-                    pass  # print "Here in hlsclient-py url =", url
-                    header = url1[(n1+1):]
-                    pass  # print "Here in hlsclient-py header = ", header
+                    header = url1[(n1 + 1):]
                 else:
                     self.url = url1
                     header = ""
                 self.svfile, self.filetitle = self.getlocal_filename()
-                # self.pop = 0
                 cmd = 'python "%s/lib/hlsdownld.py" "%s" "1" "%s" "%s" + &' % (THISPLUG, self.url, self.svfile, header)
-                pass  # print "In Playoptions m3u8 download cmd =", cmd
                 os.system(cmd)
                 self.icount = 1
-                # self.updateTimer.start(2000)
 
             elif self.url.startswith("https"):
-                pass  # print "In Playoptions Download https url like youtube"
                 self.icount = 1
                 self.svfile, self.filetitle = self.getlocal_filename()
-                pass  # print "In Playoptions Download https self.svfile,self.filetitle =", self.svfile, self.filetitle
-                pass  # print "In Playoptions Download https self.url =", self.url
                 self.filetitle = self.filetitle.replace("-", "")
                 if PY3:
                     urlretrieve(self.url, self.svfile, reporthook=self.download_progress_hook)
@@ -713,7 +624,6 @@ class Playoptions(Screen):
 
             elif "rtmp" in self.url:
                 params = self.url
-                pass  # print "params A=", params
                 params = "'" + params + "'"
                 params = params.replace(" swfVfy=", "' --swfVfy '")
                 params = params.replace(" playpath=", "' --playpath '")
@@ -721,13 +631,11 @@ class Playoptions(Screen):
                 params = params.replace(" pageUrl=", "' --pageUrl '")
                 params = params.replace(" tcUrl=", "' --tcUrl '")
                 params = params.replace(" swfUrl=", "' --swfUrl '")
-                pass  # print "params B=", params
                 self.svfile, self.filetitle = self.getlocal_filename()
                 self.urtmp = "rtmpdump -r " + params + " -o '" + self.svfile + "'"
                 self["info"].setText(_("Start downloading"))
                 self.icount = 1
                 cmd = "rm " + self.svfile
-                pass  # print "rtmp cmd =", cmd
                 os.system(cmd)
                 JobManager.AddJob(downloadJob(self, self.urtmp, self.svfile, 'Title 1'))
                 self.LastJobView()
@@ -735,8 +643,6 @@ class Playoptions(Screen):
             else:
                 self.icount = 1
                 self.svfile, self.filetitle = self.getlocal_filename()
-                pass  # print "In Playoptions Download https self.svfile,self.filetitle =", self.svfile, self.filetitle
-                pass  # print "In Playoptions Download https self.url =", self.url
                 self.filetitle = self.filetitle.replace("-", "")
                 if PY3:
                     urlretrieve(self.url, self.svfile, reporthook=self.download_progress_hook)
@@ -749,25 +655,20 @@ class Playoptions(Screen):
             self.stopDL()
 
         elif idx == 8:
-            pass  # print 'add to favorite'
             try:
                 from Plugins.Extensions.KodiLite.lib.favorites import addfavorite
             except:
                 from .favorites import addfavorite
             try:
                 addon_id = os.path.split(os.path.split(sys.argv[0])[0])[1]
-                pass  # print "470add_id",addon_id
                 result = addfavorite(addon_id, self.name, self.url)
             except:
                 result = False
             if result is False:
-                pass  # print "failed to add to favorites"
                 self.session.open(MessageBox, _("Failed to add to favorites."), MessageBox.TYPE_ERROR, timeout=4)
             else:
-                pass  # print "added to favorites"
                 self.session.open(MessageBox, _("Item added successfully to favorites."), MessageBox.TYPE_INFO, timeout=4)
         elif idx == 9:
-            # print("In Utils.py self.url =", self.url)
             try:
                 error = stream2bouquet(self.url, self.name, 'kodilite')
             except:
@@ -801,14 +702,6 @@ class Playoptions(Screen):
         if res is None:
             self.close()
         else:
-            """
-            print("In playChoice res =", res)
-            url = res[1]
-            name = res[0]
-            desc = " "
-            self.session.open(Playgo, name, url, desc)
-            self.close()
-            """
             self.ebuf2 = []
             self.ebuf2.append((_("Play"), res[1]))
             self.ebuf2.append((_("Delete"), res[1]))
@@ -830,44 +723,34 @@ class Playoptions(Screen):
             self.close()
 
     def showError(self, error):
-        pass  # print "DownloadPage error = ", error
+        pass
 
     def updateStatus(self):
         if self.pop == 1:
             try:
                 ptxt = self.p.read()
-                # pass  # print "In updateStatus ptxt =", ptxt
                 if "data B" in ptxt:
                     n1 = ptxt.find("data B", 0)
                     n2 = ptxt.find("&url", n1)
                     n3 = ptxt.find("\n", n2)
-                    url = ptxt[(n2+5):n3]
+                    url = ptxt[(n2 + 5):n3]
                     url = url.replace("AxNxD", "&")
                     self.url = url.replace("ExQ", "=")
-                    # pass  # print "In updateStatus url =", url
-                    name = "Video"
                     desc = self.desc
                     self.session.open(Playgo, self.name, self.url, desc)
                     self.close()
                     self.updateTimer.stop()
-                # else:
-                    # self.openTest()
-                    # return
             except:
                 self.openTest()
-            # return
         else:
             if not os.path.exists(self.svfile):
-                pass  # print "No self.svfile =", self.svfile
                 self.openTest()
                 return
 
             if self.icount == 0:
                 self.openTest()
                 return
-            # pass  # print "Exists self.svfile =", self.svfile
             b1 = os.path.getsize(self.svfile)
-            pass  # print "b1 =", b1
             b = b1 / 1000
             if b == self.bLast:
                 infotxt = _('Download Complete....') + str(b)
@@ -878,14 +761,10 @@ class Playoptions(Screen):
             self['info'].setText(infotxt)
 
     def download_progress_hook(self, count, blockSize, totalSize):
-        # print("count, blockSize, totalSize =", count, blockSize, totalSize)
-        # b1 = os.path.getsize(self.svfile)
         b1 = count * blockSize
-        # print("b1 =", b1)
         if (b1 > totalSize) or (b1 == totalSize):
             infotxt = _('Download Complete....') + str(totalSize)
             self['info'].setText(infotxt)
-            # return
         else:
             infotxt = _('Downloading....') + str(b1)
             self['info'].setText(infotxt)
@@ -898,7 +777,6 @@ class Playoptions(Screen):
             self.session.open(JobViewNew, currentjob)
 
     def cancel(self):
-        pass  # print "Here in cancel"
         try:
             import urllib
             vlcip = config.plugins.kodiplug.vlcip.value
@@ -909,8 +787,6 @@ class Playoptions(Screen):
             opener = urllib.request.build_opener(handler)
             f = opener.open(self.hostaddr + "/requests/status.xml?command=pl_stop")
             f = opener.open(self.hostaddr + "/requests/status.xml?command=pl_empty")
-            # self.session.nav.stopService()
-            # self.session.nav.playService(self.sref)
         except:
             pass
         if os.path.exists("/tmp/hls.avi"):
@@ -936,7 +812,6 @@ class Playoptions(Screen):
 
     def keyNumberGlobal(self, number):
         self['list'].number(number)
-
 
 
 class TvInfoBarShowHide():
@@ -1067,9 +942,7 @@ class Playgo(InfoBarBase, TvInfoBarShowHide, InfoBarMenu, InfoBarSeek, InfoBarAu
         InfoBarSummarySupport.__init__(self)
         InfoBarServiceErrorPopupSupport.__init__(self)
         InfoBarNotifications.__init__(self)
-        # InfoBarMoviePlayerSummarySupport.__init__(self) #error on play
         if subsx is True:
-        # if cfg.subtitle.getValue() is True:
             SubsSupport.__init__(self, searchSupport=True, embeddedSupport=True)
             SubsSupportStatus.__init__(self)
         try:
@@ -1094,10 +967,8 @@ class Playgo(InfoBarBase, TvInfoBarShowHide, InfoBarMenu, InfoBarSeek, InfoBarAu
                                                              'cancel': self.cancel,
                                                              'back': self.cancel}, -1)
         if '8088' in str(self.url):
-            # self.onLayoutFinish.append(self.slinkPlay)
             self.onFirstExecBegin.append(self.slinkPlay)
         else:
-            # self.onLayoutFinish.append(self.cicleStreamType)
             self.onFirstExecBegin.append(self.cicleStreamType)
         self.onClose.append(self.cancel)
 
@@ -1105,26 +976,22 @@ class Playgo(InfoBarBase, TvInfoBarShowHide, InfoBarMenu, InfoBarSeek, InfoBarAu
         return AVSwitch().getAspectRatioSetting()
 
     def getAspectString(self, aspectnum):
-        return {
-                0: '4:3 Letterbox',
+        return {0: '4:3 Letterbox',
                 1: '4:3 PanScan',
                 2: '16:9',
                 3: '16:9 always',
                 4: '16:10 Letterbox',
                 5: '16:10 PanScan',
-                6: '16:9 Letterbox'
-                }[aspectnum]
+                6: '16:9 Letterbox'}[aspectnum]
 
     def setAspect(self, aspect):
-        map = {
-               0: '4_3_letterbox',
+        map = {0: '4_3_letterbox',
                1: '4_3_panscan',
                2: '16_9',
                3: '16_9_always',
                4: '16_10_letterbox',
                5: '16_10_panscan',
-               6: '16_9_letterbox'
-                }
+               6: '16_9_letterbox'}
         config.av.aspectratio.setValue(map[aspect])
         try:
             AVSwitch().setAspectRatio(aspect)
@@ -1142,8 +1009,8 @@ class Playgo(InfoBarBase, TvInfoBarShowHide, InfoBarMenu, InfoBarSeek, InfoBarAu
     def showIMDB(self):
         idx = self.index
         text_clear = self.names[idx]
-        if returnIMDB(text_clear):
-            print('show imdb/tmdb')
+        # if returnIMDB(text_clear):
+        print('show imdb/tmdb', text_clear)
 
     def slinkPlay(self, url):
         name = self.name
@@ -1259,14 +1126,12 @@ class Showrtmp(Screen):
         self["list"] = List(self.list)
         self["list"] = Utils.tvList([])
         self["setupActions"] = ActionMap(["SetupActions", "ColorActions", "TimerEditActions"],
-                                        {
-                                        "red": self.close,
-                                        "green": self.okClicked,
-                                        "yellow": self.play,
-                                        "blue": self.stopdl,
-                                        "cancel": self.cancel,
-                                        "ok": self.okClicked,
-                                        }, -2)
+                                         {"red": self.close,
+                                          "green": self.okClicked,
+                                          "yellow": self.play,
+                                          "blue": self.stopdl,
+                                          "cancel": self.cancel,
+                                          "ok": self.okClicked}, -2)
         self.icount = 0
         self.name = name
         self.url = url
@@ -1278,17 +1143,15 @@ class Showrtmp(Screen):
     def getrtmp(self):
         pic = THISPLUG + "/images/default.png"
         if Utils.isFHD():
-            pic = res_plugin_path + "defaultL.png"
+            pic = THISPLUG + "/images/defaultL.png"
         self["pixmap"].instance.setPixmapFromFile(pic)
         params = self.url
-        pass  # print "params A=", params
         params = params.replace("-swfVfy", " --swfVfy")
         params = params.replace("-playpath", " --playpath")
         params = params.replace("-app", " --app")
         params = params.replace("-pageUrl", " --pageUrl")
         params = params.replace("-tcUrl", " --tcUrl")
         params = params.replace("-swfUrl", " --swfUrl")
-        pass  # print "params B=", params
         fold = str(config.plugins.kodiplug.cachefold.value) + "/xbmc/vid"
         name = self.name.replace("/media/hdd/xbmc/vid/", "")
         name = name.replace(":", "-")
@@ -1329,7 +1192,6 @@ class Showrtmp(Screen):
             svfile = self.svf
             desc = self.desc
             self.session.open(Playgo, self.name, svfile, desc)
-            # runKDplayer(self.session,name,svfile,desc)
         else:
             txt = "Download Video first."
             self["info"].setText(txt)
@@ -1356,7 +1218,6 @@ class Showrtmp(Screen):
         self["list"].right()
 
     def keyNumberGlobal(self, number):
-        # pass  # print "pressed", number
         self["list"].number(number)
 
 
@@ -1387,17 +1248,18 @@ class downloadTask(Task):
     def processOutput(self, data):
         try:
             if data.endswith('%)'):
-                startpos = data.rfind("sec (")+5
+                startpos = data.rfind("sec (") + 5
                 if startpos and startpos != -1:
                     self.progress = int(float(data[startpos:-4]))
             elif data.find('%') != -1:
                 tmpvalue = data[:data.find("%")]
                 tmpvalue = tmpvalue[tmpvalue.rfind(" "):].strip()
-                tmpvalue = tmpvalue[tmpvalue.rfind("(")+1:].strip()
+                tmpvalue = tmpvalue[tmpvalue.rfind("(") + 1:].strip()
                 self.progress = int(float(tmpvalue))
             else:
                 Task.processOutput(self, data)
-        except Exception as errormsg:
+        except Exception as e:
+            print(e)
             Task.processOutput(self, data)
 
     def processOutputLine(self, line):
@@ -1484,9 +1346,7 @@ class StatusScreen(Screen):
         self.delayTimer = 1500
         self.shown = True
         self.skin = '\n            <screen name="StatusScreen" position="%s,%s" size="%s,90" zPosition="0" backgroundColor="transparent" flags="wfNoBorder">\n                    <widget name="status" position="0,0" size="%s,70" valign="center" halign="left" font="Regular;22" transparent="1" foregroundColor="yellow" shadowColor="#40101010" shadowOffset="3,3" />\n            </screen>' % (str(statusPositionX),
-                str(statusPositionY),
-                str(self.sc_width),
-                str(self.sc_width))
+            str(statusPositionY),  str(self.sc_width), str(self.sc_width))
         Screen.__init__(self, session)
         self.stand_alone = True
 
@@ -1506,4 +1366,3 @@ class StatusScreen(Screen):
     def __onClose(self):
         self.delayTimer.stop()
         del self.delayTimer
-

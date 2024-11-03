@@ -6,6 +6,8 @@ from Tools.Directories import resolveFilename, SCOPE_PLUGINS
 import gettext
 import os
 from skin import loadSkin
+from Components.config import config
+
 
 PluginLanguageDomain = 'xbmcaddons'
 PluginLanguagePath = 'Extensions/KodiLite/locale'
@@ -14,12 +16,11 @@ isDreamOS = False
 
 def loadSkinReal(skinPath):
     if os.path.exists(skinPath):
-        print('Loading skin',skinPath)
+        print('Loading skin', skinPath)
         loadSkin(skinPath)
 
 
 def loadPluginSkin(pluginPath):
-#    loadSkinReal(pluginPath + '/' + config.skin.primary_skin.value)
     loadSkinReal(config.skin.primary_skin.value)
     loadSkinReal(pluginPath + '/skin.xml')
 

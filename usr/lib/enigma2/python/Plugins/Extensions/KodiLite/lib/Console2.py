@@ -34,9 +34,14 @@ class Console2(Screen):
         self.onShown.append(self.updateTitle)
         self.container = eConsoleAppContainer()
         self.run = 0
-        self.container.appClosed.append(self.runFinished)
-        self.container.dataAvail.append(self.dataAvail)
-        self.onLayoutFinish.append(self.startRun)  # dont start before gui is finished
+        self.finished = False
+        try:  # DreamOS By RAED
+            self.container.appClosed.append(self.runFinished)
+            self.container.dataAvail.append(self.dataAvail)
+        except:
+            self.container.appClosed_conn = self.container.appClosed.connect(self.runFinished)
+            self.container.dataAvail_conn = self.container.dataAvail.connect(self.dataAvail)
+        self.onLayoutFinish.append(self.startRun)
 
     def updateTitle(self):
         self.setTitle(self.newtitle)
@@ -98,4 +103,3 @@ class Console2(Screen):
         except:
             self["text"].setText(self["text"].getText() + str)
             self["text"].lastPage()
-

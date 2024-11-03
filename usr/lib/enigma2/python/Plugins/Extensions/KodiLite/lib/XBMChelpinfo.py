@@ -27,12 +27,10 @@ class XBMChelpinfo(Screen):
         self["text"] = ScrollLabel("")
         self["actions"] = ActionMap(["WizardActions",
                                      "DirectionActions",
-                                     "ColorActions"], {
-                                                       "ok": self.cancel,
+                                     "ColorActions"], {"ok": self.cancel,
                                                        "back": self.cancel,
                                                        "up": self["text"].pageUp,
-                                                       "down": self["text"].pageDown
-                                                       }, -1)
+                                                       "down": self["text"].pageDown}, -1)
         self.cmdlist = cmdlist
         self.newtitle = title
         self.onShown.append(self.updateTitle)
@@ -48,7 +46,7 @@ class XBMChelpinfo(Screen):
             f = open(fpath, 'r')
             lines = f.readlines()
             for line in lines:
-                data = data+line
+                data += line
         else:
             data = "No info available"
             self["text"].setText(data)

@@ -63,10 +63,10 @@ class XBMCAddonsinfoScreen(Screen):
                 f = open("/tmp/XBMCAddons_log", 'r')
                 lines = f.readlines()
                 for line in lines:
-                    data = data+line
+                    data += line
         else:
             data = "No info available"
-            data = data + "\n**********************************" + (_("\nPlease send the error log to the coder\nThe log file is available as /tmp/XBMCAddons_log,/tmp/xbmc_log,/tmp/TXBMCAddons_error"))+"\n**********************************" + (_("\nXBMXAddons support sites\nhttp://www.xtrend-alliance.com/")) + (_("\n press OK or Cancel to exit"))
+            data += "\n**********************************" + (_("\nPlease send the error log to the coder\nThe log file is available as /tmp/XBMCAddons_log,/tmp/xbmc_log,/tmp/TXBMCAddons_error")) + "\n**********************************" + (_("\nXBMXAddons support sites\nhttp://www.xtrend-alliance.com/")) + (_("\n press OK or Cancel to exit"))
             self["text"].setText(data)
 
     def cancel(self):

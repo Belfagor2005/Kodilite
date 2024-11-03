@@ -70,13 +70,11 @@ class JobViewNew(InfoBarNotifications, Screen, ConfigListScreen):
         self.onShow.append(self.windowShow)
         self.onHide.append(self.windowHide)
         self["setupActions"] = ActionMap(["ColorActions", "SetupActions"],
-                                    {
-                                    "green": self.ok,
-                                    "red": self.abort,
-                                    "blue": self.background,
-                                    "cancel": self.ok,
-                                    "ok": self.ok,
-                                    }, -2)
+                                         {"green": self.ok,
+                                          "red": self.abort,
+                                          "blue": self.background,
+                                          "cancel": self.ok,
+                                          "ok": self.ok}, -2)
 
         self.settings = ConfigSubsection()
         if SystemInfo["DeepstandbySupport"]:

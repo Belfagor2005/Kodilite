@@ -21,6 +21,7 @@ def unix_getpass(prompt='Password: ', stream=None):
         if not stream:
             stream = tty
     except EnvironmentError as e:
+        print(e)
         try:
             fd = sys.stdin.fileno()
         except (AttributeError, ValueError):
@@ -86,7 +87,7 @@ def fallback_getpass(prompt='Password: ', stream=None):
     warnings.warn('Can not control echo on the terminal.', GetPassWarning, stacklevel=2)
     if not stream:
         stream = sys.stderr
-    print >> stream, 'Warning: Password input may be echoed.'
+    print('>> stream, Warning: Password input may be echoed.')
     return _raw_input(prompt, stream)
 
 
@@ -123,17 +124,13 @@ try:
     (termios.tcgetattr, termios.tcsetattr)
 except (ImportError, AttributeError):
     try:
-        import msvcrt
+        from EasyDialogs import AskPassword
     except ImportError:
-        try:
-            from EasyDialogs import AskPassword
-        except ImportError:
-            getpass = fallback_getpass
-        else:
-            getpass = AskPassword
+        getpass = fallback_getpass
+    try:
+        getpass = AskPassword
 
-    else:
+    except:
         getpass = win_getpass
-
 else:
     getpass = unix_getpass
